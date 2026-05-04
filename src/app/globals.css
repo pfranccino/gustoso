@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --orange:#F26419;--orange-light:#FF8C42;--orange-dark:#C94E0A;
+  --yellow:#FFD600;
+  --bg:#FFF9F5;--bg2:#FFF1E6;--bg3:#FFE5CC;
+  --card:#FFFFFF;
+  --text:#1A0800;--text-muted:#A0541A;
+  --border:rgba(242,100,25,0.2);
+  --radius:14px;--radius-sm:8px;--max:680px;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--text);min-height:100dvh;overflow-x:hidden}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--bg2)}
+::-webkit-scrollbar-thumb{background:var(--orange-dark);border-radius:2px}
+#__next,main{min-height:100dvh}
+.section-divider{width:100%;height:1px;background:linear-gradient(90deg,transparent,var(--orange),transparent);opacity:.2}
+.stars{color:var(--yellow);letter-spacing:2px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+.fade-up{animation:fadeUp .7s ease both}
+.fade-up-2{animation:fadeUp .7s .15s ease both}
+.fade-up-3{animation:fadeUp .7s .3s ease both}
+@keyframes pulse-ring{0%{transform:scale(1);opacity:.7}100%{transform:scale(1.6);opacity:0}}
+@keyframes slideUp{from{transform:translateY(100%);opacity:0}to{transform:translateY(0);opacity:1}}

@@ -1,2 +1,16 @@
 .DS_Store
 Thumbs.db
+
+# env — NUNCA subir al repo
+.env.local
+.env*.local
+
+# Next.js
+.next/
+out/
+
+# deps
+node_modules/
+
+# misc
+npm-debug.log*
