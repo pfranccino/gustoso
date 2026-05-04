@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell($env:APPDATA; ls \"$env:APPDATA\\\\GitHub CLI\\\\\" 2>&1)",
+      "Bash(mkdir _scaffold)",
+      "Bash(npx create-next-app@14 _scaffold --typescript --tailwind --app --src-dir --no-eslint --import-alias \"@/*\" --yes)",
+      "Bash(mkdir scaffold-temp *)",
+      "Bash(npx create-next-app@14 scaffold-temp --typescript --tailwind --app --src-dir --no-eslint --import-alias \"@/*\" --yes)",
+      "Bash(mv scaffold-temp/src .)",
+      "Bash(mv scaffold-temp/public .)",
+      "Bash(mv scaffold-temp/package.json .)",
+      "Bash(mv scaffold-temp/package-lock.json .)",
+      "Bash(mv scaffold-temp/node_modules .)",
+      "Bash(npm run *)"
+    ]
+  }
+}

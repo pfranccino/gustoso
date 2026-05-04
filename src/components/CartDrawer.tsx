@@ -3,20 +3,61 @@
 import { useCart } from '@/contexts/CartContext';
 import { fmt, WA_NUMBER } from '@/lib/menuData';
 import { TrashIcon, WAIcon } from './icons';
+import { useGeolocation } from '@/hooks/useGeolocation';
+
+function getSessionId(): string {
+  const key = 'gustosos_sid';
+  let sid = sessionStorage.getItem(key);
+  if (!sid) {
+    sid = Math.random().toString(36).slice(2) + Date.now().toString(36);
+    sessionStorage.setItem(key, sid);
+  }
+  return sid;
+}
+
+async function logOrder(
+  items: ReturnType<typeof useCart>['items'],
+  total: number,
+  locationUrl?: string
+) {
+  try {
+    await fetch('/api/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        items,
+        total,
+        sessionId: getSessionId(),
+        locationUrl,
+      }),
+    });
+  } catch {
+    // fire-and-forget — no bloquea el pedido si falla
+  }
+}
 
 export default function CartDrawer() {
   const { items, updateQty, removeItem, clearCart, total, count, isOpen, setIsOpen } = useCart();
+  const { state: geo, request: requestGeo, clear: clearGeo } = useGeolocation();
+
+  const locationUrl = geo.status === 'success' ? geo.locationUrl : undefined;
 
   const buildWAMsg = () => {
     const lines = ["Hola Gustoso's! Quiero hacer un pedido 🛒", ''];
     items.forEach((item, i) => {
-      lines.push(`${i+1}. ${item.qty}x ${item.name}${item.size ? ` (${item.size.toUpperCase()})` : ''} — ${fmt(item.price * item.qty)}`);
+      lines.push(`${i + 1}. ${item.qty}x ${item.name}${item.size ? ` (${item.size.toUpperCase()})` : ''} — ${fmt(item.price * item.qty)}`);
       if (item.desc) lines.push(`   📋 ${item.desc}`);
       if (item.note) lines.push(`   📝 Nota: ${item.note}`);
     });
     lines.push('');
     lines.push(`💰 TOTAL: ${fmt(total)}`);
+    if (locationUrl) lines.push(`📍 Mi ubicación: ${locationUrl}`);
     return `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(lines.join('\n'))}`;
+  };
+
+  const handleSend = () => {
+    logOrder(items, total, locationUrl);
+    window.open(buildWAMsg(), '_blank');
   };
 
   if (!isOpen) return null;
@@ -26,6 +67,7 @@ export default function CartDrawer() {
       <div onClick={() => setIsOpen(false)} style={{ position:'absolute', inset:0, background:'rgba(0,0,0,0.5)', backdropFilter:'blur(4px)' }}></div>
       <div style={{ position:'relative', zIndex:1, width:'100%', maxWidth:'var(--max)', background:'var(--card)', borderRadius:'var(--radius) var(--radius) 0 0', maxHeight:'85dvh', display:'flex', flexDirection:'column', animation:'slideUp .3s ease', boxShadow:'0 -8px 40px rgba(0,0,0,0.3)' }}>
 
+        {/* Header */}
         <div style={{ padding:'16px 20px 12px', borderBottom:'1px solid var(--border)', display:'flex', justifyContent:'space-between', alignItems:'center', flexShrink:0 }}>
           <div>
             <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:22, color:'var(--text)' }}>Tu pedido</div>
@@ -37,6 +79,7 @@ export default function CartDrawer() {
           </div>
         </div>
 
+        {/* Items */}
         <div style={{ overflowY:'auto', flex:1, padding:'12px 20px' }}>
           {items.length === 0 ? (
             <div style={{ textAlign:'center', padding:'40px 0', color:'var(--text-muted)' }}>
@@ -73,15 +116,41 @@ export default function CartDrawer() {
           )}
         </div>
 
+        {/* Footer */}
         {items.length > 0 && (
           <div style={{ padding:'16px 20px 32px', borderTop:'1px solid var(--border)', flexShrink:0 }}>
-            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12 }}>
               <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:16, color:'var(--text-muted)' }}>TOTAL</span>
               <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:28, color:'var(--text)' }}>{fmt(total)}</span>
             </div>
-            <a href={buildWAMsg()} target="_blank" rel="noopener noreferrer" style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:10, background:'#25D366', color:'#fff', padding:'15px 24px', borderRadius:999, fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:20, letterSpacing:.5, textDecoration:'none', boxShadow:'0 4px 16px rgba(37,211,102,0.3)' }}>
+
+            {/* Geolocation */}
+            <div style={{ marginBottom:12 }}>
+              {geo.status === 'idle' && (
+                <button onClick={requestGeo} style={{ width:'100%', padding:'9px', borderRadius:'var(--radius-sm)', border:'1px dashed var(--border)', background:'transparent', color:'var(--text-muted)', fontSize:13, fontWeight:600, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
+                  📍 Incluir mi ubicación (opcional)
+                </button>
+              )}
+              {geo.status === 'loading' && (
+                <div style={{ textAlign:'center', fontSize:13, color:'var(--text-muted)', padding:'9px' }}>Obteniendo ubicación…</div>
+              )}
+              {geo.status === 'success' && (
+                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', background:'rgba(37,211,102,0.08)', border:'1px solid rgba(37,211,102,0.25)', borderRadius:'var(--radius-sm)', padding:'8px 12px' }}>
+                  <span style={{ fontSize:13, color:'#1a8a3e', fontWeight:600 }}>📍 Ubicación incluida</span>
+                  <button onClick={clearGeo} style={{ fontSize:12, color:'var(--text-muted)', background:'transparent', border:'none', cursor:'pointer', fontWeight:600 }}>Quitar</button>
+                </div>
+              )}
+              {geo.status === 'denied' && (
+                <div style={{ fontSize:12, color:'var(--text-muted)', textAlign:'center', padding:'6px' }}>Permiso denegado — el pedido se envía igual sin ubicación</div>
+              )}
+              {geo.status === 'error' && (
+                <div style={{ fontSize:12, color:'var(--text-muted)', textAlign:'center', padding:'6px' }}>No se pudo obtener la ubicación</div>
+              )}
+            </div>
+
+            <button onClick={handleSend} style={{ width:'100%', display:'flex', alignItems:'center', justifyContent:'center', gap:10, background:'#25D366', color:'#fff', padding:'15px 24px', borderRadius:999, border:'none', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:20, letterSpacing:.5, cursor:'pointer', boxShadow:'0 4px 16px rgba(37,211,102,0.3)' }}>
               <WAIcon size={20} color="#fff"/> Enviar pedido por WhatsApp
-            </a>
+            </button>
           </div>
         )}
       </div>
