@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Gustoso's — La Calidad Va en el Gusto</title>
+<meta name="description" content="Vienesas, sándwiches, burritos y más. Pide directo por WhatsApp — Gustoso's, Marino José Manuel Ramírez #1641.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;900&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --orange:#F26419;--orange-light:#FF8C42;--orange-dark:#C94E0A;
+  --yellow:#FFD600;
+  --bg:#FFF9F5;--bg2:#FFF1E6;--bg3:#FFE5CC;
+  --card:#FFFFFF;
+  --text:#1A0800;--text-muted:#A0541A;
+  --border:rgba(242,100,25,0.2);
+  --radius:14px;--radius-sm:8px;--max:680px;
+}
+html{scroll-behavior:smooth}
+body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--text);min-height:100dvh;overflow-x:hidden}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--bg2)}
+::-webkit-scrollbar-thumb{background:var(--orange-dark);border-radius:2px}
+#root{min-height:100dvh}
+.section-divider{width:100%;height:1px;background:linear-gradient(90deg,transparent,var(--orange),transparent);opacity:.2}
+.stars{color:var(--yellow);letter-spacing:2px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+.fade-up{animation:fadeUp .7s ease both}
+.fade-up-2{animation:fadeUp .7s .15s ease both}
+.fade-up-3{animation:fadeUp .7s .3s ease both}
+@keyframes pulse-ring{0%{transform:scale(1);opacity:.7}100%{transform:scale(1.6);opacity:0}}
+@keyframes slideUp{from{transform:translateY(100%);opacity:0}to{transform:translateY(0);opacity:1}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+// ─── TWEAKS PANEL (inline) ───────────────────────────────────────────────────
+const __TWEAKS_STYLE = `
+  .twk-panel{position:fixed;right:16px;bottom:16px;z-index:2147483646;width:260px;
+    max-height:calc(100vh - 32px);display:flex;flex-direction:column;
+    background:rgba(250,249,247,.9);color:#29261b;
+    -webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px);
+    border:.5px solid rgba(255,255,255,.6);border-radius:14px;
+    box-shadow:0 12px 40px rgba(0,0,0,.18);
+    font:11.5px/1.4 ui-sans-serif,system-ui,sans-serif;overflow:hidden}
+  .twk-hd{display:flex;align-items:center;justify-content:space-between;
+    padding:10px 8px 10px 14px;cursor:move;user-select:none}
+  .twk-hd b{font-size:12px;font-weight:600}
+  .twk-x{appearance:none;border:0;background:transparent;color:rgba(41,38,27,.55);
+    width:22px;height:22px;border-radius:6px;cursor:pointer;font-size:13px;line-height:1}
+  .twk-x:hover{background:rgba(0,0,0,.06);color:#29261b}
+  .twk-body{padding:2px 14px 14px;display:flex;flex-direction:column;gap:10px;
+    overflow-y:auto;min-height:0;scrollbar-width:thin}
+  .twk-row{display:flex;flex-direction:column;gap:5px}
+  .twk-row-h{flex-direction:row;align-items:center;justify-content:space-between;gap:10px}
+  .twk-lbl{display:flex;justify-content:space-between;align-items:baseline;color:rgba(41,38,27,.72)}
+  .twk-lbl>span:first-child{font-weight:500}
+  .twk-toggle{position:relative;width:32px;height:18px;border:0;border-radius:999px;
+    background:rgba(0,0,0,.15);transition:background .15s;cursor:pointer;padding:0}
+  .twk-toggle[data-on="1"]{background:#34c759}
+  .twk-toggle i{position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;
+    background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .15s}
+  .twk-toggle[data-on="1"] i{transform:translateX(14px)}
+  .twk-swatch{appearance:none;-webkit-appearance:none;width:56px;height:22px;
+    border:.5px solid rgba(0,0,0,.1);border-radius:6px;padding:0;cursor:pointer;background:transparent}
+  .twk-swatch::-webkit-color-swatch-wrapper{padding:0}
+  .twk-swatch::-webkit-color-swatch{border:0;border-radius:5.5px}
+`;
+
+function useTweaks(defaults) {
+  const [values, setValues] = React.useState(defaults);
+  const setTweak = React.useCallback((keyOrEdits, val) => {
+    const edits = typeof keyOrEdits === 'object' ? keyOrEdits : { [keyOrEdits]: val };
+    setValues(prev => ({ ...prev, ...edits }));
+  }, []);
+  return [values, setTweak];
+}
+
+function TweaksPanel({ children }) {
+  const [open, setOpen] = React.useState(false);
+  const dragRef = React.useRef(null);
+  const offsetRef = React.useRef({ x: 16, y: 80 });
+
+  const clamp = React.useCallback(() => {
+    const panel = dragRef.current;
+    if (!panel) return;
+    const w = panel.offsetWidth, h = panel.offsetHeight;
+    offsetRef.current = {
+      x: Math.min(Math.max(16, offsetRef.current.x), window.innerWidth - w - 16),
+      y: Math.min(Math.max(16, offsetRef.current.y), window.innerHeight - h - 16),
+    };
+    panel.style.right = offsetRef.current.x + 'px';
+    panel.style.bottom = offsetRef.current.y + 'px';
+  }, []);
+
+  const onDragStart = (e) => {
+    const panel = dragRef.current;
+    if (!panel) return;
+    const r = panel.getBoundingClientRect();
+    const sx = e.clientX, sy = e.clientY;
+    const startRight = window.innerWidth - r.right;
+    const startBottom = window.innerHeight - r.bottom;
+    const move = (ev) => {
+      offsetRef.current = { x: startRight - (ev.clientX - sx), y: startBottom - (ev.clientY - sy) };
+      clamp();
+    };
+    const up = () => { window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', up); };
+    window.addEventListener('mousemove', move);
+    window.addEventListener('mouseup', up);
+  };
+
+  if (!open) return (
+    <button onClick={() => setOpen(true)} style={{
+      position:'fixed', right:16, bottom:80, zIndex:9999,
+      background:'rgba(0,0,0,0.7)', color:'#fff',
+      border:'none', borderRadius:999, padding:'6px 12px',
+      fontSize:11, fontWeight:600, cursor:'pointer',
+      backdropFilter:'blur(8px)',
+    }}>⚙ Ajustes</button>
+  );
+
+  return (
+    <>
+      <style>{__TWEAKS_STYLE}</style>
+      <div ref={dragRef} className="twk-panel" style={{ right: offsetRef.current.x, bottom: offsetRef.current.y }}>
+        <div className="twk-hd" onMouseDown={onDragStart}>
+          <b>Ajustes</b>
+          <button className="twk-x" onClick={() => setOpen(false)}>✕</button>
+        </div>
+        <div className="twk-body">{children}</div>
+      </div>
+    </>
+  );
+}
+
+function TweakToggle({ label, value, onChange }) {
+  return (
+    <div className="twk-row twk-row-h">
+      <div className="twk-lbl"><span>{label}</span></div>
+      <button type="button" className="twk-toggle" data-on={value ? '1' : '0'}
+              onClick={() => onChange(!value)}><i /></button>
+    </div>
+  );
+}
+
+function TweakColor({ label, value, onChange }) {
+  return (
+    <div className="twk-row twk-row-h">
+      <div className="twk-lbl"><span>{label}</span></div>
+      <input type="color" className="twk-swatch" value={value} onChange={e => onChange(e.target.value)} />
+    </div>
+  );
+}
+
+// ─── CONFIG ──────────────────────────────────────────────────────────────────
+const WA_NUMBER = '56985210940';
+const ADDRESS   = 'Marino José Manuel Ramírez #1641';
+
+// ─── CART CONTEXT ────────────────────────────────────────────────────────────
+const CartCtx = React.createContext(null);
+
+function CartProvider({ children }) {
+  const [items, setItems] = React.useState([]);
+  const [isOpen, setIsOpen] = React.useState(false);
+
+  const addItem = React.useCallback((item) => {
+    setItems(prev => {
+      if (item.alwaysNew) {
+        return [...prev, { ...item, id: Date.now() + Math.random(), qty: 1 }];
+      }
+      const idx = prev.findIndex(p =>
+        p.name === item.name &&
+        (p.size || '') === (item.size || '') &&
+        (p.note || '') === (item.note || '')
+      );
+      if (idx >= 0) {
+        const updated = [...prev];
+        updated[idx] = { ...updated[idx], qty: updated[idx].qty + 1 };
+        return updated;
+      }
+      return [...prev, { ...item, id: Date.now() + Math.random(), qty: 1 }];
+    });
+  }, []);
+
+  const removeItem = React.useCallback((id) => setItems(prev => prev.filter(p => p.id !== id)), []);
+  const updateQty  = React.useCallback((id, delta) => setItems(prev => prev.map(p => p.id === id ? { ...p, qty: Math.max(0, p.qty + delta) } : p).filter(p => p.qty > 0)), []);
+  const clearCart  = React.useCallback(() => setItems([]), []);
+
+  const total = items.reduce((s, i) => s + i.price * i.qty, 0);
+  const count = items.reduce((s, i) => s + i.qty, 0);
+
+  return (
+    <CartCtx.Provider value={{ items, addItem, removeItem, updateQty, clearCart, total, count, isOpen, setIsOpen }}>
+      {children}
+    </CartCtx.Provider>
+  );
+}
+
+const useCart = () => React.useContext(CartCtx);
+
+// ─── MENU DATA ───────────────────────────────────────────────────────────────
+const MENU_DATA = {
+  vienesas: { id:'vienesas', label:'Vienesas', emoji:'🌭', items:[
+    { name:'Vienesa Alemana',       desc:'Tomate, Chucrut, Mayonesa',                       price:2800 },
+    { name:'Vienesa Italiana',      desc:'Tomate, Palta, Mayonesa',                          price:3000 },
+    { name:'Vienesa Completo',      desc:'Tomate, Chucrut, Palta, Mayonesa',                 price:3500 },
+    { name:'Vienesa Dinámico',      desc:'Tomate, Chucrut, Salsa Verde, Palta, Mayonesa',    price:4000 },
+    { name:'Vienesa Italiano Queso',desc:'Tomate, Palta, Queso, Mayonesa',                   price:4500 },
+    { name:'Vienesa Queso',         desc:'Queso, Mayonesa',                                   price:2800 },
+  ]},
+  as: { id:'as', label:'AS', emoji:'🥪', items:[
+    { name:'AS Alemano',       desc:'Tomate, Chucrut, Mayonesa',                    price:4000 },
+    { name:'AS Italiana',      desc:'Tomate, Palta, Mayonesa',                       price:4500 },
+    { name:'AS Completo',      desc:'Tomate, Chucrut, Palta, Mayonesa',              price:5000 },
+    { name:'AS Dinámico',      desc:'Tomate, Chucrut, Salsa Verde, Palta, Mayonesa', price:5500 },
+    { name:'AS Italiano Queso',desc:'Tomate, Palta, Queso, Mayonesa',                price:6000 },
+    { name:'AS Queso',         desc:'Queso, Mayonesa',                                price:4500 },
+  ]},
+  churrasco: { id:'churrasco', label:'Churrasco', emoji:'🥩', items:[
+    { name:'Alemano',        desc:'Tomate, Chucrut, Mayonesa',                          priceNormal:7300,  priceXL:13800 },
+    { name:'Italiano',       desc:'Tomate, Palta, Mayonesa',                             priceNormal:8000,  priceXL:16300 },
+    { name:'Italiano Queso', desc:'Tomate, Palta, Queso, Mayonesa',                      priceNormal:9000,  priceXL:18800 },
+    { name:'Completo',       desc:'Tomate, Chucrut, Palta, Mayonesa',                    priceNormal:8700,  priceXL:17000 },
+    { name:'Brasileño',      desc:'Palta, Queso, Mayonesa',                              priceNormal:8800,  priceXL:16500 },
+    { name:'Luco Champiñón', desc:'Queso, Champiñón, Mayonesa',                          priceNormal:8700,  priceXL:17000 },
+    { name:'Luco',           desc:'Queso',                                                priceNormal:7900,  priceXL:16000 },
+    { name:'Chacarero',      desc:'Tomate, Poroto Verde, Ají Verde, Mayonesa',            priceNormal:8300,  priceXL:16400 },
+    { name:'Chacarero Palta',desc:'Tomate, Poroto Verde, Ají Verde, Mayonesa, Palta',     priceNormal:9300,  priceXL:19400 },
+    { name:'Rodeo',          desc:'Queso, Tocino, BBQ, Mayonesa',                         priceNormal:8500,  priceXL:17500 },
+    { name:'A lo Pobre',     desc:'Cebolla Caramelizada, Huevo, Mayonesa',                priceNormal:8500,  priceXL:17500 },
+  ]},
+  mechada: { id:'mechada', label:'Mechada', emoji:'🥖', items:[
+    { name:'Alemano',        desc:'Tomate, Chucrut, Mayonesa',                       priceNormal:8500,  priceXL:15800 },
+    { name:'Italiano',       desc:'Tomate, Palta, Mayonesa',                          priceNormal:9000,  priceXL:16800 },
+    { name:'Italiano Queso', desc:'Tomate, Palta, Queso, Mayonesa',                   priceNormal:10000, priceXL:19300 },
+    { name:'Completo',       desc:'Tomate, Chucrut, Palta, Mayonesa',                 priceNormal:9500,  priceXL:17500 },
+    { name:'Brasileño',      desc:'Palta, Queso, Mayonesa',                           priceNormal:9800,  priceXL:17800 },
+    { name:'Luco Champiñón', desc:'Queso, Champiñón, Mayonesa',                       priceNormal:9400,  priceXL:17500 },
+    { name:'Luco',           desc:'Queso',                                             priceNormal:8900,  priceXL:16900 },
+    { name:'Chacarero',      desc:'Tomate, Poroto Verde, Ají Verde, Mayonesa',         priceNormal:8900,  priceXL:16900 },
+    { name:'Chacarero Palta',desc:'Tomate, Poroto Verde, Ají Verde, Mayonesa, Palta',  priceNormal:9900,  priceXL:19900 },
+    { name:'Rodeo',          desc:'Queso, Tocino, BBQ, Mayonesa',                      priceNormal:9500,  priceXL:18000 },
+    { name:'A lo Pobre',     desc:'Cebolla Caramelizada, Huevo, Mayonesa',             priceNormal:9500,  priceXL:18000 },
+  ]},
+  burrito: { id:'burrito', label:'Burrito', emoji:'🌯', special:true },
+  papas: { id:'papas', label:'Papas & Más', emoji:'🍟', groups:[
+    { name:'Empanadas', items:[
+      { name:'Empanadas de Queso', desc:'5 Empanadas de queso', price:3000 },
+    ]},
+    { name:'Papas Fritas Naturales', items:[
+      { name:'Individual', price:2500 },
+      { name:'Mediana',    price:5500 },
+      { name:'Grande',     price:8000 },
+    ]},
+    { name:'Salchipapas', items:[
+      { name:'Individual', price:3500 },
+      { name:'Mediana',    price:6500 },
+      { name:'Grande',     price:9500 },
+    ]},
+    { name:'Chorrillana', items:[
+      { name:'Chorrillana 2 Personas', desc:'Carne, Cebolla Caramelizada, Chorizo, Huevo', price:10000 },
+      { name:'Chorrillana 4 Personas', desc:'Carne, Cebolla Caramelizada, Chorizo, Huevo', price:18000 },
+    ]},
+  ]},
+};
+
+const BURRITO_DATA = {
+  rellenos:  ['Arroz Blanco','Veggie (Pimiento-Cebolla)','Arroz Especial','Papas Fritas'],
+  proteinas: [
+    { name:'Pollo Frito',     normal:5800, xl:9000 },
+    { name:'Birria (Mechada)',normal:6800, xl:9800 },
+    { name:'Carne',           normal:6500, xl:9500 },
+    { name:'Camarón',         normal:6700, xl:9700 },
+    { name:'Al Pastor',       normal:6000, xl:9000 },
+  ],
+  toppings: ['Choclo','Jalapeño','Queso','Pico Gallo','Palta','Coleslaw','Lechuga','Pepinillo','Cebolla','Cilantro','Tomate','Chips de Maíz','Poroto Verde','Ají Verde','Frijoles'],
+  salsas:   ['Crema Agria','Salsa de Queso','Buffalo','Burrera','BBQ','Mayonesa','Mayonesa Picante','Guacamole'],
+};
+
+const fmt = n => `$${n.toLocaleString('es-CL')}`;
+
+// ─── ICONS ───────────────────────────────────────────────────────────────────
+function WAIcon({ size=24, color='#fff' }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill={color}>
+      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+    </svg>
+  );
+}
+function LocationIcon({ size=18 }) { return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>; }
+function ClockIcon({ size=18 }) { return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>; }
+function PhoneIcon({ size=18 }) { return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.68A2 2 0 012 .18h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7a2 2 0 011.72 2.02z"/></svg>; }
+function TrashIcon({ size=16 }) { return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>; }
+
+// ─── LOGO ────────────────────────────────────────────────────────────────────
+function Logo({ size=56 }) {
+  return (
+    <svg width={size * 2} height={size} viewBox="0 0 220 88" style={{ display:'block' }}>
+      <ellipse cx="110" cy="44" rx="106" ry="40" fill="#FFD600"/>
+      <ellipse cx="110" cy="44" rx="98"  ry="33" fill="#F26419"/>
+      <text x="110" y="57" textAnchor="middle" style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:42, fill:'#fff', letterSpacing:1 }}>Gustoso</text>
+      <text x="110" y="74" textAnchor="middle" style={{ fontFamily:"'Barlow',sans-serif", fontWeight:600, fontSize:10, fill:'#FFD600', letterSpacing:2 }}>LA CALIDAD VA EN EL GUSTO</text>
+    </svg>
+  );
+}
+
+// ─── ADD TO CART MODAL ───────────────────────────────────────────────────────
+function AddToCartModal({ item, isDual, onClose }) {
+  const { addItem } = useCart();
+  const [size, setSize] = React.useState('normal');
+  const [note, setNote] = React.useState('');
+  const [qty,  setQty]  = React.useState(1);
+  const price = isDual ? (size === 'normal' ? item.priceNormal : item.priceXL) : item.price;
+
+  const confirm = () => {
+    for (let i = 0; i < qty; i++) {
+      addItem({ name:item.name, desc:item.desc, price, size: isDual ? size : undefined, note: note.trim() || undefined });
+    }
+    onClose();
+  };
+
+  return (
+    <div style={{ position:'fixed', inset:0, zIndex:500, display:'flex', alignItems:'flex-end', justifyContent:'center' }}
+         onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div style={{ position:'absolute', inset:0, background:'rgba(0,0,0,0.5)', backdropFilter:'blur(4px)' }}></div>
+      <div style={{ position:'relative', zIndex:1, width:'100%', maxWidth:'var(--max)', background:'var(--card)', borderRadius:'var(--radius) var(--radius) 0 0', padding:'24px 20px 36px', animation:'slideUp .3s ease', boxShadow:'0 -8px 40px rgba(0,0,0,0.3)' }}>
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:18 }}>
+          <div style={{ width:36, height:4, borderRadius:2, background:'var(--border)' }}></div>
+          <button onClick={onClose} style={{ width:32, height:32, borderRadius:'50%', border:'none', background:'var(--bg2)', cursor:'pointer', fontSize:18, color:'var(--text-muted)', display:'flex', alignItems:'center', justifyContent:'center' }}>×</button>
+        </div>
+
+        <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:24, color:'var(--text)', marginBottom:4 }}>{item.name}</div>
+        {item.desc && <div style={{ fontSize:13, color:'var(--text-muted)', marginBottom:16 }}>{item.desc}</div>}
+
+        {isDual && (
+          <div style={{ marginBottom:16 }}>
+            <div style={{ fontSize:12, fontWeight:700, color:'var(--text-muted)', letterSpacing:1, textTransform:'uppercase', marginBottom:8 }}>Tamaño</div>
+            <div style={{ display:'flex', gap:8 }}>
+              {[['normal', item.priceNormal], ['xl', item.priceXL]].map(([s, p]) => (
+                <button key={s} onClick={() => setSize(s)} style={{ flex:1, padding:'10px', borderRadius:999, border:`2px solid ${size === s ? 'var(--orange)' : 'var(--border)'}`, background: size === s ? 'rgba(242,100,25,0.1)' : 'transparent', cursor:'pointer', transition:'all .2s', display:'flex', flexDirection:'column', alignItems:'center', gap:2 }}>
+                  <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:15, color: size === s ? 'var(--orange)' : 'var(--text)', textTransform:'uppercase' }}>{s === 'xl' ? 'XL' : 'Normal'}</span>
+                  <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:17, color:'var(--yellow)' }}>{fmt(p)}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div style={{ marginBottom:20 }}>
+          <div style={{ fontSize:12, fontWeight:700, color:'var(--text-muted)', letterSpacing:1, textTransform:'uppercase', marginBottom:8 }}>Nota (opcional)</div>
+          <input value={note} onChange={e => setNote(e.target.value)} placeholder="Ej: sin cebolla, extra palta..." style={{ width:'100%', padding:'10px 14px', borderRadius:'var(--radius-sm)', border:'1px solid var(--border)', background:'var(--bg2)', color:'var(--text)', fontSize:14, fontFamily:'Barlow,sans-serif', outline:'none' }} />
+        </div>
+
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16 }}>
+          <div style={{ display:'flex', alignItems:'center', border:'1px solid var(--border)', borderRadius:999, overflow:'hidden' }}>
+            <button onClick={() => setQty(q => Math.max(1, q - 1))} style={{ width:40, height:40, border:'none', background:'var(--bg2)', cursor:'pointer', fontSize:18, color:'var(--text)', display:'flex', alignItems:'center', justifyContent:'center' }}>−</button>
+            <span style={{ padding:'0 16px', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:20, color:'var(--text)', minWidth:36, textAlign:'center' }}>{qty}</span>
+            <button onClick={() => setQty(q => q + 1)} style={{ width:40, height:40, border:'none', background:'var(--bg2)', cursor:'pointer', fontSize:18, color:'var(--orange)', display:'flex', alignItems:'center', justifyContent:'center' }}>+</button>
+          </div>
+          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:26, color:'var(--yellow)' }}>{fmt(price * qty)}</div>
+        </div>
+
+        <button onClick={confirm} style={{ width:'100%', padding:'14px', borderRadius:999, border:'none', background:'var(--orange)', color:'#fff', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:20, cursor:'pointer' }}>
+          Agregar al carrito
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── ITEM CARDS ──────────────────────────────────────────────────────────────
+function SimpleCard({ item }) {
+  const [modal, setModal] = React.useState(false);
+  return (
+    <>
+      <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:'var(--radius)', padding:'14px 16px', display:'flex', justifyContent:'space-between', alignItems:'center', gap:12 }}>
+        <div style={{ flex:1, minWidth:0 }}>
+          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:17, color:'var(--text)', lineHeight:1.2 }}>{item.name}</div>
+          {item.desc && <div style={{ fontSize:13, color:'var(--text-muted)', marginTop:3, fontWeight:500 }}>{item.desc}</div>}
+          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:18, color:'var(--yellow)', marginTop:4 }}>{fmt(item.price)}</div>
+        </div>
+        <button onClick={() => setModal(true)} style={{ width:40, height:40, borderRadius:'50%', border:'2px solid var(--orange)', background:'var(--orange)', color:'#fff', fontSize:22, cursor:'pointer', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', fontWeight:700 }}>+</button>
+      </div>
+      {modal && <AddToCartModal item={item} isDual={false} onClose={() => setModal(false)} />}
+    </>
+  );
+}
+
+function DualCard({ item }) {
+  const [modal, setModal] = React.useState(false);
+  return (
+    <>
+      <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:'var(--radius)', padding:'14px 16px', display:'flex', justifyContent:'space-between', alignItems:'center', gap:12 }}>
+        <div style={{ flex:1, minWidth:0 }}>
+          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:17, color:'var(--text)', lineHeight:1.2 }}>{item.name}</div>
+          {item.desc && <div style={{ fontSize:13, color:'var(--text-muted)', marginTop:3, fontWeight:500 }}>{item.desc}</div>}
+          <div style={{ display:'flex', gap:10, marginTop:4, alignItems:'center' }}>
+            <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:16, color:'var(--yellow)' }}>{fmt(item.priceNormal)}</span>
+            <span style={{ fontSize:11, color:'var(--text-muted)', fontWeight:600 }}>Normal</span>
+            <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:16, color:'var(--orange-light)' }}>{fmt(item.priceXL)}</span>
+            <span style={{ fontSize:11, color:'var(--orange)', fontWeight:700, background:'rgba(242,100,25,0.1)', padding:'1px 5px', borderRadius:4 }}>XL</span>
+          </div>
+        </div>
+        <button onClick={() => setModal(true)} style={{ width:40, height:40, borderRadius:'50%', border:'2px solid var(--orange)', background:'var(--orange)', color:'#fff', fontSize:22, cursor:'pointer', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', fontWeight:700 }}>+</button>
+      </div>
+      {modal && <AddToCartModal item={item} isDual={true} onClose={() => setModal(false)} />}
+    </>
+  );
+}
+
+function SectionHeader({ title }) {
+  return (
+    <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:12, marginTop:20 }}>
+      <div style={{ flex:1, height:1, background:'var(--border)' }}></div>
+      <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:11, letterSpacing:2, color:'var(--orange)', textTransform:'uppercase' }}>{title}</span>
+      <div style={{ flex:1, height:1, background:'var(--border)' }}></div>
+    </div>
+  );
+}
+
+// ─── BURRITO BUILDER ─────────────────────────────────────────────────────────
+function BurritoBuilder() {
+  const { addItem, setIsOpen } = useCart();
+  const [step,     setStep]     = React.useState(0);
+  const [format,   setFormat]   = React.useState(null);
+  const [relleno,  setRelleno]  = React.useState(null);
+  const [proteina, setProteina] = React.useState(null);
+  const [size,     setSize]     = React.useState('normal');
+  const [toppings, setToppings] = React.useState([]);
+  const [salsas,   setSalsas]   = React.useState([]);
+  const [note,     setNote]     = React.useState('');
+  const [done,     setDone]     = React.useState(false);
+
+  const steps = ['Formato','Relleno','Proteína','Toppings','Salsas'];
+  const toggleArr = (arr, setArr, val, max) => {
+    if (arr.includes(val)) setArr(arr.filter(x => x !== val));
+    else if (arr.length < max) setArr([...arr, val]);
+  };
+  const canNext = [format !== null, relleno !== null, proteina !== null, true, true];
+  const price = proteina ? (size === 'normal' ? proteina.normal : proteina.xl) : 0;
+
+  const addToCart = () => {
+    const desc = [
+      `${format === 'bowl' ? 'Bowl' : 'Burrito'} · ${relleno}`,
+      `${proteina.name} (${size.toUpperCase()})`,
+      toppings.length ? `Toppings: ${toppings.join(', ')}` : null,
+      salsas.length   ? `Salsas: ${salsas.join(', ')}`     : null,
+    ].filter(Boolean).join(' · ');
+
+    addItem({ name:`Burrito Gustoso${format === 'bowl' ? ' (Bowl)' : ''}`, desc, price, note: note.trim() || undefined, alwaysNew:true });
+    setIsOpen(true);
+    setStep(0); setFormat(null); setRelleno(null); setProteina(null);
+    setSize('normal'); setToppings([]); setSalsas([]); setNote(''); setDone(false);
+  };
+
+  if (done) return (
+    <div style={{ textAlign:'center', padding:'24px 0' }}>
+      <div style={{ fontSize:40, marginBottom:10 }}>🌯</div>
+      <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:26, color:'var(--orange)', marginBottom:6 }}>¡Listo tu burrito!</div>
+      <div style={{ background:'var(--bg2)', border:'1px solid var(--border)', borderRadius:'var(--radius)', padding:'16px', textAlign:'left', marginBottom:16 }}>
+        {[['Formato',format==='bowl'?'Bowl':'Burrito'],['Relleno',relleno],['Proteína',`${proteina?.name} (${size.toUpperCase()})`],['Toppings',toppings.join(', ')||'—'],['Salsas',salsas.join(', ')||'—']].map(([k,v]) => (
+          <div key={k} style={{ fontSize:13, color:'var(--text-muted)', marginBottom:4 }}><span style={{ fontWeight:700 }}>{k}:</span> {v}</div>
+        ))}
+      </div>
+      <div style={{ marginBottom:16 }}>
+        <div style={{ fontSize:12, fontWeight:700, color:'var(--text-muted)', letterSpacing:1, textTransform:'uppercase', marginBottom:6 }}>Nota (opcional)</div>
+        <input value={note} onChange={e => setNote(e.target.value)} placeholder="Ej: extra picante, sin jalapeño..." style={{ width:'100%', padding:'10px 14px', borderRadius:'var(--radius-sm)', border:'1px solid var(--border)', background:'var(--bg2)', color:'var(--text)', fontSize:14, fontFamily:'Barlow,sans-serif', outline:'none' }} />
+      </div>
+      <div style={{ display:'flex', gap:8 }}>
+        <button onClick={() => { setStep(0);setFormat(null);setRelleno(null);setProteina(null);setSize('normal');setToppings([]);setSalsas([]);setNote('');setDone(false); }} style={{ flex:1, padding:'12px', borderRadius:999, border:'2px solid var(--border)', background:'transparent', color:'var(--text-muted)', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:15, cursor:'pointer' }}>← Editar</button>
+        <button onClick={addToCart} style={{ flex:2, padding:'12px', borderRadius:999, border:'none', background:'var(--orange)', color:'#fff', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:18, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
+          🛒 Agregar {fmt(price)}
+        </button>
+      </div>
+    </div>
+  );
+
+  return (
+    <div style={{ paddingBottom:16 }}>
+      <div style={{ display:'flex', gap:4, marginBottom:18 }}>
+        {steps.map((s, i) => (
+          <div key={s} style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', gap:3 }}>
+            <div style={{ width:'100%', height:3, borderRadius:2, background: i <= step ? 'var(--orange)' : 'var(--border)', transition:'background .3s' }}></div>
+            <span style={{ fontSize:9, fontWeight:700, letterSpacing:.5, color: i <= step ? 'var(--orange)' : 'var(--text-muted)' }}>{s.toUpperCase()}</span>
+          </div>
+        ))}
+      </div>
+
+      {step === 0 && (
+        <div>
+          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:22, marginBottom:14, color:'var(--text)' }}>¿Burrito o Bowl?</div>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+            {['burrito','bowl'].map(f => (
+              <button key={f} onClick={() => setFormat(f)} style={{ background: format===f?'var(--orange)':'var(--card)', border:`2px solid ${format===f?'var(--orange)':'var(--border)'}`, borderRadius:'var(--radius)', padding:'20px 16px', cursor:'pointer', transition:'all .2s', display:'flex', flexDirection:'column', alignItems:'center', gap:6 }}>
+                <span style={{ fontSize:30 }}>{f==='burrito'?'🌯':'🥣'}</span>
+                <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:17, color: format===f?'#fff':'var(--text)', textTransform:'uppercase' }}>{f}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {step === 1 && (
+        <div>
+          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:22, marginBottom:4, color:'var(--text)' }}>Relleno</div>
+          <div style={{ fontSize:12, color:'var(--text-muted)', marginBottom:12 }}>Elige 1</div>
+          <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+            {BURRITO_DATA.rellenos.map(r => (
+              <button key={r} onClick={() => setRelleno(r)} style={{ background: relleno===r?'rgba(242,100,25,0.1)':'var(--card)', border:`2px solid ${relleno===r?'var(--orange)':'var(--border)'}`, borderRadius:'var(--radius-sm)', padding:'12px 16px', textAlign:'left', cursor:'pointer', transition:'all .2s', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:16, color: relleno===r?'var(--orange)':'var(--text)' }}>{r}</button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {step === 2 && (
+        <div>
+          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:22, marginBottom:4, color:'var(--text)' }}>Proteína</div>
+          <div style={{ display:'flex', gap:8, margin:'8px 0 12px' }}>
+            {['normal','xl'].map(s => (
+              <button key={s} onClick={() => setSize(s)} style={{ flex:1, padding:'7px', borderRadius:999, border:`2px solid ${size===s?'var(--orange)':'var(--border)'}`, background: size===s?'rgba(242,100,25,0.1)':'var(--card)', color: size===s?'var(--orange)':'var(--text-muted)', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:13, cursor:'pointer', textTransform:'uppercase', transition:'all .2s' }}>{s==='xl'?'XL':'Normal'}</button>
+            ))}
+          </div>
+          <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+            {BURRITO_DATA.proteinas.map(p => (
+              <button key={p.name} onClick={() => setProteina(p)} style={{ background: proteina?.name===p.name?'rgba(242,100,25,0.1)':'var(--card)', border:`2px solid ${proteina?.name===p.name?'var(--orange)':'var(--border)'}`, borderRadius:'var(--radius-sm)', padding:'12px 16px', cursor:'pointer', transition:'all .2s', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:16, color: proteina?.name===p.name?'var(--orange)':'var(--text)' }}>{p.name}</span>
+                <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:17, color:'var(--yellow)' }}>{fmt(size==='normal'?p.normal:p.xl)}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {step === 3 && (
+        <div>
+          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:22, marginBottom:4, color:'var(--text)' }}>Toppings</div>
+          <div style={{ fontSize:12, color:'var(--text-muted)', marginBottom:12 }}>Hasta 5 — {toppings.length}/5</div>
+          <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
+            {BURRITO_DATA.toppings.map(t => {
+              const sel = toppings.includes(t);
+              const maxed = !sel && toppings.length >= 5;
+              return <button key={t} onClick={() => toggleArr(toppings,setToppings,t,5)} style={{ padding:'7px 13px', borderRadius:999, border:`2px solid ${sel?'var(--orange)':'var(--border)'}`, background: sel?'var(--orange)':'var(--card)', color: sel?'#fff':maxed?'var(--border)':'var(--text)', fontWeight:600, fontSize:13, cursor: maxed?'not-allowed':'pointer', opacity: maxed?.35:1 }}>{t}</button>;
+            })}
+          </div>
+        </div>
+      )}
+
+      {step === 4 && (
+        <div>
+          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:22, marginBottom:4, color:'var(--text)' }}>Salsas</div>
+          <div style={{ fontSize:12, color:'var(--text-muted)', marginBottom:12 }}>Hasta 2 — {salsas.length}/2</div>
+          <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
+            {BURRITO_DATA.salsas.map(s => {
+              const sel = salsas.includes(s);
+              const maxed = !sel && salsas.length >= 2;
+              return <button key={s} onClick={() => toggleArr(salsas,setSalsas,s,2)} style={{ padding:'7px 13px', borderRadius:999, border:`2px solid ${sel?'var(--yellow)':'var(--border)'}`, background: sel?'rgba(255,214,0,0.12)':'var(--card)', color: sel?'#8a6800':maxed?'var(--border)':'var(--text)', fontWeight:600, fontSize:13, cursor: maxed?'not-allowed':'pointer', opacity: maxed?.35:1 }}>{s}</button>;
+            })}
+          </div>
+        </div>
+      )}
+
+      <div style={{ display:'flex', gap:10, marginTop:20 }}>
+        {step > 0
+          ? <button onClick={() => setStep(s => s - 1)} style={{ flex:1, padding:'11px', borderRadius:999, border:'2px solid var(--border)', background:'transparent', color:'var(--text-muted)', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:15, cursor:'pointer' }}>← Atrás</button>
+          : <div style={{ flex:1 }}></div>
+        }
+        <button disabled={!canNext[step]} onClick={() => { if (step < 4) setStep(s => s + 1); else setDone(true); }} style={{ flex:2, padding:'11px', borderRadius:999, border:'none', background: canNext[step]?'var(--orange)':'var(--border)', color: canNext[step]?'#fff':'var(--text-muted)', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:17, cursor: canNext[step]?'pointer':'not-allowed', transition:'all .2s' }}>
+          {step === 4 ? 'Revisar pedido →' : 'Siguiente →'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── CART DRAWER ─────────────────────────────────────────────────────────────
+function CartDrawer() {
+  const { items, updateQty, removeItem, clearCart, total, count, isOpen, setIsOpen } = useCart();
+
+  const buildWAMsg = () => {
+    const lines = ["Hola Gustoso's! Quiero hacer un pedido 🛒", ''];
+    items.forEach((item, i) => {
+      lines.push(`${i+1}. ${item.qty}x ${item.name}${item.size ? ` (${item.size.toUpperCase()})` : ''} — ${fmt(item.price * item.qty)}`);
+      if (item.desc) lines.push(`   📋 ${item.desc}`);
+      if (item.note) lines.push(`   📝 Nota: ${item.note}`);
+    });
+    lines.push('');
+    lines.push(`💰 TOTAL: ${fmt(total)}`);
+    return `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(lines.join('\n'))}`;
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div style={{ position:'fixed', inset:0, zIndex:600, display:'flex', flexDirection:'column', justifyContent:'flex-end', alignItems:'center' }}>
+      <div onClick={() => setIsOpen(false)} style={{ position:'absolute', inset:0, background:'rgba(0,0,0,0.5)', backdropFilter:'blur(4px)' }}></div>
+      <div style={{ position:'relative', zIndex:1, width:'100%', maxWidth:'var(--max)', background:'var(--card)', borderRadius:'var(--radius) var(--radius) 0 0', maxHeight:'85dvh', display:'flex', flexDirection:'column', animation:'slideUp .3s ease', boxShadow:'0 -8px 40px rgba(0,0,0,0.3)' }}>
+        {/* Header */}
+        <div style={{ padding:'16px 20px 12px', borderBottom:'1px solid var(--border)', display:'flex', justifyContent:'space-between', alignItems:'center', flexShrink:0 }}>
+          <div>
+            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:22, color:'var(--text)' }}>Tu pedido</div>
+            <div style={{ fontSize:13, color:'var(--text-muted)' }}>{count} {count === 1 ? 'producto' : 'productos'}</div>
+          </div>
+          <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+            {items.length > 0 && <button onClick={clearCart} style={{ fontSize:12, color:'var(--text-muted)', background:'transparent', border:'1px solid var(--border)', borderRadius:999, padding:'4px 10px', cursor:'pointer', fontWeight:600 }}>Vaciar</button>}
+            <button onClick={() => setIsOpen(false)} style={{ width:32, height:32, borderRadius:'50%', border:'none', background:'var(--bg2)', cursor:'pointer', fontSize:18, color:'var(--text-muted)', display:'flex', alignItems:'center', justifyContent:'center' }}>×</button>
+          </div>
+        </div>
+
+        {/* Items */}
+        <div style={{ overflowY:'auto', flex:1, padding:'12px 20px' }}>
+          {items.length === 0 ? (
+            <div style={{ textAlign:'center', padding:'40px 0', color:'var(--text-muted)' }}>
+              <div style={{ fontSize:40, marginBottom:12 }}>🛒</div>
+              <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:18 }}>Tu carrito está vacío</div>
+              <div style={{ fontSize:13, marginTop:6 }}>Agrega productos desde el menú</div>
+            </div>
+          ) : (
+            <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+              {items.map(item => (
+                <div key={item.id} style={{ background:'var(--bg2)', borderRadius:'var(--radius-sm)', padding:'12px 14px', border:'1px solid var(--border)' }}>
+                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:8, marginBottom:6 }}>
+                    <div style={{ flex:1, minWidth:0 }}>
+                      <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:16, color:'var(--text)', lineHeight:1.2 }}>
+                        {item.name}
+                        {item.size && <span style={{ fontSize:12, color:'var(--orange)', fontWeight:900, marginLeft:6, background:'rgba(242,100,25,0.1)', padding:'1px 5px', borderRadius:4 }}>{item.size.toUpperCase()}</span>}
+                      </div>
+                      {item.desc && <div style={{ fontSize:12, color:'var(--text-muted)', marginTop:2, lineHeight:1.4 }}>{item.desc}</div>}
+                      {item.note && <div style={{ fontSize:12, color:'var(--orange)', marginTop:3, fontStyle:'italic' }}>📝 {item.note}</div>}
+                    </div>
+                    <button onClick={() => removeItem(item.id)} style={{ color:'var(--text-muted)', background:'transparent', border:'none', cursor:'pointer', padding:4, flexShrink:0, opacity:.6 }}><TrashIcon size={14}/></button>
+                  </div>
+                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                    <div style={{ display:'flex', alignItems:'center', border:'1px solid var(--border)', borderRadius:999, overflow:'hidden', background:'var(--card)' }}>
+                      <button onClick={() => updateQty(item.id, -1)} style={{ width:32, height:32, border:'none', background:'transparent', cursor:'pointer', fontSize:16, color:'var(--text)', display:'flex', alignItems:'center', justifyContent:'center' }}>−</button>
+                      <span style={{ padding:'0 10px', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:16, color:'var(--text)' }}>{item.qty}</span>
+                      <button onClick={() => updateQty(item.id, 1)} style={{ width:32, height:32, border:'none', background:'transparent', cursor:'pointer', fontSize:16, color:'var(--orange)', display:'flex', alignItems:'center', justifyContent:'center' }}>+</button>
+                    </div>
+                    <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:18, color:'var(--yellow)' }}>{fmt(item.price * item.qty)}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        {items.length > 0 && (
+          <div style={{ padding:'16px 20px 32px', borderTop:'1px solid var(--border)', flexShrink:0 }}>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
+              <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:16, color:'var(--text-muted)' }}>TOTAL</span>
+              <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:28, color:'var(--text)' }}>{fmt(total)}</span>
+            </div>
+            <a href={buildWAMsg()} target="_blank" rel="noopener noreferrer" style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:10, background:'#25D366', color:'#fff', padding:'15px 24px', borderRadius:999, fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:20, letterSpacing:.5, textDecoration:'none', boxShadow:'0 4px 16px rgba(37,211,102,0.3)' }}>
+              <WAIcon size={20} color="#fff"/> Enviar pedido por WhatsApp
+            </a>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── CART BAR ────────────────────────────────────────────────────────────────
+function CartBar() {
+  const { count, total, setIsOpen } = useCart();
+  const [popped, setPopped] = React.useState(false);
+  const prevCount = React.useRef(0);
+
+  React.useEffect(() => {
+    if (count > prevCount.current) {
+      setPopped(true);
+      setTimeout(() => setPopped(false), 300);
+    }
+    prevCount.current = count;
+  }, [count]);
+
+  if (count === 0) return null;
+
+  return (
+    <div style={{ position:'fixed', bottom:0, left:0, right:0, zIndex:400, display:'flex', justifyContent:'center', padding:'12px 16px 20px', background:'linear-gradient(0deg, var(--bg) 60%, transparent)', pointerEvents:'none' }}>
+      <button onClick={() => setIsOpen(true)} style={{ pointerEvents:'all', width:'100%', maxWidth:'var(--max)', padding:'14px 20px', borderRadius:999, border:'none', background:'var(--orange)', color:'#fff', display:'flex', alignItems:'center', justifyContent:'space-between', cursor:'pointer', boxShadow:'0 4px 20px rgba(242,100,25,0.4)', transform: popped ? 'scale(1.03)' : 'scale(1)', transition:'transform .15s' }}>
+        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+          <div style={{ background:'rgba(255,255,255,0.25)', width:28, height:28, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:15, transform: popped ? 'scale(1.3)' : 'scale(1)', transition:'transform .3s' }}>{count}</div>
+          <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:18, letterSpacing:.5 }}>Ver pedido</span>
+        </div>
+        <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:18 }}>{fmt(total)}</span>
+      </button>
+    </div>
+  );
+}
+
+// ─── NAV ─────────────────────────────────────────────────────────────────────
+function Nav({ scrolled }) {
+  const { count, setIsOpen } = useCart();
+  const scrollTo = id => { const el = document.getElementById(id); if (el) el.scrollIntoView({ behavior:'smooth' }); };
+
+  return (
+    <nav style={{ position:'fixed', top:0, left:0, right:0, zIndex:100, background: scrolled?'rgba(255,249,245,0.95)':'transparent', backdropFilter: scrolled?'blur(12px)':'none', borderBottom: scrolled?'1px solid var(--border)':'none', transition:'all .35s', padding:'12px 20px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+      <Logo size={24}/>
+      <div style={{ display:'flex', gap:6, alignItems:'center' }}>
+        {[['menu','Menú'],['nosotros','Nosotros'],['contacto','Contacto']].map(([id,label]) => (
+          <button key={id} onClick={() => scrollTo(id)} style={{ background:'transparent', border:'none', color:'var(--text-muted)', fontSize:13, fontWeight:600, cursor:'pointer', padding:'6px 8px', borderRadius:6, transition:'color .2s' }}
+            onMouseEnter={e => e.target.style.color='var(--text)'}
+            onMouseLeave={e => e.target.style.color='var(--text-muted)'}
+          >{label}</button>
+        ))}
+        <button onClick={() => setIsOpen(true)} style={{ position:'relative', background:'var(--orange)', color:'#fff', border:'none', borderRadius:999, padding:'7px 14px', display:'flex', alignItems:'center', gap:6, fontSize:13, fontWeight:700, cursor:'pointer' }}>
+          🛒
+          {count > 0 && <span style={{ position:'absolute', top:-6, right:-6, background:'var(--yellow)', color:'#1A0800', width:18, height:18, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:11 }}>{count}</span>}
+        </button>
+      </div>
+    </nav>
+  );
+}
+
+// ─── HERO ────────────────────────────────────────────────────────────────────
+function Hero() {
+  const waUrl = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent("Hola Gustoso's, quiero hacer un pedido 🌭")}`;
+
+  return (
+    <section style={{ position:'relative', minHeight:'100dvh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', overflow:'hidden', padding:'80px 24px 80px', textAlign:'center' }}>
+      <div style={{ position:'absolute', inset:0, zIndex:0, background:'radial-gradient(ellipse 80% 60% at 50% 0%, rgba(242,100,25,0.12) 0%, transparent 70%)' }}></div>
+      {[...Array(3)].map((_,i) => (
+        <div key={i} style={{ position:'absolute', width:280+i*160, height:280+i*160, borderRadius:'50%', border:`1px solid rgba(242,100,25,${0.07-i*0.02})`, top:'50%', left:'50%', transform:'translate(-50%,-50%)', pointerEvents:'none', zIndex:0 }}></div>
+      ))}
+      <div style={{ position:'relative', zIndex:1, maxWidth:'var(--max)', width:'100%' }}>
+        <div className="fade-up" style={{ marginBottom:24, display:'flex', justifyContent:'center' }}><Logo size={64}/></div>
+        <h1 className="fade-up-2" style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:'clamp(40px,10vw,76px)', lineHeight:.95, color:'var(--text)', marginBottom:14, letterSpacing:-1 }}>
+          El sabor que<br/><span style={{ color:'var(--orange)' }}>te conquista</span>
+        </h1>
+        <p className="fade-up-3" style={{ fontSize:17, color:'var(--text-muted)', maxWidth:360, margin:'0 auto 32px', fontWeight:500, lineHeight:1.5 }}>
+          Vienesas, sándwiches, burritos y más.<br/>Hecho con sabor, entregado con gusto.
+        </p>
+        <div className="fade-up-3" style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:10 }}>
+          <button onClick={() => document.getElementById('menu')?.scrollIntoView({behavior:'smooth'})} style={{ display:'inline-flex', alignItems:'center', gap:8, background:'var(--orange)', color:'#fff', padding:'15px 30px', borderRadius:999, border:'none', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:20, letterSpacing:.5, cursor:'pointer', boxShadow:'0 6px 24px rgba(242,100,25,0.35)' }}>
+            Ver carta y pedir 🛒
+          </button>
+          <a href={waUrl} target="_blank" rel="noopener noreferrer" style={{ display:'inline-flex', alignItems:'center', gap:6, color:'#25D366', textDecoration:'none', fontSize:14, fontWeight:700 }}>
+            <WAIcon size={16} color="#25D366"/> Contactar por WhatsApp
+          </a>
+        </div>
+        <div style={{ display:'flex', gap:0, marginTop:48, border:'1px solid var(--border)', borderRadius:'var(--radius)', overflow:'hidden', background:'rgba(255,255,255,0.7)', backdropFilter:'blur(8px)' }}>
+          {[['5+','Años'],['500+','Clientes felices'],['30min','Tiempo promedio']].map(([num, label], i) => (
+            <div key={i} style={{ flex:1, padding:'16px 8px', textAlign:'center', borderRight: i<2?'1px solid var(--border)':'none' }}>
+              <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:24, color:'var(--orange)' }}>{num}</div>
+              <div style={{ fontSize:11, color:'var(--text-muted)', fontWeight:600 }}>{label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── MENU SECTION ────────────────────────────────────────────────────────────
+const TABS = [
+  { id:'vienesas', label:'Vienesas',   emoji:'🌭' },
+  { id:'as',       label:'AS',         emoji:'🥪' },
+  { id:'churrasco',label:'Churrasco',  emoji:'🥩' },
+  { id:'mechada',  label:'Mechada',    emoji:'🥖' },
+  { id:'burrito',  label:'Burrito',    emoji:'🌯' },
+  { id:'papas',    label:'Papas & Más',emoji:'🍟' },
+];
+
+function MenuSection() {
+  const [activeTab, setActiveTab] = React.useState('vienesas');
+  const tabBarRef = React.useRef(null);
+
+  const switchTab = id => {
+    setActiveTab(id);
+    if (tabBarRef.current) {
+      const btn = tabBarRef.current.querySelector(`[data-tab="${id}"]`);
+      if (btn) tabBarRef.current.scrollLeft = btn.offsetLeft - tabBarRef.current.clientWidth / 2 + btn.offsetWidth / 2;
+    }
+  };
+
+  const activeTabData = TABS.find(t => t.id === activeTab);
+  const tabLabel = activeTab==='churrasco'?'Sándwich Churrasco':activeTab==='mechada'?'Sándwich Mechada':activeTab==='burrito'?'Burrito Gustoso':activeTab==='papas'?'Papas & Más':activeTabData?.label;
+
+  const renderContent = () => {
+    const listStyle = { display:'flex', flexDirection:'column', gap:10 };
+    switch (activeTab) {
+      case 'vienesas':   return <div style={listStyle}>{MENU_DATA.vienesas.items.map(i => <SimpleCard key={i.name} item={i}/>)}</div>;
+      case 'as':         return <div style={listStyle}>{MENU_DATA.as.items.map(i => <SimpleCard key={i.name} item={i}/>)}</div>;
+      case 'churrasco':  return <div><SizeHint/><div style={listStyle}>{MENU_DATA.churrasco.items.map(i => <DualCard key={i.name} item={i}/>)}</div></div>;
+      case 'mechada':    return <div><SizeHint/><div style={listStyle}>{MENU_DATA.mechada.items.map(i => <DualCard key={i.name} item={i}/>)}</div></div>;
+      case 'burrito':    return <BurritoBuilder/>;
+      case 'papas':      return <div>{MENU_DATA.papas.groups.map(g => <div key={g.name}><SectionHeader title={g.name}/><div style={listStyle}>{g.items.map(i => <SimpleCard key={i.name} item={i}/>)}</div></div>)}</div>;
+      default:           return null;
+    }
+  };
+
+  return (
+    <section id="menu" style={{ paddingBottom:100 }}>
+      <div style={{ position:'sticky', top:52, zIndex:30, background:'rgba(255,249,245,0.96)', backdropFilter:'blur(12px)', borderBottom:'1px solid var(--border)', padding:'10px 20px' }}>
+        <div ref={tabBarRef} style={{ display:'flex', gap:8, overflowX:'auto', scrollbarWidth:'none', msOverflowStyle:'none', paddingBottom:2 }}>
+          {TABS.map(tab => (
+            <button key={tab.id} data-tab={tab.id} onClick={() => switchTab(tab.id)} style={{ display:'flex', alignItems:'center', gap:5, padding:'7px 13px', borderRadius:999, border: activeTab===tab.id?'2px solid var(--orange)':'2px solid transparent', background: activeTab===tab.id?'var(--orange)':'var(--bg3)', color: activeTab===tab.id?'#fff':'var(--text-muted)', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:13, whiteSpace:'nowrap', cursor:'pointer', transition:'all .2s', letterSpacing:.5, flexShrink:0 }}>
+              <span style={{ fontSize:13 }}>{tab.emoji}</span>{tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div style={{ maxWidth:'var(--max)', margin:'0 auto', padding:'20px 16px 0' }}>
+        <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}>
+          <span style={{ fontSize:24 }}>{activeTabData?.emoji}</span>
+          <h2 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:26, color:'var(--text)', letterSpacing:.3, lineHeight:1 }}>{tabLabel}</h2>
+        </div>
+        {activeTab === 'burrito' && <p style={{ fontSize:13, color:'var(--text-muted)', marginBottom:14, fontWeight:500 }}>Arma tu Burrito o Bowl personalizado paso a paso</p>}
+        {renderContent()}
+      </div>
+    </section>
+  );
+}
+
+function SizeHint() {
+  return (
+    <div style={{ display:'flex', gap:8, marginBottom:12, padding:'8px 12px', background:'var(--bg2)', borderRadius:'var(--radius-sm)', border:'1px solid var(--border)' }}>
+      <span style={{ fontSize:12, fontWeight:600, color:'var(--text-muted)' }}>Toca <strong style={{ color:'var(--orange)' }}>+</strong> para elegir tamaño y agregar al carrito</span>
+    </div>
+  );
+}
+
+// ─── GALLERY ─────────────────────────────────────────────────────────────────
+function Gallery() {
+  const slots = ['Sándwich Churrasco','Burrito Gustoso','Salchipapas','Sándwich Mechada'];
+  return (
+    <section style={{ padding:'60px 0', background:'var(--bg2)' }}>
+      <div style={{ maxWidth:'var(--max)', margin:'0 auto', padding:'0 20px' }}>
+        <div style={{ textAlign:'center', marginBottom:28 }}>
+          <span style={{ fontSize:11, fontWeight:700, letterSpacing:3, color:'var(--orange)', textTransform:'uppercase' }}>Galería</span>
+          <h2 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:32, color:'var(--text)', marginTop:6 }}>Nuestros platos</h2>
+        </div>
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+          {slots.map((s, i) => (
+            <div key={i} style={{ aspectRatio:'4/3', background:'var(--bg3)', borderRadius:'var(--radius)', border:'1px dashed var(--border)', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:6, overflow:'hidden', position:'relative' }}>
+              <div style={{ position:'absolute', inset:0, backgroundImage:'repeating-linear-gradient(45deg,rgba(242,100,25,0.04) 0px,rgba(242,100,25,0.04) 1px,transparent 1px,transparent 10px)' }}></div>
+              <div style={{ position:'relative', zIndex:1, textAlign:'center', padding:'0 10px' }}>
+                <div style={{ fontSize:24, marginBottom:4 }}>📷</div>
+                <div style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', letterSpacing:.5, fontFamily:'monospace' }}>{s}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── ABOUT ───────────────────────────────────────────────────────────────────
+function About() {
+  return (
+    <section id="nosotros" style={{ padding:'60px 20px', maxWidth:'var(--max)', margin:'0 auto', textAlign:'center' }}>
+      <span style={{ fontSize:11, fontWeight:700, letterSpacing:3, color:'var(--orange)', textTransform:'uppercase' }}>Quiénes somos</span>
+      <h2 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:36, color:'var(--text)', margin:'8px 0 18px', lineHeight:1 }}>La calidad <span style={{ color:'var(--orange)' }}>va en el gusto</span></h2>
+      <p style={{ fontSize:16, color:'var(--text-muted)', lineHeight:1.7, maxWidth:460, margin:'0 auto 16px' }}>En Gustoso's creemos que comer rico no debería ser complicado. Desde nuestros jugosos sándwiches hasta nuestros burritos armados a tu gusto, cada pedido se prepara con ingredientes frescos y mucho cariño.</p>
+      <p style={{ fontSize:16, color:'var(--text-muted)', lineHeight:1.7, maxWidth:460, margin:'0 auto' }}>Somos un local comprometido con entregar sabor real — sin atajos, sin ingredientes de relleno.</p>
+    </section>
+  );
+}
+
+// ─── REVIEWS ─────────────────────────────────────────────────────────────────
+function Reviews() {
+  const reviews = [
+    { name:'Francisca M.', stars:5, text:'El sándwich mechada italiano queso es lo mejor que he probado. Siempre vuelvo.' },
+    { name:'Rodrigo V.',    stars:5, text:'Pedí el burrito con carne y elegí mis toppings, llegó perfecto. Atención excelente.' },
+    { name:'Carolina T.',   stars:5, text:'Las salchipapas son enormes para el precio. Muy buena relación calidad-precio.' },
+    { name:'Sebastián P.',  stars:5, text:'Rapidísimos por WhatsApp, el pedido llegó completo y caliente. 100% recomendado.' },
+  ];
+  return (
+    <section style={{ padding:'60px 0', background:'var(--bg2)' }}>
+      <div style={{ maxWidth:'var(--max)', margin:'0 auto', padding:'0 20px' }}>
+        <div style={{ textAlign:'center', marginBottom:28 }}>
+          <span style={{ fontSize:11, fontWeight:700, letterSpacing:3, color:'var(--orange)', textTransform:'uppercase' }}>Testimonios</span>
+          <h2 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:32, color:'var(--text)', marginTop:6 }}>Lo que dicen nuestros clientes</h2>
+        </div>
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+          {reviews.map((r, i) => (
+            <div key={i} style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:'var(--radius)', padding:'16px' }}>
+              <div className="stars" style={{ fontSize:13, marginBottom:8 }}>{'★'.repeat(r.stars)}</div>
+              <p style={{ fontSize:13, color:'var(--text)', lineHeight:1.6, marginBottom:12, fontStyle:'italic' }}>"{r.text}"</p>
+              <div style={{ fontSize:12, fontWeight:700, color:'var(--text-muted)' }}>{r.name}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── TIP SECTION ─────────────────────────────────────────────────────────────
+function TipSection() {
+  const [selected, setSelected] = React.useState(null);
+  const [sent, setSent] = React.useState(false);
+  const amounts = [500, 1000, 2000, 5000];
+
+  const sendTip = () => {
+    if (!selected) return;
+    window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(`Hola Gustoso's! Quiero dejar una propina de ${fmt(selected)} 🙏 ¿Cómo les transfiero?`)}`, '_blank');
+    setSent(true);
+  };
+
+  return (
+    <section style={{ padding:'60px 20px', maxWidth:'var(--max)', margin:'0 auto', textAlign:'center' }}>
+      <span style={{ fontSize:11, fontWeight:700, letterSpacing:3, color:'var(--orange)', textTransform:'uppercase' }}>Propina</span>
+      <h2 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:32, color:'var(--text)', margin:'8px 0 8px' }}>¿Te gustó la atención?</h2>
+      <p style={{ fontSize:14, color:'var(--text-muted)', marginBottom:24 }}>100% opcional, siempre agradecida.</p>
+      {sent ? (
+        <div style={{ background:'rgba(37,211,102,0.08)', border:'1px solid rgba(37,211,102,0.25)', borderRadius:'var(--radius)', padding:'24px' }}>
+          <div style={{ fontSize:32, marginBottom:6 }}>🙏</div>
+          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:22, color:'#1a8a3e' }}>¡Muchas gracias!</div>
+        </div>
+      ) : (
+        <div>
+          <div style={{ display:'flex', gap:8, justifyContent:'center', marginBottom:18, flexWrap:'wrap' }}>
+            {amounts.map(a => (
+              <button key={a} onClick={() => setSelected(a)} style={{ padding:'10px 18px', borderRadius:999, border:`2px solid ${selected===a?'var(--orange)':'var(--border)'}`, background: selected===a?'rgba(242,100,25,0.1)':'var(--card)', color: selected===a?'var(--orange)':'var(--text)', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:17, cursor:'pointer', transition:'all .2s' }}>{fmt(a)}</button>
+            ))}
+          </div>
+          <button onClick={sendTip} disabled={!selected} style={{ display:'inline-flex', alignItems:'center', gap:8, background: selected?'#25D366':'var(--bg3)', color: selected?'#fff':'var(--text-muted)', padding:'13px 26px', borderRadius:999, border:'none', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:17, cursor: selected?'pointer':'not-allowed', transition:'all .2s' }}>
+            <WAIcon size={17} color={selected?'#fff':'var(--text-muted)'}/> Enviar propina
+          </button>
+        </div>
+      )}
+    </section>
+  );
+}
+
+// ─── CONTACT ─────────────────────────────────────────────────────────────────
+function Contact() {
+  const waUrl = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent("Hola Gustoso's, quiero hacer un pedido 🌭")}`;
+  return (
+    <section id="contacto" style={{ background:'var(--bg2)', padding:'60px 0 80px' }}>
+      <div style={{ maxWidth:'var(--max)', margin:'0 auto', padding:'0 20px' }}>
+        <div style={{ textAlign:'center', marginBottom:28 }}>
+          <span style={{ fontSize:11, fontWeight:700, letterSpacing:3, color:'var(--orange)', textTransform:'uppercase' }}>Encuéntranos</span>
+          <h2 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:32, color:'var(--text)', marginTop:6 }}>Cómo llegar</h2>
+        </div>
+        <div style={{ width:'100%', height:200, background:'var(--bg3)', borderRadius:'var(--radius)', border:'1px solid var(--border)', marginBottom:16, overflow:'hidden' }}>
+          <iframe title="Ubicación Gustoso's" src="https://maps.google.com/maps?q=Marino+Jose+Manuel+Ramirez+1641&output=embed&z=15" width="100%" height="100%" style={{ border:'none' }} loading="lazy"></iframe>
+        </div>
+        <div style={{ display:'flex', flexDirection:'column', gap:10, marginBottom:20 }}>
+          {[
+            { icon:<LocationIcon size={17}/>, label:'Dirección', value:ADDRESS },
+            { icon:<ClockIcon size={17}/>,   label:'Horario',   value:'Lunes a Domingo · 12:00 – 23:00' },
+            { icon:<PhoneIcon size={17}/>,   label:'WhatsApp',  value:'+56 9 8521 0940', href:waUrl },
+          ].map((item, i) => (
+            <div key={i} style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:'var(--radius-sm)', padding:'12px 16px', display:'flex', alignItems:'flex-start', gap:12 }}>
+              <div style={{ color:'var(--orange)', flexShrink:0, marginTop:2 }}>{item.icon}</div>
+              <div>
+                <div style={{ fontSize:10, fontWeight:700, color:'var(--text-muted)', letterSpacing:1, textTransform:'uppercase', marginBottom:2 }}>{item.label}</div>
+                {item.href
+                  ? <a href={item.href} target="_blank" rel="noopener noreferrer" style={{ fontSize:14, fontWeight:600, color:'#25D366', textDecoration:'none' }}>{item.value}</a>
+                  : <div style={{ fontSize:14, fontWeight:600, color:'var(--text)' }}>{item.value}</div>
+                }
+              </div>
+            </div>
+          ))}
+        </div>
+        <a href={waUrl} target="_blank" rel="noopener noreferrer" style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:10, background:'#25D366', color:'#fff', padding:'15px 24px', borderRadius:999, fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:19, letterSpacing:.5, textDecoration:'none', boxShadow:'0 6px 20px rgba(37,211,102,0.25)' }}>
+          <WAIcon size={20} color="#fff"/> Hacer pedido ahora
+        </a>
+      </div>
+    </section>
+  );
+}
+
+// ─── FOOTER ──────────────────────────────────────────────────────────────────
+function Footer() {
+  return (
+    <footer style={{ background:'var(--bg)', borderTop:'1px solid var(--border)', padding:'24px 20px', textAlign:'center' }}>
+      <div style={{ display:'flex', justifyContent:'center', marginBottom:10 }}><Logo size={22}/></div>
+      <div style={{ fontSize:13, color:'var(--text-muted)', marginBottom:4 }}>{ADDRESS}</div>
+      <div style={{ fontSize:12, color:'rgba(160,84,26,0.4)' }}>© 2026 Gustoso's — La Calidad Va en el Gusto</div>
+    </footer>
+  );
+}
+
+// ─── FLOATING WA ─────────────────────────────────────────────────────────────
+function FloatingWA() {
+  const { count } = useCart();
+  if (count > 0) return null;
+  const waUrl = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent("Hola Gustoso's, quiero hacer un pedido 🌭")}`;
+  return (
+    <a href={waUrl} target="_blank" rel="noopener noreferrer" style={{ position:'fixed', bottom:24, right:20, zIndex:200, width:54, height:54, borderRadius:'50%', background:'#25D366', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 4px 18px rgba(37,211,102,0.5)', textDecoration:'none' }}>
+      <div style={{ position:'absolute', width:'100%', height:'100%', borderRadius:'50%', background:'rgba(37,211,102,0.35)', animation:'pulse-ring 2s ease-out infinite' }}></div>
+      <WAIcon size={26} color="#fff"/>
+    </a>
+  );
+}
+
+// ─── APP ─────────────────────────────────────────────────────────────────────
+function App() {
+  const [scrolled, setScrolled] = React.useState(false);
+  const [tweaks,   setTweak]    = useTweaks({ showGallery:true, showTips:true, accentColor:'#F26419' });
+
+  React.useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 60);
+    window.addEventListener('scroll', onScroll, { passive:true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  React.useEffect(() => {
+    document.documentElement.style.setProperty('--orange', tweaks.accentColor);
+  }, [tweaks.accentColor]);
+
+  return (
+    <CartProvider>
+      <div style={{ maxWidth:'var(--max)', margin:'0 auto', position:'relative' }}>
+        <Nav scrolled={scrolled}/>
+        <Hero/>
+        <div className="section-divider"></div>
+        <MenuSection/>
+        <div className="section-divider"></div>
+        {tweaks.showGallery && <><Gallery/><div className="section-divider"></div></>}
+        <About/>
+        <div className="section-divider"></div>
+        <Reviews/>
+        <div className="section-divider"></div>
+        {tweaks.showTips && <><TipSection/><div className="section-divider"></div></>}
+        <Contact/>
+        <Footer/>
+        <FloatingWA/>
+        <CartBar/>
+        <CartDrawer/>
+
+        <TweaksPanel>
+          <TweakColor   id="accentColor"  label="Color acento"      value={tweaks.accentColor}  onChange={v => setTweak('accentColor', v)}/>
+          <TweakToggle  id="showGallery"  label="Mostrar galería"   value={tweaks.showGallery}  onChange={v => setTweak('showGallery', v)}/>
+          <TweakToggle  id="showTips"     label="Mostrar propinas"  value={tweaks.showTips}      onChange={v => setTweak('showTips', v)}/>
+        </TweaksPanel>
+      </div>
+    </CartProvider>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
