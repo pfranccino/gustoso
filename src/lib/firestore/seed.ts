@@ -2,6 +2,10 @@ import { getAdminDb } from '@/lib/firebase/admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { MENU_DATA, BURRITO_DATA } from '@/lib/menuData';
 
+/** Convierte "Tomate, Chucrut, Mayonesa" → ['Tomate', 'Chucrut', 'Mayonesa'] */
+const parseIngredients = (desc?: string): string[] =>
+  desc ? desc.split(',').map(s => s.trim()).filter(Boolean) : [];
+
 export async function seedMenuIfEmpty(): Promise<{ seeded: boolean; count: number }> {
   const db = getAdminDb();
   const existing = await db.collection('menu_items').limit(1).get();
@@ -19,7 +23,9 @@ export async function seedMenuIfEmpty(): Promise<{ seeded: boolean; count: numbe
       batch.set(db.collection('menu_items').doc(slug), {
         category,
         name:        item.name,
-        desc:        item.desc ?? null,
+        desc:        null,
+        ingredients: parseIngredients(item.desc),
+        extras:      [],
         price:       item.price,
         priceNormal: null,
         priceXL:     null,
@@ -41,7 +47,9 @@ export async function seedMenuIfEmpty(): Promise<{ seeded: boolean; count: numbe
       batch.set(db.collection('menu_items').doc(slug), {
         category,
         name:        item.name,
-        desc:        item.desc ?? null,
+        desc:        null,
+        ingredients: parseIngredients(item.desc),
+        extras:      [],
         price:       null,
         priceNormal: item.priceNormal,
         priceXL:     item.priceXL,
@@ -61,7 +69,9 @@ export async function seedMenuIfEmpty(): Promise<{ seeded: boolean; count: numbe
         category:    'papas',
         group:       group.name,
         name:        item.name,
-        desc:        item.desc ?? null,
+        desc:        null,
+        ingredients: parseIngredients(item.desc),
+        extras:      [],
         price:       item.price,
         priceNormal: null,
         priceXL:     null,

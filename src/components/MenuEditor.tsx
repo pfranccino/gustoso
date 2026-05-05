@@ -51,8 +51,10 @@ export default function MenuEditor({ initialItems }: { initialItems: MenuItem[] 
   const [editing, setEditing]   = useState<EditState | null>(null);
   const [creating, setCreating] = useState<CreateState | null>(null);
   const [saveError, setSaveError] = useState('');
-  const [seeding, setSeeding]   = useState(false);
-  const [seedMsg,  setSeedMsg]  = useState('');
+  const [seeding,    setSeeding]    = useState(false);
+  const [seedMsg,    setSeedMsg]    = useState('');
+  const [migrating,  setMigrating]  = useState(false);
+  const [migrateMsg, setMigrateMsg] = useState('');
   const [isPending, startTransition] = useTransition();
   const editExtrasRef         = useRef<ExtrasHandle>(null);
   const createExtrasRef       = useRef<ExtrasHandle>(null);
@@ -190,6 +192,19 @@ export default function MenuEditor({ initialItems }: { initialItems: MenuItem[] 
     });
   }
 
+  /* ── migrate ingredients ─────────────────────── */
+
+  async function handleMigrateIngredients() {
+    if (!confirm('Esto leerá el campo "descripción" de cada producto en Firestore, lo convertirá en ingredientes y borrará la descripción. ¿Continuar?')) return;
+    setMigrating(true); setMigrateMsg('');
+    try {
+      const res  = await fetch('/api/admin/migrate-ingredients', { method: 'POST' });
+      const data = await res.json();
+      setMigrateMsg(`✓ ${data.migrated} producto${data.migrated !== 1 ? 's' : ''} migrado${data.migrated !== 1 ? 's' : ''}. Recarga la página.`);
+    } catch { setMigrateMsg('Error al migrar.'); }
+    setMigrating(false);
+  }
+
   /* ── seed ─────────────────────────────────────── */
 
   async function handleSeed() {
@@ -229,7 +244,14 @@ export default function MenuEditor({ initialItems }: { initialItems: MenuItem[] 
         >
           {seeding ? 'Importando…' : 'Importar menú inicial'}
         </button>
-        {seedMsg && <span style={{ fontSize:13, color:'#A0541A', fontWeight:600 }}>{seedMsg}</span>}
+        <button
+          onClick={handleMigrateIngredients} disabled={migrating}
+          style={{ padding:'9px 18px', borderRadius:999, border:'1.5px solid #6b7280', background:'transparent', color:'#6b7280', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:15, cursor: migrating?'not-allowed':'pointer', opacity: migrating?0.6:1 }}
+        >
+          {migrating ? 'Migrando…' : '🥬 Migrar ingredientes'}
+        </button>
+        {seedMsg    && <span style={{ fontSize:13, color:'#A0541A', fontWeight:600 }}>{seedMsg}</span>}
+        {migrateMsg && <span style={{ fontSize:13, color:'#16a34a', fontWeight:600 }}>{migrateMsg}</span>}
       </div>
 
       {/* Category sections */}

@@ -12,7 +12,12 @@ export default function DualCard({ item }: { item: MenuItem }) {
       <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:'var(--radius)', padding:'14px 16px', display:'flex', justifyContent:'space-between', alignItems:'center', gap:12 }}>
         <div style={{ flex:1, minWidth:0 }}>
           <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:17, color:'var(--text)', lineHeight:1.2 }}>{item.name}</div>
-          {item.desc && <div style={{ fontSize:13, color:'var(--text-muted)', marginTop:3, fontWeight:500 }}>{item.desc}</div>}
+          {item.desc
+            ? <div style={{ fontSize:13, color:'var(--text-muted)', marginTop:3, fontWeight:500 }}>{item.desc}</div>
+            : item.ingredients.length > 0
+              ? <div style={{ fontSize:12, color:'var(--text-muted)', marginTop:3, fontWeight:500, lineHeight:1.4 }}>{item.ingredients.join(' · ')}</div>
+              : null
+          }
           <div style={{ display:'flex', gap:10, marginTop:4, alignItems:'center', flexWrap:'wrap' }}>
             <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:16, color:'var(--yellow)' }}>{fmt(item.priceNormal!)}</span>
             <span style={{ fontSize:11, color:'var(--text-muted)', fontWeight:600 }}>Normal</span>
