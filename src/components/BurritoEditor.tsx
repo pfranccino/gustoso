@@ -13,7 +13,7 @@ const INPUT: React.CSSProperties = {
   outline: 'none',
 };
 
-const SECTION_LABELS: Record<keyof BurritoConfig, string> = {
+const SECTION_LABELS: Partial<Record<keyof BurritoConfig, string>> = {
   rellenos:    '🫔 Rellenos',
   proteinas:   '🥩 Proteínas',
   toppings:    '🥬 Toppings',
@@ -196,8 +196,8 @@ export default function BurritoEditor({ initial }: { initial: BurritoConfig }) {
         </div>
         <div style={{ fontSize:12, color:'var(--text-muted)', marginBottom:14 }}>
           {section === 'rellenos'    && 'Base del burrito. Precio siempre incluido en la proteína.'}
-          {section === 'toppings'    && 'Hasta 5 por pedido. Precio 0 = incluido, >0 = costo extra.'}
-          {section === 'salsas'      && 'Hasta 2 por pedido. Precio 0 = incluida, >0 = costo extra.'}
+          {section === 'toppings'    && `Máx ${config.toppingsMax} · ${config.toppingsLibres} incluidos gratis${config.toppingExtraPrecio > 0 ? `, +$${config.toppingExtraPrecio.toLocaleString('es-CL')} c/u extra` : ''}. Configura los límites abajo.`}
+          {section === 'salsas'      && `Máx ${config.salsasMax} · ${config.salsasLibres} incluidas gratis${config.salsaExtraPrecio > 0 ? `, +$${config.salsaExtraPrecio.toLocaleString('es-CL')} c/u extra` : ''}. Configura los límites abajo.`}
           {section === 'adicionales' && 'Extras opcionales de pago. Ej: doble proteína, extra queso.'}
         </div>
 
@@ -289,6 +289,76 @@ export default function BurritoEditor({ initial }: { initial: BurritoConfig }) {
 
       {/* Adicionales */}
       {renderSimpleSection('adicionales')}
+
+      {/* Límites y precios extra */}
+      <div style={sectionStyle}>
+        <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:18, color:'var(--text)', marginBottom:4 }}>
+          ⚙️ Límites y cobro por extras
+        </div>
+        <div style={{ fontSize:12, color:'var(--text-muted)', marginBottom:16 }}>
+          Define cuántos toppings y salsas van incluidos gratis y cuánto cobrar por cada uno adicional.
+        </div>
+
+        {/* Toppings limits */}
+        <div style={{ marginBottom:18 }}>
+          <div style={{ fontSize:13, fontWeight:800, color:'var(--text)', marginBottom:10 }}>🥬 Toppings</div>
+          <div style={{ display:'flex', gap:10, flexWrap:'wrap' }}>
+            <div style={{ display:'flex', flexDirection:'column', gap:4, flex:1, minWidth:100 }}>
+              <label style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', letterSpacing:.5, textTransform:'uppercase' }}>Máx seleccionables</label>
+              <input type="number" min={1} max={20} value={config.toppingsMax}
+                onChange={e => { setConfig(c => ({ ...c, toppingsMax: parseInt(e.target.value, 10) || 1 })); setSaved(false); }}
+                style={{ ...INPUT, width:'100%' }} />
+            </div>
+            <div style={{ display:'flex', flexDirection:'column', gap:4, flex:1, minWidth:100 }}>
+              <label style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', letterSpacing:.5, textTransform:'uppercase' }}>Incluidos gratis</label>
+              <input type="number" min={0} max={20} value={config.toppingsLibres}
+                onChange={e => { setConfig(c => ({ ...c, toppingsLibres: parseInt(e.target.value, 10) || 0 })); setSaved(false); }}
+                style={{ ...INPUT, width:'100%' }} />
+            </div>
+            <div style={{ display:'flex', flexDirection:'column', gap:4, flex:1, minWidth:100 }}>
+              <label style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', letterSpacing:.5, textTransform:'uppercase' }}>Precio c/u extra ($)</label>
+              <input type="number" min={0} value={config.toppingExtraPrecio}
+                onChange={e => { setConfig(c => ({ ...c, toppingExtraPrecio: parseInt(e.target.value, 10) || 0 })); setSaved(false); }}
+                style={{ ...INPUT, width:'100%' }} />
+            </div>
+          </div>
+          {config.toppingExtraPrecio > 0 && (
+            <div style={{ fontSize:12, color:'#F26419', fontWeight:600, marginTop:8 }}>
+              ℹ️ El cliente verá: &quot;{config.toppingsLibres} incluidos gratis · +${config.toppingExtraPrecio.toLocaleString('es-CL')} por cada topping extra&quot;
+            </div>
+          )}
+        </div>
+
+        {/* Salsas limits */}
+        <div>
+          <div style={{ fontSize:13, fontWeight:800, color:'var(--text)', marginBottom:10 }}>🫙 Salsas</div>
+          <div style={{ display:'flex', gap:10, flexWrap:'wrap' }}>
+            <div style={{ display:'flex', flexDirection:'column', gap:4, flex:1, minWidth:100 }}>
+              <label style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', letterSpacing:.5, textTransform:'uppercase' }}>Máx seleccionables</label>
+              <input type="number" min={1} max={20} value={config.salsasMax}
+                onChange={e => { setConfig(c => ({ ...c, salsasMax: parseInt(e.target.value, 10) || 1 })); setSaved(false); }}
+                style={{ ...INPUT, width:'100%' }} />
+            </div>
+            <div style={{ display:'flex', flexDirection:'column', gap:4, flex:1, minWidth:100 }}>
+              <label style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', letterSpacing:.5, textTransform:'uppercase' }}>Incluidas gratis</label>
+              <input type="number" min={0} max={20} value={config.salsasLibres}
+                onChange={e => { setConfig(c => ({ ...c, salsasLibres: parseInt(e.target.value, 10) || 0 })); setSaved(false); }}
+                style={{ ...INPUT, width:'100%' }} />
+            </div>
+            <div style={{ display:'flex', flexDirection:'column', gap:4, flex:1, minWidth:100 }}>
+              <label style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', letterSpacing:.5, textTransform:'uppercase' }}>Precio c/u extra ($)</label>
+              <input type="number" min={0} value={config.salsaExtraPrecio}
+                onChange={e => { setConfig(c => ({ ...c, salsaExtraPrecio: parseInt(e.target.value, 10) || 0 })); setSaved(false); }}
+                style={{ ...INPUT, width:'100%' }} />
+            </div>
+          </div>
+          {config.salsaExtraPrecio > 0 && (
+            <div style={{ fontSize:12, color:'#F26419', fontWeight:600, marginTop:8 }}>
+              ℹ️ El cliente verá: &quot;{config.salsasLibres} incluidas gratis · +${config.salsaExtraPrecio.toLocaleString('es-CL')} por cada salsa extra&quot;
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* Save */}
       {error  && <div style={{ fontSize:13, color:'#dc2626', fontWeight:600, marginBottom:12 }}>{error}</div>}

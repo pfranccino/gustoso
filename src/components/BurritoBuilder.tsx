@@ -25,6 +25,14 @@ export default function BurritoBuilder({ config }: { config: BurritoConfig }) {
   const visSalsas      = config.salsas.filter(s => s.visible);
   const visAdicionales = (config.adicionales ?? []).filter(a => a.visible);
 
+  // Límites desde config
+  const tMax  = config.toppingsMax        ?? 5;
+  const tLib  = config.toppingsLibres     ?? 5;
+  const tXtra = config.toppingExtraPrecio ?? 0;
+  const sMax  = config.salsasMax          ?? 5;
+  const sLib  = config.salsasLibres       ?? 2;
+  const sXtra = config.salsaExtraPrecio   ?? 0;
+
   // Incluir paso Adicionales solo si hay al menos uno configurado
   const steps = visAdicionales.length > 0
     ? ['Formato', 'Relleno', 'Proteína', 'Toppings', 'Salsas', 'Adicionales']
@@ -37,9 +45,17 @@ export default function BurritoBuilder({ config }: { config: BurritoConfig }) {
   };
 
   const canNext  = [format !== null, relleno !== null, proteina !== null, true, true, true];
-  const basePrice   = proteina ? (size === 'normal' ? proteina.normal : proteina.xl) : 0;
-  const extrasPrice = [...toppings, ...salsas, ...adicionales].reduce((s, i) => s + i.price, 0);
-  const price = basePrice + extrasPrice;
+
+  // Precio extra por toppings/salsas sobre el límite libre
+  const toppingsExtraQty = Math.max(0, toppings.length - tLib);
+  const salsasExtraQty   = Math.max(0, salsas.length   - sLib);
+  const toppingsExtraCost = toppingsExtraQty * tXtra;
+  const salsasExtraCost   = salsasExtraQty   * sXtra;
+
+  const basePrice    = proteina ? (size === 'normal' ? proteina.normal : proteina.xl) : 0;
+  const adicionalesCost = adicionales.reduce((s, i) => s + i.price, 0);
+  const extrasPrice  = toppingsExtraCost + salsasExtraCost + adicionalesCost;
+  const price        = basePrice + extrasPrice;
 
   const reset = () => {
     setStep(0); setFormat(null); setRelleno(null); setProteina(null);
@@ -47,12 +63,16 @@ export default function BurritoBuilder({ config }: { config: BurritoConfig }) {
   };
 
   const addToCart = () => {
-    const extrasList = [...toppings, ...salsas, ...adicionales].filter(i => i.price > 0);
+    const extrasList = [
+      ...(toppingsExtraQty > 0 && tXtra > 0 ? [{ name: `${toppingsExtraQty} topping${toppingsExtraQty > 1 ? 's' : ''} extra`, price: toppingsExtraCost }] : []),
+      ...(salsasExtraQty   > 0 && sXtra > 0 ? [{ name: `${salsasExtraQty} salsa${salsasExtraQty > 1 ? 's' : ''} extra`,   price: salsasExtraCost   }] : []),
+      ...adicionales.filter(a => a.price > 0),
+    ];
     const desc = [
       `${format === 'bowl' ? 'Bowl' : 'Burrito'} · ${relleno!.name}`,
       `${proteina!.name} (${size.toUpperCase()})`,
-      toppings.length ? `Toppings: ${toppings.map(t => t.price > 0 ? `${t.name} (+${fmt(t.price)})` : t.name).join(', ')}` : null,
-      salsas.length   ? `Salsas: ${salsas.map(s => s.price > 0 ? `${s.name} (+${fmt(s.price)})` : s.name).join(', ')}`     : null,
+      toppings.length ? `Toppings: ${toppings.map(t => t.name).join(', ')}` : null,
+      salsas.length   ? `Salsas: ${salsas.map(s => s.name).join(', ')}`     : null,
     ].filter(Boolean).join(' · ');
 
     addItem({
@@ -67,7 +87,33 @@ export default function BurritoBuilder({ config }: { config: BurritoConfig }) {
     reset();
   };
 
-  /* ── done screen ─────────────────────────────────────────── */
+  /* ── helpers de UI ───────────────────────────────────────────── */
+
+  // Chip de info para límites (toppings / salsas)
+  function LimitBadge({ selected, libre, max, xtraPrecio, label }: {
+    selected: number; libre: number; max: number; xtraPrecio: number; label: string;
+  }) {
+    const extras = Math.max(0, selected - libre);
+    return (
+      <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap', marginBottom:12 }}>
+        <span style={{ fontSize:12, color:'var(--text-muted)', fontWeight:600 }}>
+          {selected}/{max} {label}
+        </span>
+        {xtraPrecio > 0 && libre > 0 && (
+          <span style={{ fontSize:11, background:'rgba(242,100,25,0.1)', color:'#A0541A', padding:'3px 8px', borderRadius:999, fontWeight:700 }}>
+            {libre} gratis · +{fmt(xtraPrecio)} c/u extra
+          </span>
+        )}
+        {extras > 0 && xtraPrecio > 0 && (
+          <span style={{ fontSize:11, background:'rgba(242,100,25,0.15)', color:'#F26419', padding:'3px 8px', borderRadius:999, fontWeight:800 }}>
+            +{fmt(extras * xtraPrecio)} extra
+          </span>
+        )}
+      </div>
+    );
+  }
+
+  /* ── done screen ─────────────────────────────────────────────── */
 
   if (done) return (
     <div style={{ textAlign:'center', padding:'24px 0' }}>
@@ -78,17 +124,27 @@ export default function BurritoBuilder({ config }: { config: BurritoConfig }) {
           ['Formato',  format==='bowl' ? 'Bowl' : 'Burrito'],
           ['Relleno',  relleno?.name],
           ['Proteína', `${proteina?.name} (${size.toUpperCase()}) — ${fmt(basePrice)}`],
-          ['Toppings',    toppings.length    ? toppings.map(t => t.price > 0 ? `${t.name} (+${fmt(t.price)})` : t.name).join(', ')       : '—'],
-          ['Salsas',      salsas.length      ? salsas.map(s => s.price > 0 ? `${s.name} (+${fmt(s.price)})` : s.name).join(', ')         : '—'],
+          ['Toppings', toppings.length ? toppings.map(t => t.name).join(', ') : '—'],
+          ['Salsas',   salsas.length   ? salsas.map(s => s.name).join(', ')   : '—'],
           ...(adicionales.length ? [['Adicionales', adicionales.map(a => `${a.name} (+${fmt(a.price)})`).join(', ')]] : []),
         ].map(([k, v]) => (
           <div key={k} style={{ fontSize:13, color:'var(--text-muted)', marginBottom:4 }}>
             <span style={{ fontWeight:700 }}>{k}:</span> {v}
           </div>
         ))}
-        {extrasPrice > 0 && (
-          <div style={{ fontSize:12, color:'var(--orange)', fontWeight:600, marginTop:8 }}>
-            ➕ Extras: +{fmt(extrasPrice)}
+        {toppingsExtraQty > 0 && tXtra > 0 && (
+          <div style={{ fontSize:12, color:'var(--orange)', fontWeight:600, marginTop:6 }}>
+            ➕ {toppingsExtraQty} topping{toppingsExtraQty > 1 ? 's' : ''} extra: +{fmt(toppingsExtraCost)}
+          </div>
+        )}
+        {salsasExtraQty > 0 && sXtra > 0 && (
+          <div style={{ fontSize:12, color:'var(--orange)', fontWeight:600, marginTop:4 }}>
+            ➕ {salsasExtraQty} salsa{salsasExtraQty > 1 ? 's' : ''} extra: +{fmt(salsasExtraCost)}
+          </div>
+        )}
+        {adicionalesCost > 0 && (
+          <div style={{ fontSize:12, color:'var(--orange)', fontWeight:600, marginTop:4 }}>
+            ➕ Adicionales: +{fmt(adicionalesCost)}
           </div>
         )}
       </div>
@@ -110,7 +166,7 @@ export default function BurritoBuilder({ config }: { config: BurritoConfig }) {
     </div>
   );
 
-  /* ── stepper ─────────────────────────────────────────────── */
+  /* ── stepper ─────────────────────────────────────────────────── */
 
   return (
     <div style={{ paddingBottom:16 }}>
@@ -184,16 +240,19 @@ export default function BurritoBuilder({ config }: { config: BurritoConfig }) {
       {step === 3 && (
         <div>
           <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:22, marginBottom:4, color:'var(--text)' }}>Toppings</div>
-          <div style={{ fontSize:12, color:'var(--text-muted)', marginBottom:12 }}>Hasta 5 — {toppings.length}/5</div>
+          <LimitBadge selected={toppings.length} libre={tLib} max={tMax} xtraPrecio={tXtra} label="toppings" />
           <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
             {visToppings.map(t => {
-              const sel    = toppings.some(x => x.name === t.name);
-              const maxed  = !sel && toppings.length >= 5;
+              const sel   = toppings.some(x => x.name === t.name);
+              const maxed = !sel && toppings.length >= tMax;
+              const esExtra = !sel && toppings.length >= tLib;
               return (
-                <button key={t.name} onClick={() => !maxed && toggleArr(toppings, setToppings, t, 5)}
-                  style={{ padding:'7px 13px', borderRadius:999, border:`2px solid ${sel?'var(--orange)':'var(--border)'}`, background: sel?'var(--orange)':'var(--card)', color: sel?'#fff':maxed?'var(--border)':'var(--text)', fontWeight:600, fontSize:13, cursor: maxed?'not-allowed':'pointer', opacity: maxed?.35:1, display:'flex', alignItems:'center', gap:5 }}>
+                <button key={t.name} onClick={() => !maxed && toggleArr(toppings, setToppings, t, tMax)}
+                  style={{ padding:'7px 13px', borderRadius:999, border:`2px solid ${sel?'var(--orange)':'var(--border)'}`, background: sel?'var(--orange)':'var(--card)', color: sel?'#fff':maxed?'var(--border)':'var(--text)', fontWeight:600, fontSize:13, cursor: maxed?'not-allowed':'pointer', opacity: maxed?.35:1, display:'flex', alignItems:'center', gap:5, transition:'all .2s' }}>
                   {t.name}
-                  {t.price > 0 && <span style={{ fontSize:11, color: sel?'rgba(255,255,255,0.8)':'var(--orange)', fontWeight:700 }}>+{fmt(t.price)}</span>}
+                  {esExtra && tXtra > 0 && !sel && (
+                    <span style={{ fontSize:10, color:'#F26419', fontWeight:800 }}>+{fmt(tXtra)}</span>
+                  )}
                 </button>
               );
             })}
@@ -205,16 +264,19 @@ export default function BurritoBuilder({ config }: { config: BurritoConfig }) {
       {step === 4 && (
         <div>
           <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:22, marginBottom:4, color:'var(--text)' }}>Salsas</div>
-          <div style={{ fontSize:12, color:'var(--text-muted)', marginBottom:12 }}>Hasta 2 — {salsas.length}/2</div>
+          <LimitBadge selected={salsas.length} libre={sLib} max={sMax} xtraPrecio={sXtra} label="salsas" />
           <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
             {visSalsas.map(s => {
-              const sel    = salsas.some(x => x.name === s.name);
-              const maxed  = !sel && salsas.length >= 2;
+              const sel   = salsas.some(x => x.name === s.name);
+              const maxed = !sel && salsas.length >= sMax;
+              const esExtra = !sel && salsas.length >= sLib;
               return (
-                <button key={s.name} onClick={() => !maxed && toggleArr(salsas, setSalsas, s, 2)}
-                  style={{ padding:'7px 13px', borderRadius:999, border:`2px solid ${sel?'var(--yellow)':'var(--border)'}`, background: sel?'rgba(255,214,0,0.12)':'var(--card)', color: sel?'#8a6800':maxed?'var(--border)':'var(--text)', fontWeight:600, fontSize:13, cursor: maxed?'not-allowed':'pointer', opacity: maxed?.35:1, display:'flex', alignItems:'center', gap:5 }}>
+                <button key={s.name} onClick={() => !maxed && toggleArr(salsas, setSalsas, s, sMax)}
+                  style={{ padding:'7px 13px', borderRadius:999, border:`2px solid ${sel?'var(--yellow)':'var(--border)'}`, background: sel?'rgba(255,214,0,0.12)':'var(--card)', color: sel?'#8a6800':maxed?'var(--border)':'var(--text)', fontWeight:600, fontSize:13, cursor: maxed?'not-allowed':'pointer', opacity: maxed?.35:1, display:'flex', alignItems:'center', gap:5, transition:'all .2s' }}>
                   {s.name}
-                  {s.price > 0 && <span style={{ fontSize:11, color:'var(--orange)', fontWeight:700 }}>+{fmt(s.price)}</span>}
+                  {esExtra && sXtra > 0 && !sel && (
+                    <span style={{ fontSize:10, color:'#F26419', fontWeight:800 }}>+{fmt(sXtra)}</span>
+                  )}
                 </button>
               );
             })}
@@ -222,7 +284,6 @@ export default function BurritoBuilder({ config }: { config: BurritoConfig }) {
         </div>
       )}
 
-      {/* Nav buttons */}
       {/* Step 5 — Adicionales (solo si hay configurados) */}
       {step === 5 && visAdicionales.length > 0 && (
         <div>
@@ -243,6 +304,7 @@ export default function BurritoBuilder({ config }: { config: BurritoConfig }) {
         </div>
       )}
 
+      {/* Nav buttons */}
       <div style={{ display:'flex', gap:10, marginTop:20 }}>
         {step > 0
           ? <button onClick={() => setStep(s => s - 1)}

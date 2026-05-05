@@ -10,6 +10,13 @@ export type BurritoConfig = {
   toppings:    BurritoItem[];
   salsas:      BurritoItem[];
   adicionales: BurritoItem[];
+  // Límites y cobro por extras
+  toppingsMax:         number;  // máximo seleccionable
+  toppingsLibres:      number;  // cuántos van incluidos sin costo
+  toppingExtraPrecio:  number;  // precio por cada topping sobre el límite libre
+  salsasMax:           number;
+  salsasLibres:        number;
+  salsaExtraPrecio:    number;
 };
 
 /** Convierte tanto el formato antiguo (string) como el nuevo (objeto) */
@@ -57,6 +64,12 @@ export const DEFAULT_BURRITO: BurritoConfig = {
     'Mayonesa','Mayonesa Picante','Guacamole',
   ].map(name => ({ name, price: 0, visible: true })),
   adicionales: [],
+  toppingsMax:        5,
+  toppingsLibres:     5,
+  toppingExtraPrecio: 0,
+  salsasMax:          5,
+  salsasLibres:       2,
+  salsaExtraPrecio:   0,
 };
 
 export async function getBurritoConfig(): Promise<BurritoConfig> {
@@ -70,6 +83,12 @@ export async function getBurritoConfig(): Promise<BurritoConfig> {
     toppings:    Array.isArray(d.toppings)    ? d.toppings.map(parseItem)    : DEFAULT_BURRITO.toppings,
     salsas:      Array.isArray(d.salsas)      ? d.salsas.map(parseItem)      : DEFAULT_BURRITO.salsas,
     adicionales: Array.isArray(d.adicionales) ? d.adicionales.map(parseItem) : DEFAULT_BURRITO.adicionales,
+    toppingsMax:         Number(d.toppingsMax         ?? DEFAULT_BURRITO.toppingsMax),
+    toppingsLibres:      Number(d.toppingsLibres      ?? DEFAULT_BURRITO.toppingsLibres),
+    toppingExtraPrecio:  Number(d.toppingExtraPrecio  ?? DEFAULT_BURRITO.toppingExtraPrecio),
+    salsasMax:           Number(d.salsasMax            ?? DEFAULT_BURRITO.salsasMax),
+    salsasLibres:        Number(d.salsasLibres         ?? DEFAULT_BURRITO.salsasLibres),
+    salsaExtraPrecio:    Number(d.salsaExtraPrecio     ?? DEFAULT_BURRITO.salsaExtraPrecio),
   };
 }
 
