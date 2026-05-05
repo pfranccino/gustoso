@@ -227,6 +227,24 @@ export default function PromotionsEditor({ initial }: { initial: Promotion[] }) 
     });
   }
 
+  function handleSeedExamples() {
+    if (!confirm('¿Cargar las 6 promociones de ejemplo? Solo se insertan si la lista está vacía.')) return;
+    startTransition(async () => {
+      try {
+        const res = await fetch('/api/admin/seed-promotions', { method: 'POST' });
+        const data = await res.json();
+        if (data.skipped) {
+          setError('Ya existen promociones — no se sobreescribieron.');
+          return;
+        }
+        // Refrescar la página para mostrar las promos recién creadas
+        window.location.reload();
+      } catch {
+        setError('Error al cargar ejemplos.');
+      }
+    });
+  }
+
   const BADGE_COLOR: Record<string, string> = {
     PROMO: '#F26419', OFERTA: '#dc2626', NUEVO: '#16a34a', COMBO: '#7c3aed', ESPECIAL: '#d97706',
   };
@@ -240,7 +258,11 @@ export default function PromotionsEditor({ initial }: { initial: Promotion[] }) 
         {promos.length === 0 && (
           <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:'var(--radius)', padding:'40px 20px', textAlign:'center' }}>
             <div style={{ fontSize:32, marginBottom:10 }}>🏷️</div>
-            <div style={{ fontSize:14, color:'var(--text-muted)' }}>No hay promociones aún. Crea la primera.</div>
+            <div style={{ fontSize:14, color:'var(--text-muted)', marginBottom:16 }}>No hay promociones aún. Crea la primera o carga los ejemplos.</div>
+            <button onClick={handleSeedExamples} disabled={isPending}
+              style={{ padding:'9px 22px', borderRadius:999, border:'1.5px solid rgba(242,100,25,0.4)', background:'rgba(242,100,25,0.06)', color:'#F26419', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:15, cursor: isPending ? 'not-allowed' : 'pointer', opacity: isPending ? 0.6 : 1 }}>
+              📋 Cargar promociones de ejemplo
+            </button>
           </div>
         )}
 
