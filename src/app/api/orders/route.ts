@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
       name:     i.name,
       qty:      i.qty,
       price:    i.price,
-      size:     i.size,
+      size:     i.size ?? null,
       subtotal: i.price * i.qty,
     }));
 
