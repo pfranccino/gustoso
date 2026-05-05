@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useRef, useImperativeHandle, forwardRef } from 'react';
 import { MenuItem, Extra } from '@/lib/firestore/menuItems';
 
 const CATEGORIES = [
@@ -52,6 +52,8 @@ export default function MenuEditor({ initialItems }: { initialItems: MenuItem[] 
   const [seeding, setSeeding]   = useState(false);
   const [seedMsg,  setSeedMsg]  = useState('');
   const [isPending, startTransition] = useTransition();
+  const editExtrasRef   = useRef<ExtrasHandle>(null);
+  const createExtrasRef = useRef<ExtrasHandle>(null);
 
   /* ── helpers ──────────────────────────────────── */
 
@@ -93,6 +95,7 @@ export default function MenuEditor({ initialItems }: { initialItems: MenuItem[] 
 
   function handleSave() {
     if (!editing) return;
+    editExtrasRef.current?.flush();
     const { item } = editing;
     const isDual = item.priceNormal != null;
 
@@ -137,6 +140,7 @@ export default function MenuEditor({ initialItems }: { initialItems: MenuItem[] 
 
   function handleCreate() {
     if (!creating) return;
+    createExtrasRef.current?.flush();
     const { category, name, desc, dual, price, priceNormal, priceXL, extras, visible } = creating;
     if (!name.trim()) { setSaveError('El nombre es obligatorio.'); return; }
 
@@ -265,7 +269,7 @@ export default function MenuEditor({ initialItems }: { initialItems: MenuItem[] 
           ) : (
             <Field label="Precio" type="number" value={editing.price} onChange={e => setEditing(p => p && ({ ...p, price: e.target.value }))} />
           )}
-          <ExtrasEditor extras={editing.extras} onChange={extras => setEditing(p => p && ({ ...p, extras }))} />
+          <ExtrasEditor ref={editExtrasRef} extras={editing.extras} onChange={extras => setEditing(p => p && ({ ...p, extras }))} />
           {saveError && <div style={{ fontSize:13, color:'#dc2626', fontWeight:600, marginBottom:12 }}>{saveError}</div>}
           <ModalActions onSave={handleSave} onCancel={() => { setEditing(null); setSaveError(''); }} isPending={isPending} />
         </Modal>
@@ -300,7 +304,7 @@ export default function MenuEditor({ initialItems }: { initialItems: MenuItem[] 
             <Field label="Precio" type="number" value={creating.price} onChange={e => setCreating(p => p && ({ ...p, price: e.target.value }))} />
           )}
 
-          <ExtrasEditor extras={creating.extras} onChange={extras => setCreating(p => p && ({ ...p, extras }))} />
+          <ExtrasEditor ref={createExtrasRef} extras={creating.extras} onChange={extras => setCreating(p => p && ({ ...p, extras }))} />
 
           <div style={{ marginBottom:14 }}>
             <label style={{ display:'flex', alignItems:'center', gap:8, cursor:'pointer', fontSize:13, fontWeight:600, color:'#1A0800' }}>
@@ -343,7 +347,10 @@ function ModalActions({ onSave, onCancel, isPending, saveLabel = 'Guardar' }: { 
   );
 }
 
-function ExtrasEditor({ extras, onChange }: { extras: Extra[]; onChange: (e: Extra[]) => void }) {
+type ExtrasHandle = { flush: () => void };
+
+const ExtrasEditor = forwardRef<ExtrasHandle, { extras: Extra[]; onChange: (e: Extra[]) => void }>(
+function ExtrasEditor({ extras, onChange }, ref) {
   const [newName,  setNewName]  = useState('');
   const [newPrice, setNewPrice] = useState('');
 
@@ -353,6 +360,8 @@ function ExtrasEditor({ extras, onChange }: { extras: Extra[]; onChange: (e: Ext
     onChange([...extras, { name, price: parseInt(newPrice, 10) || 0 }]);
     setNewName(''); setNewPrice('');
   };
+
+  useImperativeHandle(ref, () => ({ flush: () => { if (newName.trim()) add(); } }));
 
   return (
     <div style={{ marginBottom:14 }}>
@@ -379,7 +388,7 @@ function ExtrasEditor({ extras, onChange }: { extras: Extra[]; onChange: (e: Ext
       </div>
     </div>
   );
-}
+});
 
 function Field({ label, ...inputProps }: { label: string } & React.InputHTMLAttributes<HTMLInputElement>) {
   return (
