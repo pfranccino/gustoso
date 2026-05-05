@@ -59,6 +59,7 @@ export default function CartDrawer() {
       const extrasTotal = (item.extras ?? []).reduce((s, e) => s + e.price, 0);
       lines.push(`${i + 1}. ${item.qty}x ${item.name}${item.size ? ` (${item.size.toUpperCase()})` : ''} — ${fmt((item.price + extrasTotal) * item.qty)}`);
       if (item.desc) lines.push(`   📋 ${item.desc}`);
+      if (item.removedIngredients?.length) lines.push(`   ❌ Sin: ${item.removedIngredients.join(', ')}`);
       if (item.extras?.length) lines.push(`   ➕ ${item.extras.map(e => e.price > 0 ? `${e.name} (+${fmt(e.price)})` : e.name).join(', ')}`);
       if (item.note) lines.push(`   📝 Nota: ${item.note}`);
     });
@@ -112,6 +113,7 @@ export default function CartDrawer() {
                         {item.size && <span style={{ fontSize:12, color:'var(--orange)', fontWeight:900, marginLeft:6, background:'rgba(242,100,25,0.1)', padding:'1px 5px', borderRadius:4 }}>{item.size.toUpperCase()}</span>}
                       </div>
                       {item.desc && <div style={{ fontSize:12, color:'var(--text-muted)', marginTop:2, lineHeight:1.4 }}>{item.desc}</div>}
+                      {item.removedIngredients && item.removedIngredients.length > 0 && <div style={{ fontSize:12, color:'#ef4444', marginTop:2, lineHeight:1.5 }}>❌ Sin: {item.removedIngredients.join(', ')}</div>}
                       {item.extras && item.extras.length > 0 && <div style={{ fontSize:12, color:'var(--orange)', marginTop:2, lineHeight:1.5 }}>➕ {item.extras.map(e => e.name).join(', ')}</div>}
                       {item.note && <div style={{ fontSize:12, color:'var(--orange)', marginTop:3, fontStyle:'italic' }}>📝 {item.note}</div>}
                     </div>

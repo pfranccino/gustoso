@@ -175,13 +175,15 @@ export default function OrdersPage() {
               : <span style={{ fontSize:13, color:'var(--text-muted)' }}>Sin día activo</span>
           }
 
-          {/* Iniciar día */}
-          <button onClick={handleStartDay} disabled={startingDay || loadingDay}
-            style={{ padding:'6px 16px', borderRadius:999, border:'none', background:'var(--orange)', color:'#fff', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:13, cursor: startingDay?'not-allowed':'pointer', opacity: startingDay?0.6:1 }}>
-            {startingDay ? 'Iniciando…' : isClosed ? '🌅 Nuevo día' : '🌅 Iniciar día'}
-          </button>
+          {/* Iniciar día — solo cuando no hay día activo */}
+          {(!dayStartedAt || isClosed) && (
+            <button onClick={handleStartDay} disabled={startingDay || loadingDay}
+              style={{ padding:'6px 16px', borderRadius:999, border:'none', background:'var(--orange)', color:'#fff', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:13, cursor: startingDay?'not-allowed':'pointer', opacity: startingDay?0.6:1 }}>
+              {startingDay ? 'Iniciando…' : isClosed ? '🌅 Nuevo día' : '🌅 Iniciar día'}
+            </button>
+          )}
 
-          {/* Cerrar día — solo si hay día activo y no está cerrado */}
+          {/* Cerrar día — solo cuando hay día activo */}
           {dayStartedAt && !isClosed && (
             <button onClick={handleCloseDay} disabled={closingDay}
               style={{ padding:'6px 16px', borderRadius:999, border:'1.5px solid #16a34a', background:'transparent', color:'#16a34a', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:13, cursor: closingDay?'not-allowed':'pointer', opacity: closingDay?0.6:1 }}>

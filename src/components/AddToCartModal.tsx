@@ -11,7 +11,8 @@ export default function AddToCartModal({ item, onClose }: { item: MenuItem; onCl
   const [size, setSize]   = useState<'normal' | 'xl'>('normal');
   const [note, setNote]   = useState('');
   const [qty,  setQty]    = useState(1);
-  const [selectedExtras, setSelectedExtras] = useState<Extra[]>([]);
+  const [selectedExtras, setSelectedExtras]         = useState<Extra[]>([]);
+  const [removedIngredients, setRemovedIngredients] = useState<string[]>([]);
 
   const basePrice = isDual
     ? (size === 'normal' ? item.priceNormal! : item.priceXL!)
@@ -28,26 +29,34 @@ export default function AddToCartModal({ item, onClose }: { item: MenuItem; onCl
     );
   };
 
+  const toggleIngredient = (ing: string) => {
+    setRemovedIngredients(prev =>
+      prev.includes(ing) ? prev.filter(i => i !== ing) : [...prev, ing]
+    );
+  };
+
   const confirm = () => {
+    const hasCustom = selectedExtras.length > 0 || !!note.trim() || removedIngredients.length > 0;
     addItem({
-      name:   item.name,
-      desc:   item.desc ?? undefined,
-      price:  basePrice,
-      size:   isDual ? size : undefined,
-      note:   note.trim() || undefined,
-      extras: selectedExtras.length > 0 ? selectedExtras : undefined,
-      alwaysNew: selectedExtras.length > 0 || !!note.trim(),
+      name:               item.name,
+      desc:               item.desc ?? undefined,
+      price:              basePrice,
+      size:               isDual ? size : undefined,
+      note:               note.trim() || undefined,
+      extras:             selectedExtras.length > 0 ? selectedExtras : undefined,
+      removedIngredients: removedIngredients.length > 0 ? removedIngredients : undefined,
+      alwaysNew:          hasCustom,
     });
-    // If qty > 1, add remaining
     for (let i = 1; i < qty; i++) {
       addItem({
-        name:   item.name,
-        desc:   item.desc ?? undefined,
-        price:  basePrice,
-        size:   isDual ? size : undefined,
-        note:   note.trim() || undefined,
-        extras: selectedExtras.length > 0 ? selectedExtras : undefined,
-        alwaysNew: true,
+        name:               item.name,
+        desc:               item.desc ?? undefined,
+        price:              basePrice,
+        size:               isDual ? size : undefined,
+        note:               note.trim() || undefined,
+        extras:             selectedExtras.length > 0 ? selectedExtras : undefined,
+        removedIngredients: removedIngredients.length > 0 ? removedIngredients : undefined,
+        alwaysNew:          true,
       });
     }
     onClose();
@@ -77,6 +86,25 @@ export default function AddToCartModal({ item, onClose }: { item: MenuItem; onCl
                   <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:17, color:'var(--yellow)' }}>{fmt(s === 'normal' ? item.priceNormal! : item.priceXL!)}</span>
                 </button>
               ))}
+            </div>
+          </div>
+        )}
+
+        {/* Ingredientes — el cliente puede quitar los que no quiere */}
+        {item.ingredients.length > 0 && (
+          <div style={{ marginBottom:16 }}>
+            <div style={{ fontSize:12, fontWeight:700, color:'var(--text-muted)', letterSpacing:1, textTransform:'uppercase', marginBottom:4 }}>Ingredientes</div>
+            <div style={{ fontSize:11, color:'var(--text-muted)', marginBottom:8 }}>Toca para quitar</div>
+            <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
+              {item.ingredients.map(ing => {
+                const removed = removedIngredients.includes(ing);
+                return (
+                  <button key={ing} onClick={() => toggleIngredient(ing)}
+                    style={{ padding:'5px 12px', borderRadius:999, border:`1.5px solid ${removed ? 'rgba(220,38,38,0.5)' : 'var(--border)'}`, background: removed ? 'rgba(220,38,38,0.07)' : 'var(--bg2)', cursor:'pointer', fontFamily:"'Barlow',sans-serif", fontWeight:600, fontSize:13, color: removed ? '#dc2626' : 'var(--text)', textDecoration: removed ? 'line-through' : 'none', transition:'all .15s' }}>
+                    {ing}
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}

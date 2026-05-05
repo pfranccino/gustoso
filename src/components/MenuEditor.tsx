@@ -23,6 +23,7 @@ type EditState = {
   priceNormal: string;
   priceXL: string;
   extras: Extra[];
+  ingredients: string[];
 };
 
 type CreateState = {
@@ -34,12 +35,13 @@ type CreateState = {
   priceNormal: string;
   priceXL: string;
   extras: Extra[];
+  ingredients: string[];
   visible: boolean;
 };
 
 const emptyCreate = (): CreateState => ({
   category: 'vienesas', name: '', desc: '', dual: false,
-  price: '', priceNormal: '', priceXL: '', extras: [], visible: true,
+  price: '', priceNormal: '', priceXL: '', extras: [], ingredients: [], visible: true,
 });
 
 /* ── componente principal ─────────────────────── */
@@ -52,8 +54,10 @@ export default function MenuEditor({ initialItems }: { initialItems: MenuItem[] 
   const [seeding, setSeeding]   = useState(false);
   const [seedMsg,  setSeedMsg]  = useState('');
   const [isPending, startTransition] = useTransition();
-  const editExtrasRef   = useRef<ExtrasHandle>(null);
-  const createExtrasRef = useRef<ExtrasHandle>(null);
+  const editExtrasRef         = useRef<ExtrasHandle>(null);
+  const createExtrasRef       = useRef<ExtrasHandle>(null);
+  const editIngredientsRef    = useRef<IngredientsHandle>(null);
+  const createIngredientsRef  = useRef<IngredientsHandle>(null);
 
   /* ── helpers ──────────────────────────────────── */
 
@@ -89,6 +93,7 @@ export default function MenuEditor({ initialItems }: { initialItems: MenuItem[] 
       priceNormal: item.priceNormal != null ? String(item.priceNormal) : '',
       priceXL:     item.priceXL != null ? String(item.priceXL) : '',
       extras:      item.extras ?? [],
+      ingredients: item.ingredients ?? [],
     });
     setSaveError('');
   }
@@ -96,13 +101,15 @@ export default function MenuEditor({ initialItems }: { initialItems: MenuItem[] 
   function handleSave() {
     if (!editing) return;
     editExtrasRef.current?.flush();
+    editIngredientsRef.current?.flush();
     const { item } = editing;
     const isDual = item.priceNormal != null;
 
     const update: Partial<MenuItem> = {
-      name:   editing.name.trim() || item.name,
-      desc:   editing.desc.trim() || null,
-      extras: editing.extras,
+      name:        editing.name.trim() || item.name,
+      desc:        editing.desc.trim() || null,
+      extras:      editing.extras,
+      ingredients: editing.ingredients,
     };
 
     if (isDual) {
@@ -141,12 +148,13 @@ export default function MenuEditor({ initialItems }: { initialItems: MenuItem[] 
   function handleCreate() {
     if (!creating) return;
     createExtrasRef.current?.flush();
-    const { category, name, desc, dual, price, priceNormal, priceXL, extras, visible } = creating;
+    createIngredientsRef.current?.flush();
+    const { category, name, desc, dual, price, priceNormal, priceXL, extras, ingredients, visible } = creating;
     if (!name.trim()) { setSaveError('El nombre es obligatorio.'); return; }
 
     startTransition(async () => {
       try {
-        const body: Record<string, unknown> = { category, name: name.trim(), desc: desc.trim() || null, extras, visible };
+        const body: Record<string, unknown> = { category, name: name.trim(), desc: desc.trim() || null, extras, ingredients, visible };
         if (dual) {
           body.priceNormal = parseInt(priceNormal, 10) || 0;
           body.priceXL     = parseInt(priceXL,     10) || 0;
@@ -172,6 +180,7 @@ export default function MenuEditor({ initialItems }: { initialItems: MenuItem[] 
           visible,
           sortOrder: items.filter(i => i.category === category).length,
           extras,
+          ingredients,
         };
         setItems(prev => [...prev, newItem]);
         setCreating(null); setSaveError('');
@@ -242,7 +251,10 @@ export default function MenuEditor({ initialItems }: { initialItems: MenuItem[] 
                   <div style={{ flex:1, minWidth:0 }}>
                     <div style={{ fontWeight:700, fontSize:14, color:'var(--text)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{item.name}</div>
                     {item.desc && <div style={{ fontSize:12, color:'var(--text-muted)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{item.desc}</div>}
-                    {item.extras.length > 0 && <div style={{ fontSize:11, color:'var(--orange)', fontWeight:600 }}>➕ {item.extras.length} extra{item.extras.length > 1 ? 's' : ''}</div>}
+                    <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+                      {item.ingredients.length > 0 && <div style={{ fontSize:11, color:'var(--text-muted)', fontWeight:600 }}>🥬 {item.ingredients.length} ingrediente{item.ingredients.length > 1 ? 's' : ''}</div>}
+                      {item.extras.length > 0 && <div style={{ fontSize:11, color:'var(--orange)', fontWeight:600 }}>➕ {item.extras.length} extra{item.extras.length > 1 ? 's' : ''}</div>}
+                    </div>
                   </div>
                   <div style={{ fontSize:13, fontWeight:700, color:'var(--orange)', whiteSpace:'nowrap', flexShrink:0 }}>
                     {isDual(item) ? `${fmt(item.priceNormal!)} / ${fmt(item.priceXL!)}` : fmt(item.price!)}
@@ -269,6 +281,7 @@ export default function MenuEditor({ initialItems }: { initialItems: MenuItem[] 
           ) : (
             <Field label="Precio" type="number" value={editing.price} onChange={e => setEditing(p => p && ({ ...p, price: e.target.value }))} />
           )}
+          <IngredientsEditor ref={editIngredientsRef} ingredients={editing.ingredients} onChange={ingredients => setEditing(p => p && ({ ...p, ingredients }))} />
           <ExtrasEditor ref={editExtrasRef} extras={editing.extras} onChange={extras => setEditing(p => p && ({ ...p, extras }))} />
           {saveError && <div style={{ fontSize:13, color:'#dc2626', fontWeight:600, marginBottom:12 }}>{saveError}</div>}
           <ModalActions onSave={handleSave} onCancel={() => { setEditing(null); setSaveError(''); }} isPending={isPending} />
@@ -304,6 +317,7 @@ export default function MenuEditor({ initialItems }: { initialItems: MenuItem[] 
             <Field label="Precio" type="number" value={creating.price} onChange={e => setCreating(p => p && ({ ...p, price: e.target.value }))} />
           )}
 
+          <IngredientsEditor ref={createIngredientsRef} ingredients={creating.ingredients} onChange={ingredients => setCreating(p => p && ({ ...p, ingredients }))} />
           <ExtrasEditor ref={createExtrasRef} extras={creating.extras} onChange={extras => setCreating(p => p && ({ ...p, extras }))} />
 
           <div style={{ marginBottom:14 }}>
@@ -346,6 +360,50 @@ function ModalActions({ onSave, onCancel, isPending, saveLabel = 'Guardar' }: { 
     </div>
   );
 }
+
+type IngredientsHandle = { flush: () => void };
+
+const IngredientsEditor = forwardRef<IngredientsHandle, { ingredients: string[]; onChange: (v: string[]) => void }>(
+function IngredientsEditor({ ingredients, onChange }, ref) {
+  const [newName, setNewName] = useState('');
+
+  const add = () => {
+    const name = newName.trim();
+    if (!name) return;
+    onChange([...ingredients, name]);
+    setNewName('');
+  };
+
+  useImperativeHandle(ref, () => ({ flush: () => { if (newName.trim()) add(); } }));
+
+  return (
+    <div style={{ marginBottom:14 }}>
+      <div style={{ fontSize:11, fontWeight:700, color:'#A0541A', letterSpacing:1, textTransform:'uppercase', marginBottom:6 }}>
+        Ingredientes
+      </div>
+      <div style={{ fontSize:11, color:'#999', marginBottom:8 }}>El cliente podrá quitar los que no quiere</div>
+
+      {ingredients.length > 0 && (
+        <div style={{ display:'flex', flexWrap:'wrap', gap:6, marginBottom:10 }}>
+          {ingredients.map((ing, i) => (
+            <span key={i} style={{ display:'inline-flex', alignItems:'center', gap:5, background:'#FFF9F5', border:'1px solid rgba(242,100,25,0.2)', borderRadius:999, padding:'4px 10px', fontSize:13, fontWeight:600, color:'#1A0800' }}>
+              {ing}
+              <button onClick={() => onChange(ingredients.filter((_, j) => j !== i))}
+                style={{ fontSize:14, color:'#dc2626', background:'transparent', border:'none', cursor:'pointer', fontWeight:700, lineHeight:1, padding:'0 2px' }}>✕</button>
+            </span>
+          ))}
+        </div>
+      )}
+
+      <div style={{ display:'flex', gap:8 }}>
+        <input value={newName} onChange={e => setNewName(e.target.value)} onKeyDown={e => e.key === 'Enter' && add()}
+          placeholder="Ej: ketchup, cebolla, tomate…"
+          style={{ flex:1, padding:'8px 10px', borderRadius:8, border:'1.5px solid rgba(242,100,25,0.25)', background:'#FFF9F5', color:'#1A0800', fontSize:13, fontFamily:"'Barlow',sans-serif" }} />
+        <button onClick={add} style={{ padding:'8px 14px', borderRadius:8, border:'none', background:'#F26419', color:'#fff', fontSize:13, fontWeight:700, cursor:'pointer' }}>+</button>
+      </div>
+    </div>
+  );
+});
 
 type ExtrasHandle = { flush: () => void };
 

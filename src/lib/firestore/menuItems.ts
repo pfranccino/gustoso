@@ -16,6 +16,7 @@ export type MenuItem = {
   visible: boolean;
   sortOrder: number;
   extras: Extra[];
+  ingredients: string[];
 };
 
 export type NewMenuItem = {
@@ -26,10 +27,11 @@ export type NewMenuItem = {
   priceNormal?: number | null;
   priceXL?: number | null;
   extras?: Extra[];
+  ingredients?: string[];
   visible?: boolean;
 };
 
-export type MenuItemUpdate = Partial<Pick<MenuItem, 'name' | 'desc' | 'price' | 'priceNormal' | 'priceXL' | 'visible' | 'imageUrl' | 'extras'>>;
+export type MenuItemUpdate = Partial<Pick<MenuItem, 'name' | 'desc' | 'price' | 'priceNormal' | 'priceXL' | 'visible' | 'imageUrl' | 'extras' | 'ingredients'>>;
 
 export async function getMenuItems(): Promise<MenuItem[]> {
   const snap = await getAdminDb().collection('menu_items').get();
@@ -48,6 +50,7 @@ export async function getMenuItems(): Promise<MenuItem[]> {
       visible:     d.visible     ?? true,
       sortOrder:   d.sortOrder   ?? 0,
       extras:      Array.isArray(d.extras) ? d.extras : [],
+      ingredients: Array.isArray(d.ingredients) ? d.ingredients : [],
     };
   });
   return items.sort((a, b) => {
@@ -67,8 +70,9 @@ export async function createMenuItem(data: NewMenuItem): Promise<string> {
     price:      data.price ?? null,
     priceNormal: data.priceNormal ?? null,
     priceXL:    data.priceXL ?? null,
-    extras:     data.extras ?? [],
-    imageUrl:   null,
+    extras:      data.extras ?? [],
+    ingredients: data.ingredients ?? [],
+    imageUrl:    null,
     group:      null,
     visible:    data.visible ?? true,
     sortOrder,
