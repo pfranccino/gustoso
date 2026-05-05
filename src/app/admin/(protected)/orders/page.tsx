@@ -41,6 +41,11 @@ function OrderCard({ order, onStatus }: { order: Order; onStatus: (id: string, s
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:12, flexWrap:'wrap', marginBottom:10 }}>
         <div style={{ flex:1, minWidth:0 }}>
           <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:6, flexWrap:'wrap' }}>
+            {order.orderId && (
+              <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:15, color:'var(--orange)', background:'rgba(242,100,25,0.1)', padding:'2px 8px', borderRadius:6, letterSpacing:1 }}>
+                {order.orderId}
+              </span>
+            )}
             <span style={{ fontSize:12, fontWeight:700, color:'var(--text-muted)' }}>{date} · {time}</span>
             <StatusBadge status={order.status}/>
             {order.locationUrl && (
@@ -82,33 +87,56 @@ function OrderCard({ order, onStatus }: { order: Order; onStatus: (id: string, s
 
 export default function OrdersPage() {
   const [dayStartedAt, setDayStartedAt] = useState<Date | null>(null);
-  const [loadingDay, setLoadingDay]     = useState(true);
-  const [startingDay, setStartingDay]   = useState(false);
-  const [showAll, setShowAll]           = useState(false);
+  const [dayClosedAt,  setDayClosedAt]  = useState<Date | null>(null);
+  const [loadingDay,   setLoadingDay]   = useState(true);
+  const [startingDay,  setStartingDay]  = useState(false);
+  const [closingDay,   setClosingDay]   = useState(false);
+  const [showAll,      setShowAll]      = useState(false);
+
+  const isClosed = !!dayClosedAt && !!dayStartedAt && dayClosedAt > dayStartedAt;
 
   const activeFrom = showAll ? null : dayStartedAt;
   const { orders, loading } = useLiveOrders(activeFrom);
 
-  // Cargar el dayStartedAt actual al montar
+  // Cargar estado del día al montar
   useEffect(() => {
     fetch('/api/admin/start-day')
       .then(r => r.json())
-      .then(({ startedAt }) => {
+      .then(({ startedAt, closedAt }) => {
         setDayStartedAt(startedAt ? new Date(startedAt) : null);
+        setDayClosedAt(closedAt  ? new Date(closedAt)  : null);
         setLoadingDay(false);
       })
       .catch(() => setLoadingDay(false));
   }, []);
 
   const handleStartDay = async () => {
+    if (pending.length > 0 && dayStartedAt && !isClosed) {
+      if (!confirm(`Hay ${pending.length} pedido${pending.length > 1 ? 's' : ''} pendiente${pending.length > 1 ? 's' : ''}. ¿Iniciar de todas formas?`)) return;
+    }
     setStartingDay(true);
     try {
       const res = await fetch('/api/admin/start-day', { method: 'POST' });
       const { startedAt } = await res.json();
       setDayStartedAt(new Date(startedAt));
+      setDayClosedAt(null);
       setShowAll(false);
     } finally {
       setStartingDay(false);
+    }
+  };
+
+  const handleCloseDay = async () => {
+    if (pending.length > 0) {
+      if (!confirm(`Hay ${pending.length} pedido${pending.length > 1 ? 's' : ''} pendiente${pending.length > 1 ? 's' : ''}. ¿Cerrar el día de todas formas?`)) return;
+    }
+    setClosingDay(true);
+    try {
+      const res = await fetch('/api/admin/start-day', { method: 'DELETE' });
+      const { closedAt } = await res.json();
+      setDayClosedAt(new Date(closedAt));
+    } finally {
+      setClosingDay(false);
     }
   };
 
@@ -138,15 +166,29 @@ export default function OrdersPage() {
         <h1 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:32, color:'var(--text)', marginBottom:4 }}>
           Pedidos
         </h1>
-        <div style={{ display:'flex', alignItems:'center', gap:10, flexWrap:'wrap' }}>
-          {dayLabel
-            ? <span style={{ fontSize:13, color:'var(--text-muted)' }}>Día iniciado el {dayLabel}</span>
-            : <span style={{ fontSize:13, color:'var(--text-muted)' }}>Sin día activo</span>
+        <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap' }}>
+          {/* Estado del día */}
+          {isClosed
+            ? <span style={{ fontSize:13, fontWeight:700, color:'#16a34a', background:'rgba(22,163,74,0.1)', padding:'3px 10px', borderRadius:999 }}>🌙 Día cerrado</span>
+            : dayLabel
+              ? <span style={{ fontSize:13, color:'var(--text-muted)' }}>🌅 Desde {dayLabel}</span>
+              : <span style={{ fontSize:13, color:'var(--text-muted)' }}>Sin día activo</span>
           }
+
+          {/* Iniciar día */}
           <button onClick={handleStartDay} disabled={startingDay || loadingDay}
             style={{ padding:'6px 16px', borderRadius:999, border:'none', background:'var(--orange)', color:'#fff', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:13, cursor: startingDay?'not-allowed':'pointer', opacity: startingDay?0.6:1 }}>
-            {startingDay ? 'Iniciando…' : '🌅 Iniciar día'}
+            {startingDay ? 'Iniciando…' : isClosed ? '🌅 Nuevo día' : '🌅 Iniciar día'}
           </button>
+
+          {/* Cerrar día — solo si hay día activo y no está cerrado */}
+          {dayStartedAt && !isClosed && (
+            <button onClick={handleCloseDay} disabled={closingDay}
+              style={{ padding:'6px 16px', borderRadius:999, border:'1.5px solid #16a34a', background:'transparent', color:'#16a34a', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:13, cursor: closingDay?'not-allowed':'pointer', opacity: closingDay?0.6:1 }}>
+              {closingDay ? 'Cerrando…' : '🌙 Cerrar día'}
+            </button>
+          )}
+
           <button onClick={() => setShowAll(v => !v)}
             style={{ padding:'6px 14px', borderRadius:999, border:'1px solid var(--border)', background:'transparent', color:'var(--text-muted)', fontSize:13, fontWeight:600, cursor:'pointer' }}>
             {showAll ? 'Ver día actual' : 'Ver histórico'}

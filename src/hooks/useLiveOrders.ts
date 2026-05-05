@@ -10,6 +10,7 @@ function docToOrder(doc: QueryDocumentSnapshot): Order {
   const d = doc.data();
   return {
     id:          doc.id,
+    orderId:     d.orderId ?? undefined,
     createdAt:   d.createdAt instanceof Timestamp ? d.createdAt.toDate().toISOString() : new Date().toISOString(),
     total:       d.total       ?? 0,
     itemCount:   d.itemCount   ?? 0,

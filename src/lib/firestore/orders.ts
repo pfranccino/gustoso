@@ -14,6 +14,7 @@ export type NewOrder = {
   total: number;
   itemCount: number;
   sessionId: string;
+  orderId?: string;
   locationUrl?: string | null;
 };
 
@@ -21,6 +22,7 @@ export type OrderStatus = 'pending' | 'confirmed' | 'rejected';
 
 export type Order = {
   id: string;
+  orderId?: string;
   createdAt: string;
   total: number;
   itemCount: number;
@@ -59,6 +61,7 @@ export async function getOrders(limit = 50): Promise<Order[]> {
         : new Date().toISOString(),
       total: d.total ?? 0,
       itemCount: d.itemCount ?? 0,
+      orderId: d.orderId ?? undefined,
       sessionId: d.sessionId ?? '',
       locationUrl: d.locationUrl ?? undefined,
       status: (d.status ?? 'pending') as OrderStatus,

@@ -16,9 +16,17 @@ function getSessionId(): string {
   return sid;
 }
 
+function generateOrderId(): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // sin 0/O, 1/I/L para evitar confusión
+  let code = 'GST-';
+  for (let i = 0; i < 4; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  return code;
+}
+
 async function logOrder(
   items: ReturnType<typeof useCart>['items'],
   total: number,
+  orderId: string,
   locationUrl?: string
 ) {
   try {
@@ -28,6 +36,7 @@ async function logOrder(
       body: JSON.stringify({
         items,
         total,
+        orderId,
         sessionId: getSessionId(),
         locationUrl,
       }),
@@ -44,8 +53,8 @@ export default function CartDrawer() {
 
   const locationUrl = geo.status === 'success' ? geo.locationUrl : undefined;
 
-  const buildWAMsg = () => {
-    const lines = ["Hola Gustoso's! Quiero hacer un pedido 🛒", ''];
+  const buildWAMsg = (orderId: string) => {
+    const lines = [`🧾 Pedido ${orderId}`, "Hola Gustoso's! Quiero hacer un pedido 🛒", ''];
     items.forEach((item, i) => {
       const extrasTotal = (item.extras ?? []).reduce((s, e) => s + e.price, 0);
       lines.push(`${i + 1}. ${item.qty}x ${item.name}${item.size ? ` (${item.size.toUpperCase()})` : ''} — ${fmt((item.price + extrasTotal) * item.qty)}`);
@@ -60,8 +69,9 @@ export default function CartDrawer() {
   };
 
   const handleSend = () => {
-    logOrder(items, total, locationUrl);
-    window.open(buildWAMsg(), '_blank');
+    const orderId = generateOrderId();
+    logOrder(items, total, orderId, locationUrl);
+    window.open(buildWAMsg(orderId), '_blank');
   };
 
   if (!isOpen) return null;
