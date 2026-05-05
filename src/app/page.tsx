@@ -2,6 +2,7 @@ import AppShell from '@/components/AppShell';
 import { getSettings, Settings } from '@/lib/firestore/settings';
 import { getMenuItems, MenuItem } from '@/lib/firestore/menuItems';
 import { getBurritoConfig, BurritoConfig, DEFAULT_BURRITO } from '@/lib/firestore/burritoConfig';
+import { getPromotions, Promotion } from '@/lib/firestore/promotions';
 
 export const revalidate = 60;
 
@@ -15,13 +16,14 @@ const DEFAULT_SETTINGS: Settings = {
 };
 
 export default async function Home() {
-  let settings: Settings       = DEFAULT_SETTINGS;
-  let menuItems: MenuItem[]    = [];
+  let settings: Settings           = DEFAULT_SETTINGS;
+  let menuItems: MenuItem[]        = [];
   let burritoConfig: BurritoConfig = DEFAULT_BURRITO;
+  let promotions: Promotion[]      = [];
   try {
-    [settings, menuItems, burritoConfig] = await Promise.all([
-      getSettings(), getMenuItems(), getBurritoConfig(),
+    [settings, menuItems, burritoConfig, promotions] = await Promise.all([
+      getSettings(), getMenuItems(), getBurritoConfig(), getPromotions(),
     ]);
   } catch {}
-  return <AppShell settings={settings} menuItems={menuItems} burritoConfig={burritoConfig} />;
+  return <AppShell settings={settings} menuItems={menuItems} burritoConfig={burritoConfig} promotions={promotions} />;
 }

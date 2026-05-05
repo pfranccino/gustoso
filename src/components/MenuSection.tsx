@@ -3,12 +3,15 @@
 import { useRef, useState } from 'react';
 import { MenuItem } from '@/lib/firestore/menuItems';
 import { BurritoConfig } from '@/lib/firestore/burritoConfig';
+import { Promotion } from '@/lib/firestore/promotions';
 import SimpleCard from './SimpleCard';
 import DualCard from './DualCard';
 import SectionHeader from './SectionHeader';
 import BurritoBuilder from './BurritoBuilder';
+import PromoCard from './PromoCard';
 
 const TABS = [
+  { id:'promos',    label:'Promos',      emoji:'🏷️' },
   { id:'vienesas',  label:'Vienesas',    emoji:'🌭' },
   { id:'as',        label:'AS',          emoji:'🥪' },
   { id:'churrasco', label:'Churrasco',   emoji:'🥩' },
@@ -27,10 +30,18 @@ function SizeHint() {
   );
 }
 
-export default function MenuSection({ items, burritoConfig }: { items: MenuItem[]; burritoConfig: BurritoConfig }) {
-  const [activeTab, setActiveTab] = useState<TabId>('vienesas');
+export default function MenuSection({ items, burritoConfig, promotions }: { items: MenuItem[]; burritoConfig: BurritoConfig; promotions: Promotion[] }) {
+  const visiblePromos = promotions.filter(p => p.visible);
+
+  // Default to 'vienesas' if no visible promos, else 'promos'
+  const defaultTab: TabId = visiblePromos.length > 0 ? 'promos' : 'vienesas';
+
+  const [activeTab, setActiveTab] = useState<TabId>(defaultTab);
   const [search,    setSearch]    = useState('');
   const tabBarRef = useRef<HTMLDivElement>(null);
+
+  // Hide promos tab if no visible promos
+  const visibleTabs = TABS.filter(t => t.id !== 'promos' || visiblePromos.length > 0);
 
   const switchTab = (id: TabId) => {
     setActiveTab(id);
@@ -40,8 +51,8 @@ export default function MenuSection({ items, burritoConfig }: { items: MenuItem[
     }
   };
 
-  const activeTabData = TABS.find(t => t.id === activeTab);
-  const tabLabel = activeTab==='churrasco'?'Sándwich Churrasco':activeTab==='mechada'?'Sándwich Mechada':activeTab==='burrito'?'Burrito Gustoso':activeTab==='papas'?'Papas & Más':activeTabData?.label;
+  const activeTabData = visibleTabs.find(t => t.id === activeTab);
+  const tabLabel = activeTab==='churrasco'?'Sándwich Churrasco':activeTab==='mechada'?'Sándwich Mechada':activeTab==='burrito'?'Burrito Gustoso':activeTab==='papas'?'Papas & Más':activeTab==='promos'?'Promociones':activeTabData?.label;
 
   const listStyle: React.CSSProperties = { display:'flex', flexDirection:'column', gap:10 };
 
@@ -49,6 +60,14 @@ export default function MenuSection({ items, burritoConfig }: { items: MenuItem[
   const isDual = (i: MenuItem) => i.priceNormal != null;
 
   const renderContent = () => {
+    if (activeTab === 'promos') {
+      return (
+        <div style={listStyle}>
+          {visiblePromos.map(p => <PromoCard key={p.id} promo={p}/>)}
+        </div>
+      );
+    }
+
     if (activeTab === 'burrito') return <BurritoBuilder config={burritoConfig}/>;
 
     if (activeTab === 'papas') {
@@ -112,7 +131,7 @@ export default function MenuSection({ items, burritoConfig }: { items: MenuItem[
         {/* Tabs — se ocultan mientras hay búsqueda */}
         {!q && (
           <div ref={tabBarRef} style={{ display:'flex', gap:8, overflowX:'auto', scrollbarWidth:'none', msOverflowStyle:'none', paddingBottom:2 }}>
-            {TABS.map(tab => (
+            {visibleTabs.map(tab => (
               <button key={tab.id} data-tab={tab.id} onClick={() => switchTab(tab.id)} style={{ display:'flex', alignItems:'center', gap:5, padding:'7px 13px', borderRadius:999, border: activeTab===tab.id?'2px solid var(--orange)':'2px solid transparent', background: activeTab===tab.id?'var(--orange)':'var(--bg3)', color: activeTab===tab.id?'#fff':'var(--text-muted)', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:13, whiteSpace:'nowrap', cursor:'pointer', transition:'all .2s', letterSpacing:.5, flexShrink:0 }}>
                 <span style={{ fontSize:13 }}>{tab.emoji}</span>{tab.label}
               </button>

@@ -4,11 +4,12 @@ import { useRouter, usePathname } from 'next/navigation';
 import Logo from './Logo';
 
 const NAV_ITEMS = [
-  { href: '/admin/dashboard', label: 'Dashboard',    emoji: '📊' },
-  { href: '/admin/menu',      label: 'Menú',         emoji: '🍔' },
-  { href: '/admin/burrito',   label: 'Burrito',      emoji: '🌯' },
-  { href: '/admin/orders',    label: 'Pedidos',      emoji: '📋' },
-  { href: '/admin/settings',  label: 'Configuración',emoji: '⚙️' },
+  { href: '/admin/dashboard',  label: 'Dashboard',    emoji: '📊' },
+  { href: '/admin/menu',       label: 'Menú',         emoji: '🍔' },
+  { href: '/admin/burrito',    label: 'Burrito',      emoji: '🌯' },
+  { href: '/admin/promotions', label: 'Promos',       emoji: '🏷️' },
+  { href: '/admin/orders',     label: 'Pedidos',      emoji: '📋' },
+  { href: '/admin/settings',   label: 'Configuración',emoji: '⚙️' },
 ];
 
 export default function AdminNav() {

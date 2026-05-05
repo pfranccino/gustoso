@@ -5,6 +5,7 @@ import { CartProvider } from '@/contexts/CartContext';
 import { SettingsProvider, PublicSettings } from '@/contexts/SettingsContext';
 import { MenuItem } from '@/lib/firestore/menuItems';
 import { BurritoConfig } from '@/lib/firestore/burritoConfig';
+import { Promotion } from '@/lib/firestore/promotions';
 import Nav from './Nav';
 import Hero from './Hero';
 import MenuSection from './MenuSection';
@@ -18,7 +19,7 @@ import FloatingWA from './FloatingWA';
 import CartBar from './CartBar';
 import CartDrawer from './CartDrawer';
 
-export default function AppShell({ settings, menuItems, burritoConfig }: { settings: PublicSettings; menuItems: MenuItem[]; burritoConfig: BurritoConfig }) {
+export default function AppShell({ settings, menuItems, burritoConfig, promotions }: { settings: PublicSettings; menuItems: MenuItem[]; burritoConfig: BurritoConfig; promotions: Promotion[] }) {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -34,7 +35,7 @@ export default function AppShell({ settings, menuItems, burritoConfig }: { setti
         <Nav scrolled={scrolled}/>
         <Hero/>
         <div className="section-divider"></div>
-        <MenuSection items={menuItems} burritoConfig={burritoConfig}/>
+        <MenuSection items={menuItems} burritoConfig={burritoConfig} promotions={promotions}/>
         <div className="section-divider"></div>
         <Gallery/>
         <div className="section-divider"></div>
