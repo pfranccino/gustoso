@@ -1,6 +1,7 @@
-import { getMetrics, Metrics, DayBucket, RecentOrder } from '@/lib/firestore/metrics';
+'use client';
 
-export const dynamic = 'force-dynamic';
+import { useLiveMetrics } from '@/hooks/useLiveMetrics';
+import { DayBucket, RecentOrder } from '@/lib/firestore/metrics';
 
 function fmt(n: number) {
   return n.toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 });
@@ -13,8 +14,7 @@ function shortDate(iso: string) {
 
 function BarChart({ days }: { days: DayBucket[] }) {
   const max = Math.max(...days.map(d => d.total), 1);
-  const W = 600;
-  const H = 100;
+  const W = 600, H = 100;
   const barW = Math.floor((W - days.length) / days.length);
 
   return (
@@ -23,10 +23,9 @@ function BarChart({ days }: { days: DayBucket[] }) {
         {days.map((d, i) => {
           const bh = Math.max(2, Math.round((d.total / max) * H));
           const x = i * (barW + 1);
-          const y = H - bh;
           return (
             <g key={d.date}>
-              <rect x={x} y={y} width={barW} height={bh} rx={3} fill="#F26419" opacity={d.total > 0 ? 1 : 0.15} />
+              <rect x={x} y={H - bh} width={barW} height={bh} rx={3} fill="#F26419" opacity={d.total > 0 ? 1 : 0.15} />
               {i % 2 === 0 && (
                 <text x={x + barW / 2} y={H + 16} textAnchor="middle" fontSize={9} fill="#A0541A">
                   {shortDate(d.date)}
@@ -42,22 +41,15 @@ function BarChart({ days }: { days: DayBucket[] }) {
 
 function OrdersTable({ orders }: { orders: RecentOrder[] }) {
   if (orders.length === 0) {
-    return (
-      <p style={{ fontSize: 13, color: 'var(--text-muted)', padding: '16px 0' }}>
-        Aún no hay pedidos registrados.
-      </p>
-    );
+    return <p style={{ fontSize: 13, color: 'var(--text-muted)', padding: '16px 0' }}>Aún no hay pedidos registrados.</p>;
   }
-
   return (
     <div style={{ overflowX: 'auto' }}>
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
         <thead>
           <tr style={{ borderBottom: '1.5px solid var(--border)' }}>
             {['Fecha', 'Items', 'Total', 'Desglose'].map(h => (
-              <th key={h} style={{ textAlign: 'left', padding: '6px 10px', fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: 0.5, textTransform: 'uppercase' }}>
-                {h}
-              </th>
+              <th key={h} style={{ textAlign: 'left', padding: '6px 10px', fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: 0.5, textTransform: 'uppercase' }}>{h}</th>
             ))}
           </tr>
         </thead>
@@ -67,12 +59,8 @@ function OrdersTable({ orders }: { orders: RecentOrder[] }) {
               <td style={{ padding: '8px 10px', whiteSpace: 'nowrap', color: 'var(--text-muted)' }}>
                 {new Date(o.createdAt).toLocaleString('es-CL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
               </td>
-              <td style={{ padding: '8px 10px', fontWeight: 700, color: 'var(--orange)' }}>
-                {o.itemCount}
-              </td>
-              <td style={{ padding: '8px 10px', fontWeight: 700, color: 'var(--text)' }}>
-                {fmt(o.total)}
-              </td>
+              <td style={{ padding: '8px 10px', fontWeight: 700, color: 'var(--orange)' }}>{o.itemCount}</td>
+              <td style={{ padding: '8px 10px', fontWeight: 700, color: 'var(--text)' }}>{fmt(o.total)}</td>
               <td style={{ padding: '8px 10px', color: 'var(--text-muted)', lineHeight: 1.5 }}>
                 {o.items.map(it => `${it.qty}× ${it.name}`).join(', ')}
               </td>
@@ -84,15 +72,8 @@ function OrdersTable({ orders }: { orders: RecentOrder[] }) {
   );
 }
 
-export default async function DashboardPage() {
-  let metrics: Metrics | null = null;
-  let fetchError = false;
-
-  try {
-    metrics = await getMetrics();
-  } catch {
-    fetchError = true;
-  }
+export default function DashboardPage() {
+  const { metrics, loading, error } = useLiveMetrics();
 
   const kpis = [
     { label: 'Total recaudado', value: metrics ? fmt(metrics.totalRevenue) : '—', emoji: '💰' },
@@ -107,14 +88,14 @@ export default async function DashboardPage() {
         <h1 style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 32, color: 'var(--text)', marginBottom: 4 }}>
           Dashboard
         </h1>
-        <p style={{ fontSize: 14, color: 'var(--text-muted)' }}>
-          Resumen de métricas y pedidos recientes.
+        <p style={{ fontSize: 14, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 6 }}>
+          {loading ? 'Conectando…' : <><span style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e', display: 'inline-block' }}/> En vivo</>}
         </p>
       </div>
 
-      {fetchError && (
+      {error && (
         <div style={{ background: 'rgba(220,38,38,0.08)', border: '1px solid rgba(220,38,38,0.3)', borderRadius: 8, padding: '10px 14px', fontSize: 13, color: '#dc2626', fontWeight: 600, marginBottom: 20 }}>
-          Error cargando métricas. Revisa la conexión con Firestore.
+          Error conectando con Firestore. Revisa tu sesión.
         </div>
       )}
 
@@ -124,11 +105,9 @@ export default async function DashboardPage() {
           <div key={kpi.label} style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '20px 16px' }}>
             <div style={{ fontSize: 22, marginBottom: 8 }}>{kpi.emoji}</div>
             <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 26, color: 'var(--orange)', marginBottom: 4, wordBreak: 'break-word' }}>
-              {kpi.value}
+              {loading ? <span style={{ opacity: 0.3 }}>—</span> : kpi.value}
             </div>
-            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: 0.5, textTransform: 'uppercase' }}>
-              {kpi.label}
-            </div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: 0.5, textTransform: 'uppercase' }}>{kpi.label}</div>
           </div>
         ))}
       </div>
@@ -148,9 +127,10 @@ export default async function DashboardPage() {
         <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 18, color: 'var(--text)', marginBottom: 16 }}>
           Últimos 10 pedidos
         </div>
-        {metrics ? <OrdersTable orders={metrics.lastOrders} /> : (
-          <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>Sin datos.</p>
-        )}
+        {loading
+          ? <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>Cargando…</p>
+          : <OrdersTable orders={metrics?.lastOrders ?? []} />
+        }
       </div>
     </div>
   );
