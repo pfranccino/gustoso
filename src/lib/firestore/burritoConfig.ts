@@ -5,10 +5,11 @@ export type BurritoItem    = { name: string; price: number; visible: boolean };
 export type BurritoProtein = { name: string; normal: number; xl: number; visible: boolean };
 
 export type BurritoConfig = {
-  rellenos:  BurritoItem[];
-  proteinas: BurritoProtein[];
-  toppings:  BurritoItem[];
-  salsas:    BurritoItem[];
+  rellenos:    BurritoItem[];
+  proteinas:   BurritoProtein[];
+  toppings:    BurritoItem[];
+  salsas:      BurritoItem[];
+  adicionales: BurritoItem[];
 };
 
 /** Convierte tanto el formato antiguo (string) como el nuevo (objeto) */
@@ -55,6 +56,7 @@ export const DEFAULT_BURRITO: BurritoConfig = {
     'Crema Agria','Salsa de Queso','Buffalo','Burrera','BBQ',
     'Mayonesa','Mayonesa Picante','Guacamole',
   ].map(name => ({ name, price: 0, visible: true })),
+  adicionales: [],
 };
 
 export async function getBurritoConfig(): Promise<BurritoConfig> {
@@ -65,8 +67,9 @@ export async function getBurritoConfig(): Promise<BurritoConfig> {
   return {
     rellenos:  Array.isArray(d.rellenos)  ? d.rellenos.map(parseItem)    : DEFAULT_BURRITO.rellenos,
     proteinas: Array.isArray(d.proteinas) ? d.proteinas.map(parseProtein) : DEFAULT_BURRITO.proteinas,
-    toppings:  Array.isArray(d.toppings)  ? d.toppings.map(parseItem)    : DEFAULT_BURRITO.toppings,
-    salsas:    Array.isArray(d.salsas)    ? d.salsas.map(parseItem)      : DEFAULT_BURRITO.salsas,
+    toppings:    Array.isArray(d.toppings)    ? d.toppings.map(parseItem)    : DEFAULT_BURRITO.toppings,
+    salsas:      Array.isArray(d.salsas)      ? d.salsas.map(parseItem)      : DEFAULT_BURRITO.salsas,
+    adicionales: Array.isArray(d.adicionales) ? d.adicionales.map(parseItem) : DEFAULT_BURRITO.adicionales,
   };
 }
 

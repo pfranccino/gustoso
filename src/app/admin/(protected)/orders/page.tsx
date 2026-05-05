@@ -92,6 +92,7 @@ export default function OrdersPage() {
   const [startingDay,  setStartingDay]  = useState(false);
   const [closingDay,   setClosingDay]   = useState(false);
   const [showAll,      setShowAll]      = useState(false);
+  const [search,       setSearch]       = useState('');
 
   const isClosed = !!dayClosedAt && !!dayStartedAt && dayClosedAt > dayStartedAt;
 
@@ -149,11 +150,25 @@ export default function OrdersPage() {
     // El onSnapshot actualiza la lista automáticamente
   }, []);
 
-  // KPIs
+  // Filtro de búsqueda
+  const q = search.trim().toLowerCase();
+  const visibleOrders = q
+    ? orders.filter(o =>
+        (o.orderId ?? '').toLowerCase().includes(q) ||
+        o.items.some(i => i.name.toLowerCase().includes(q))
+      )
+    : orders;
+
+  // KPIs (sobre todos los pedidos del día, no sobre los filtrados)
   const pending   = orders.filter(o => o.status === 'pending');
   const confirmed = orders.filter(o => o.status === 'confirmed');
   const rejected  = orders.filter(o => o.status === 'rejected');
   const revenue   = confirmed.reduce((s, o) => s + o.total, 0);
+
+  // Listas filtradas para mostrar
+  const shownPending   = visibleOrders.filter(o => o.status === 'pending');
+  const shownConfirmed = visibleOrders.filter(o => o.status === 'confirmed');
+  const shownRejected  = visibleOrders.filter(o => o.status === 'rejected');
 
   const dayLabel = dayStartedAt
     ? dayStartedAt.toLocaleString('es-CL', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' })
@@ -196,6 +211,21 @@ export default function OrdersPage() {
             {showAll ? 'Ver día actual' : 'Ver histórico'}
           </button>
         </div>
+
+        {/* Buscador */}
+        <div style={{ position:'relative', marginTop:10 }}>
+          <span style={{ position:'absolute', left:12, top:'50%', transform:'translateY(-50%)', fontSize:14, color:'var(--text-muted)', pointerEvents:'none' }}>🔍</span>
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Buscar por código GST-XXXX o producto…"
+            style={{ width:'100%', padding:'9px 12px 9px 34px', borderRadius:999, border:'1px solid var(--border)', background:'var(--card)', color:'var(--text)', fontSize:13, fontFamily:"'Barlow',sans-serif", outline:'none', boxSizing:'border-box' }}
+          />
+          {search && (
+            <button onClick={() => setSearch('')}
+              style={{ position:'absolute', right:12, top:'50%', transform:'translateY(-50%)', background:'transparent', border:'none', cursor:'pointer', fontSize:16, color:'var(--text-muted)', lineHeight:1 }}>×</button>
+          )}
+        </div>
       </div>
 
       {/* KPIs */}
@@ -225,31 +255,35 @@ export default function OrdersPage() {
             {showAll ? 'No hay pedidos registrados.' : dayStartedAt ? 'No hay pedidos desde que se inició el día.' : 'Inicia el día para ver los pedidos de esta jornada.'}
           </div>
         </div>
+      ) : visibleOrders.length === 0 && q ? (
+        <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:'var(--radius)', padding:'40px 20px', textAlign:'center' }}>
+          <div style={{ fontSize:32, marginBottom:12 }}>🔍</div>
+          <div style={{ fontSize:14, color:'var(--text-muted)' }}>Sin resultados para <strong>"{search}"</strong></div>
+        </div>
       ) : (
         <div>
-          {/* Pendientes primero */}
-          {pending.length > 0 && (
+          {shownPending.length > 0 && (
             <div style={{ marginBottom:16 }}>
               <div style={{ fontSize:12, fontWeight:700, color:'#d97706', letterSpacing:1, textTransform:'uppercase', marginBottom:8 }}>
-                🟡 Pendientes ({pending.length})
+                🟡 Pendientes ({shownPending.length})
               </div>
-              {pending.map(o => <OrderCard key={o.id} order={o} onStatus={handleStatus}/>)}
+              {shownPending.map(o => <OrderCard key={o.id} order={o} onStatus={handleStatus}/>)}
             </div>
           )}
-          {confirmed.length > 0 && (
+          {shownConfirmed.length > 0 && (
             <div style={{ marginBottom:16 }}>
               <div style={{ fontSize:12, fontWeight:700, color:'#16a34a', letterSpacing:1, textTransform:'uppercase', marginBottom:8 }}>
-                🟢 Confirmados ({confirmed.length})
+                🟢 Confirmados ({shownConfirmed.length})
               </div>
-              {confirmed.map(o => <OrderCard key={o.id} order={o} onStatus={handleStatus}/>)}
+              {shownConfirmed.map(o => <OrderCard key={o.id} order={o} onStatus={handleStatus}/>)}
             </div>
           )}
-          {rejected.length > 0 && (
+          {shownRejected.length > 0 && (
             <div>
               <div style={{ fontSize:12, fontWeight:700, color:'#dc2626', letterSpacing:1, textTransform:'uppercase', marginBottom:8 }}>
-                🔴 Rechazados ({rejected.length})
+                🔴 Rechazados ({shownRejected.length})
               </div>
-              {rejected.map(o => <OrderCard key={o.id} order={o} onStatus={handleStatus}/>)}
+              {shownRejected.map(o => <OrderCard key={o.id} order={o} onStatus={handleStatus}/>)}
             </div>
           )}
         </div>

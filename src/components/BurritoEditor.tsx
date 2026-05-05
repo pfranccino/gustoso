@@ -14,10 +14,11 @@ const INPUT: React.CSSProperties = {
 };
 
 const SECTION_LABELS: Record<keyof BurritoConfig, string> = {
-  rellenos:  '🫔 Rellenos',
-  proteinas: '🥩 Proteínas',
-  toppings:  '🥬 Toppings',
-  salsas:    '🫙 Salsas',
+  rellenos:    '🫔 Rellenos',
+  proteinas:   '🥩 Proteínas',
+  toppings:    '🥬 Toppings',
+  salsas:      '🫙 Salsas',
+  adicionales: '➕ Adicionales',
 };
 
 /* ── helpers de sección ──────────────────────────────────────── */
@@ -117,17 +118,17 @@ export default function BurritoEditor({ initial }: { initial: BurritoConfig }) {
 
   /* ── mutators ──────────────────────────────────────────────── */
 
-  function updateItem(section: 'rellenos' | 'toppings' | 'salsas', idx: number, updated: BurritoItem) {
+  function updateItem(section: 'rellenos' | 'toppings' | 'salsas' | 'adicionales', idx: number, updated: BurritoItem) {
     setConfig(c => ({ ...c, [section]: c[section].map((it, i) => i === idx ? updated : it) as BurritoItem[] }));
     setSaved(false);
   }
 
-  function deleteItem(section: 'rellenos' | 'toppings' | 'salsas', idx: number) {
+  function deleteItem(section: 'rellenos' | 'toppings' | 'salsas' | 'adicionales', idx: number) {
     setConfig(c => ({ ...c, [section]: (c[section] as BurritoItem[]).filter((_, i) => i !== idx) }));
     setSaved(false);
   }
 
-  function addItem(section: 'rellenos' | 'toppings' | 'salsas') {
+  function addItem(section: 'rellenos' | 'toppings' | 'salsas' | 'adicionales') {
     const name = (newItem[section] ?? '').trim();
     if (!name) return;
     const price = parseInt(newPrice[section] ?? '0', 10) || 0;
@@ -185,18 +186,19 @@ export default function BurritoEditor({ initial }: { initial: BurritoConfig }) {
     display:'flex', gap:8, marginTop:12, flexWrap:'wrap',
   };
 
-  function renderSimpleSection(section: 'rellenos' | 'toppings' | 'salsas') {
+  function renderSimpleSection(section: 'rellenos' | 'toppings' | 'salsas' | 'adicionales') {
     const items = config[section] as BurritoItem[];
-    const showPrice = section !== 'rellenos'; // rellenos never cost extra
+    const showPrice = section !== 'rellenos';
     return (
       <div style={sectionStyle}>
         <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:18, color:'var(--text)', marginBottom:4 }}>
           {SECTION_LABELS[section]}
         </div>
         <div style={{ fontSize:12, color:'var(--text-muted)', marginBottom:14 }}>
-          {section === 'rellenos'  && 'Base del burrito. Precio siempre incluido en la proteína.'}
-          {section === 'toppings'  && 'Hasta 5 por pedido. Precio 0 = incluido, >0 = costo extra.'}
-          {section === 'salsas'    && 'Hasta 2 por pedido. Precio 0 = incluida, >0 = costo extra.'}
+          {section === 'rellenos'    && 'Base del burrito. Precio siempre incluido en la proteína.'}
+          {section === 'toppings'    && 'Hasta 5 por pedido. Precio 0 = incluido, >0 = costo extra.'}
+          {section === 'salsas'      && 'Hasta 2 por pedido. Precio 0 = incluida, >0 = costo extra.'}
+          {section === 'adicionales' && 'Extras opcionales de pago. Ej: doble proteína, extra queso.'}
         </div>
 
         <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
@@ -284,6 +286,9 @@ export default function BurritoEditor({ initial }: { initial: BurritoConfig }) {
 
       {/* Salsas */}
       {renderSimpleSection('salsas')}
+
+      {/* Adicionales */}
+      {renderSimpleSection('adicionales')}
 
       {/* Save */}
       {error  && <div style={{ fontSize:13, color:'#dc2626', fontWeight:600, marginBottom:12 }}>{error}</div>}

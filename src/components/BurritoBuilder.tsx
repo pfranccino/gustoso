@@ -12,36 +12,42 @@ export default function BurritoBuilder({ config }: { config: BurritoConfig }) {
   const [relleno,  setRelleno]  = useState<BurritoItem | null>(null);
   const [proteina, setProteina] = useState<BurritoProtein | null>(null);
   const [size,     setSize]     = useState<'normal' | 'xl'>('normal');
-  const [toppings, setToppings] = useState<BurritoItem[]>([]);
-  const [salsas,   setSalsas]   = useState<BurritoItem[]>([]);
-  const [note,     setNote]     = useState('');
-  const [done,     setDone]     = useState(false);
+  const [toppings,    setToppings]    = useState<BurritoItem[]>([]);
+  const [salsas,      setSalsas]      = useState<BurritoItem[]>([]);
+  const [adicionales, setAdicionales] = useState<BurritoItem[]>([]);
+  const [note,        setNote]        = useState('');
+  const [done,        setDone]        = useState(false);
 
   // Solo mostrar ítems visibles
-  const visRellenos  = config.rellenos.filter(r => r.visible);
-  const visProteinas = config.proteinas.filter(p => p.visible);
-  const visToppings  = config.toppings.filter(t => t.visible);
-  const visSalsas    = config.salsas.filter(s => s.visible);
+  const visRellenos    = config.rellenos.filter(r => r.visible);
+  const visProteinas   = config.proteinas.filter(p => p.visible);
+  const visToppings    = config.toppings.filter(t => t.visible);
+  const visSalsas      = config.salsas.filter(s => s.visible);
+  const visAdicionales = (config.adicionales ?? []).filter(a => a.visible);
 
-  const steps = ['Formato', 'Relleno', 'Proteína', 'Toppings', 'Salsas'];
+  // Incluir paso Adicionales solo si hay al menos uno configurado
+  const steps = visAdicionales.length > 0
+    ? ['Formato', 'Relleno', 'Proteína', 'Toppings', 'Salsas', 'Adicionales']
+    : ['Formato', 'Relleno', 'Proteína', 'Toppings', 'Salsas'];
+  const lastStep = steps.length - 1;
 
   const toggleArr = <T extends BurritoItem>(arr: T[], setArr: (v: T[]) => void, val: T, max: number) => {
     if (arr.some(x => x.name === val.name)) setArr(arr.filter(x => x.name !== val.name));
     else if (arr.length < max) setArr([...arr, val]);
   };
 
-  const canNext  = [format !== null, relleno !== null, proteina !== null, true, true];
-  const basePrice = proteina ? (size === 'normal' ? proteina.normal : proteina.xl) : 0;
-  const extrasPrice = [...toppings, ...salsas].reduce((s, i) => s + i.price, 0);
+  const canNext  = [format !== null, relleno !== null, proteina !== null, true, true, true];
+  const basePrice   = proteina ? (size === 'normal' ? proteina.normal : proteina.xl) : 0;
+  const extrasPrice = [...toppings, ...salsas, ...adicionales].reduce((s, i) => s + i.price, 0);
   const price = basePrice + extrasPrice;
 
   const reset = () => {
     setStep(0); setFormat(null); setRelleno(null); setProteina(null);
-    setSize('normal'); setToppings([]); setSalsas([]); setNote(''); setDone(false);
+    setSize('normal'); setToppings([]); setSalsas([]); setAdicionales([]); setNote(''); setDone(false);
   };
 
   const addToCart = () => {
-    const extrasList = [...toppings, ...salsas].filter(i => i.price > 0);
+    const extrasList = [...toppings, ...salsas, ...adicionales].filter(i => i.price > 0);
     const desc = [
       `${format === 'bowl' ? 'Bowl' : 'Burrito'} · ${relleno!.name}`,
       `${proteina!.name} (${size.toUpperCase()})`,
@@ -72,8 +78,9 @@ export default function BurritoBuilder({ config }: { config: BurritoConfig }) {
           ['Formato',  format==='bowl' ? 'Bowl' : 'Burrito'],
           ['Relleno',  relleno?.name],
           ['Proteína', `${proteina?.name} (${size.toUpperCase()}) — ${fmt(basePrice)}`],
-          ['Toppings', toppings.length ? toppings.map(t => t.price > 0 ? `${t.name} (+${fmt(t.price)})` : t.name).join(', ') : '—'],
-          ['Salsas',   salsas.length   ? salsas.map(s => s.price > 0 ? `${s.name} (+${fmt(s.price)})` : s.name).join(', ')   : '—'],
+          ['Toppings',    toppings.length    ? toppings.map(t => t.price > 0 ? `${t.name} (+${fmt(t.price)})` : t.name).join(', ')       : '—'],
+          ['Salsas',      salsas.length      ? salsas.map(s => s.price > 0 ? `${s.name} (+${fmt(s.price)})` : s.name).join(', ')         : '—'],
+          ...(adicionales.length ? [['Adicionales', adicionales.map(a => `${a.name} (+${fmt(a.price)})`).join(', ')]] : []),
         ].map(([k, v]) => (
           <div key={k} style={{ fontSize:13, color:'var(--text-muted)', marginBottom:4 }}>
             <span style={{ fontWeight:700 }}>{k}:</span> {v}
@@ -216,6 +223,26 @@ export default function BurritoBuilder({ config }: { config: BurritoConfig }) {
       )}
 
       {/* Nav buttons */}
+      {/* Step 5 — Adicionales (solo si hay configurados) */}
+      {step === 5 && visAdicionales.length > 0 && (
+        <div>
+          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:22, marginBottom:4, color:'var(--text)' }}>Adicionales</div>
+          <div style={{ fontSize:12, color:'var(--text-muted)', marginBottom:12 }}>Extras opcionales con costo adicional</div>
+          <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+            {visAdicionales.map(a => {
+              const sel = adicionales.some(x => x.name === a.name);
+              return (
+                <button key={a.name} onClick={() => toggleArr(adicionales, setAdicionales, a, 99)}
+                  style={{ background: sel?'rgba(242,100,25,0.1)':'var(--card)', border:`2px solid ${sel?'var(--orange)':'var(--border)'}`, borderRadius:'var(--radius-sm)', padding:'12px 16px', cursor:'pointer', transition:'all .2s', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                  <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:16, color: sel?'var(--orange)':'var(--text)' }}>{a.name}</span>
+                  <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:16, color:'var(--yellow)' }}>+{fmt(a.price)}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       <div style={{ display:'flex', gap:10, marginTop:20 }}>
         {step > 0
           ? <button onClick={() => setStep(s => s - 1)}
@@ -223,9 +250,9 @@ export default function BurritoBuilder({ config }: { config: BurritoConfig }) {
           : <div style={{ flex:1 }}/>
         }
         <button disabled={!canNext[step]}
-          onClick={() => { if (step < 4) setStep(s => s + 1); else setDone(true); }}
+          onClick={() => { if (step < lastStep) setStep(s => s + 1); else setDone(true); }}
           style={{ flex:2, padding:'11px', borderRadius:999, border:'none', background: canNext[step]?'var(--orange)':'var(--border)', color: canNext[step]?'#fff':'var(--text-muted)', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:17, cursor: canNext[step]?'pointer':'not-allowed', transition:'all .2s' }}>
-          {step === 4 ? 'Revisar pedido →' : 'Siguiente →'}
+          {step === lastStep ? 'Revisar pedido →' : 'Siguiente →'}
         </button>
       </div>
     </div>
