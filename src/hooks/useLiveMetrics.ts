@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { collection, onSnapshot, orderBy, query, QueryDocumentSnapshot } from 'firebase/firestore';
-import { getClientFirestore } from '@/lib/firebase/client';
+import { onAuthStateChanged } from 'firebase/auth';
+import { getClientFirestore, getClientAuth } from '@/lib/firebase/client';
 import { Metrics, DayBucket, RecentOrder } from '@/lib/firestore/metrics';
 
 function dateKey(ts: { toDate(): Date }): string {
@@ -73,13 +74,21 @@ export function useLiveMetrics() {
   const [error, setError]   = useState(false);
 
   useEffect(() => {
-    const q = query(collection(getClientFirestore(), 'orders'), orderBy('createdAt', 'desc'));
-    const unsub = onSnapshot(
-      q,
-      (snap) => { setMetrics(computeMetrics(snap.docs)); setLoading(false); },
-      ()     => { setError(true); setLoading(false); },
-    );
-    return unsub;
+    let unsubSnap: (() => void) | undefined;
+
+    const unsubAuth = onAuthStateChanged(getClientAuth(), (user) => {
+      if (unsubSnap) { unsubSnap(); unsubSnap = undefined; }
+      if (!user) { setError(true); setLoading(false); return; }
+
+      const q = query(collection(getClientFirestore(), 'orders'), orderBy('createdAt', 'desc'));
+      unsubSnap = onSnapshot(
+        q,
+        (snap) => { setMetrics(computeMetrics(snap.docs)); setLoading(false); },
+        ()     => { setError(true); setLoading(false); },
+      );
+    });
+
+    return () => { unsubAuth(); if (unsubSnap) unsubSnap(); };
   }, []);
 
   return { metrics, loading, error };
