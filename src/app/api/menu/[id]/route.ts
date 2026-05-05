@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifySession } from '@/lib/auth/verifySession';
-import { updateMenuItem, MenuItemUpdate } from '@/lib/firestore/menuItems';
+import { updateMenuItem, deleteMenuItem, MenuItemUpdate } from '@/lib/firestore/menuItems';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,6 +39,28 @@ export async function PATCH(
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error('menu PATCH error', err);
+    return NextResponse.json({ error: 'Internal error' }, { status: 500 });
+  }
+}
+
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    await verifySession();
+  } catch {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const id = params.id;
+  if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
+
+  try {
+    await deleteMenuItem(id);
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    console.error('menu DELETE error', err);
     return NextResponse.json({ error: 'Internal error' }, { status: 500 });
   }
 }

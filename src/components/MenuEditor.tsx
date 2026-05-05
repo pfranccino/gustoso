@@ -97,6 +97,19 @@ export default function MenuEditor({ initialItems }: { initialItems: MenuItem[] 
     });
   }
 
+  /* ── delete ─────────────────────────────────────── */
+
+  async function handleDelete(item: MenuItem) {
+    if (!confirm(`¿Eliminar "${item.name}"? Esta acción no se puede deshacer.`)) return;
+    applyLocal(item.id, { visible: false }); // feedback optimista
+    try {
+      await fetch(`/api/menu/${item.id}`, { method: 'DELETE' });
+      setItems(prev => prev.filter(it => it.id !== item.id));
+    } catch {
+      applyLocal(item.id, { visible: item.visible }); // revertir
+    }
+  }
+
   /* ── seed ────────────────────────────────────────── */
 
   async function handleSeed() {
@@ -226,19 +239,18 @@ export default function MenuEditor({ initialItems }: { initialItems: MenuItem[] 
                   {/* Edit */}
                   <button
                     onClick={() => openEdit(item)}
-                    style={{
-                      flexShrink: 0,
-                      padding: '5px 12px',
-                      borderRadius: 6,
-                      border: '1px solid var(--border)',
-                      background: 'transparent',
-                      fontSize: 12,
-                      fontWeight: 700,
-                      color: 'var(--text-muted)',
-                      cursor: 'pointer',
-                    }}
+                    style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 6, border: '1px solid var(--border)', background: 'transparent', fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', cursor: 'pointer' }}
                   >
                     Editar
+                  </button>
+
+                  {/* Delete */}
+                  <button
+                    onClick={() => handleDelete(item)}
+                    style={{ flexShrink: 0, padding: '5px 10px', borderRadius: 6, border: '1px solid rgba(220,38,38,0.3)', background: 'transparent', fontSize: 12, fontWeight: 700, color: '#dc2626', cursor: 'pointer' }}
+                    title="Eliminar ítem"
+                  >
+                    ✕
                   </button>
                 </div>
               ))}

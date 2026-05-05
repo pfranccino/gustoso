@@ -47,3 +47,7 @@ export async function updateMenuItem(id: string, update: MenuItemUpdate): Promis
     .doc(id)
     .update({ ...update, updatedAt: FieldValue.serverTimestamp() });
 }
+
+export async function deleteMenuItem(id: string): Promise<void> {
+  await getAdminDb().collection('menu_items').doc(id).delete();
+}

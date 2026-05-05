@@ -26,7 +26,7 @@ export function useGeolocation() {
       (err) => {
         setState(err.code === err.PERMISSION_DENIED ? { status: 'denied' } : { status: 'error' });
       },
-      { timeout: 10000 }
+      { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 }
     );
   };
 
