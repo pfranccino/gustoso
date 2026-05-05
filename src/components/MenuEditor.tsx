@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useTransition } from 'react';
+import { useState, useTransition } from 'react';
 import { MenuItem } from '@/lib/firestore/menuItems';
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -273,27 +273,16 @@ export default function MenuEditor({ initialItems }: { initialItems: MenuItem[] 
               Editar ítem
             </h2>
 
-            <Field label="Nombre">
-              <input value={editing.name} onChange={e => setEditing(p => p && ({ ...p, name: e.target.value }))} />
-            </Field>
-
-            <Field label="Descripción">
-              <input value={editing.desc} onChange={e => setEditing(p => p && ({ ...p, desc: e.target.value }))} placeholder="(opcional)" />
-            </Field>
+            <Field label="Nombre" value={editing.name} onChange={e => setEditing(p => p && ({ ...p, name: e.target.value }))} />
+            <Field label="Descripción" value={editing.desc} placeholder="(opcional)" onChange={e => setEditing(p => p && ({ ...p, desc: e.target.value }))} />
 
             {isDual(editing.item) ? (
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                <Field label="Precio Normal">
-                  <input type="number" value={editing.priceNormal} onChange={e => setEditing(p => p && ({ ...p, priceNormal: e.target.value }))} />
-                </Field>
-                <Field label="Precio XL">
-                  <input type="number" value={editing.priceXL} onChange={e => setEditing(p => p && ({ ...p, priceXL: e.target.value }))} />
-                </Field>
+                <Field label="Precio Normal" type="number" value={editing.priceNormal} onChange={e => setEditing(p => p && ({ ...p, priceNormal: e.target.value }))} />
+                <Field label="Precio XL"     type="number" value={editing.priceXL}     onChange={e => setEditing(p => p && ({ ...p, priceXL:     e.target.value }))} />
               </div>
             ) : (
-              <Field label="Precio">
-                <input type="number" value={editing.price} onChange={e => setEditing(p => p && ({ ...p, price: e.target.value }))} />
-              </Field>
+              <Field label="Precio" type="number" value={editing.price} onChange={e => setEditing(p => p && ({ ...p, price: e.target.value }))} />
             )}
 
             {saveError && (
@@ -336,24 +325,16 @@ export default function MenuEditor({ initialItems }: { initialItems: MenuItem[] 
   );
 }
 
-const INPUT_STYLE: React.CSSProperties = {
-  display: 'block', width: '100%', padding: '10px 12px', borderRadius: 8,
-  border: '1.5px solid rgba(242,100,25,0.25)', background: '#FFF9F5',
-  color: '#1A0800', fontSize: 14, fontFamily: "'Barlow',sans-serif",
-  boxSizing: 'border-box', outline: 'none',
-};
-
-function Field({ label, children }: { label: string; children: React.ReactElement<React.InputHTMLAttributes<HTMLInputElement>> }) {
+function Field({ label, ...inputProps }: { label: string } & React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <div style={{ marginBottom: 14 }}>
-      <label style={{
-        display: 'block', fontSize: 11, fontWeight: 700,
-        color: '#A0541A', letterSpacing: 1,
-        textTransform: 'uppercase', marginBottom: 6,
-      }}>
+      <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#A0541A', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 6 }}>
         {label}
       </label>
-      {React.cloneElement(children, { style: { ...INPUT_STYLE, ...(children.props.style ?? {}) } })}
+      <input
+        {...inputProps}
+        style={{ display: 'block', width: '100%', padding: '10px 12px', borderRadius: 8, border: '1.5px solid rgba(242,100,25,0.25)', background: '#FFF9F5', color: '#1A0800', fontSize: 14, fontFamily: "'Barlow',sans-serif", boxSizing: 'border-box', outline: 'none' }}
+      />
     </div>
   );
 }

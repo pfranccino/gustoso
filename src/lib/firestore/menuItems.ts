@@ -19,10 +19,25 @@ export type MenuItemUpdate = Partial<Pick<MenuItem, 'name' | 'desc' | 'price' | 
 
 export async function getMenuItems(): Promise<MenuItem[]> {
   const snap = await getAdminDb().collection('menu_items').get();
-  const items = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as MenuItem));
+  const items: MenuItem[] = snap.docs.map(doc => {
+    const d = doc.data();
+    return {
+      id:          doc.id,
+      category:    d.category    ?? '',
+      group:       d.group       ?? undefined,
+      name:        d.name        ?? '',
+      desc:        d.desc        ?? null,
+      price:       d.price       ?? null,
+      priceNormal: d.priceNormal ?? null,
+      priceXL:     d.priceXL     ?? null,
+      imageUrl:    d.imageUrl    ?? null,
+      visible:     d.visible     ?? true,
+      sortOrder:   d.sortOrder   ?? 0,
+    };
+  });
   return items.sort((a, b) => {
     if (a.category !== b.category) return a.category.localeCompare(b.category);
-    return (a.sortOrder ?? 0) - (b.sortOrder ?? 0);
+    return a.sortOrder - b.sortOrder;
   });
 }
 
