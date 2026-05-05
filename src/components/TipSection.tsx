@@ -1,17 +1,19 @@
 'use client';
 
 import { useState } from 'react';
-import { fmt, WA_NUMBER } from '@/lib/menuData';
+import { fmt } from '@/lib/menuData';
+import { useSettings } from '@/contexts/SettingsContext';
 import { WAIcon } from './icons';
 
 export default function TipSection() {
   const [selected, setSelected] = useState<number | null>(null);
   const [sent, setSent] = useState(false);
+  const { waNumber } = useSettings();
   const amounts = [500, 1000, 2000, 5000];
 
   const sendTip = () => {
     if (!selected) return;
-    window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(`Hola Gustoso's! Quiero dejar una propina de ${fmt(selected)} 🙏 ¿Cómo les transfiero?`)}`, '_blank');
+    window.open(`https://wa.me/${waNumber}?text=${encodeURIComponent(`Hola Gustoso's! Quiero dejar una propina de ${fmt(selected)} 🙏 ¿Cómo les transfiero?`)}`, '_blank');
     setSent(true);
   };
 

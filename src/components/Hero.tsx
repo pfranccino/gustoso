@@ -1,11 +1,12 @@
 'use client';
 
-import { WA_NUMBER } from '@/lib/menuData';
+import { useSettings } from '@/contexts/SettingsContext';
 import Logo from './Logo';
 import { WAIcon } from './icons';
 
 export default function Hero() {
-  const waUrl = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent("Hola Gustoso's, quiero hacer un pedido 🌭")}`;
+  const { waNumber } = useSettings();
+  const waUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent("Hola Gustoso's, quiero hacer un pedido 🌭")}`;
 
   return (
     <section style={{ position:'relative', minHeight:'100dvh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', overflow:'hidden', padding:'80px 24px 80px', textAlign:'center' }}>

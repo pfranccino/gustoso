@@ -1,8 +1,11 @@
-import { ADDRESS, WA_NUMBER } from '@/lib/menuData';
-import { WAIcon, LocationIcon, ClockIcon, PhoneIcon } from './icons';
+'use client';
+
+import { useSettings } from '@/contexts/SettingsContext';
+import { WAIcon, LocationIcon, ClockIcon } from './icons';
 
 export default function Contact() {
-  const waUrl = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent("Hola Gustoso's, quiero hacer un pedido 🌭")}`;
+  const { waNumber, address, schedule } = useSettings();
+  const waUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent("Hola Gustoso's, quiero hacer un pedido 🌭")}`;
   return (
     <section id="contacto" style={{ background:'var(--bg2)', padding:'60px 0 80px' }}>
       <div style={{ maxWidth:'var(--max)', margin:'0 auto', padding:'0 20px' }}>
@@ -15,9 +18,9 @@ export default function Contact() {
         </div>
         <div style={{ display:'flex', flexDirection:'column', gap:10, marginBottom:20 }}>
           {[
-            { icon:<LocationIcon size={17}/>, label:'Dirección', value:ADDRESS,                         href: undefined },
-            { icon:<ClockIcon size={17}/>,   label:'Horario',   value:'Lunes a Domingo · 12:00 – 23:00', href: undefined },
-            { icon:<PhoneIcon size={17}/>,   label:'WhatsApp',  value:'+56 9 8521 9094',                href: waUrl },
+            { icon:<LocationIcon size={17}/>, label:'Dirección', value: address,   href: undefined },
+            { icon:<ClockIcon size={17}/>,   label:'Horario',   value: schedule,   href: undefined },
+            { icon:<WAIcon size={17} color="var(--orange)"/>, label:'WhatsApp', value:`+${waNumber}`, href: waUrl },
           ].map((item, i) => (
             <div key={i} style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:'var(--radius-sm)', padding:'12px 16px', display:'flex', alignItems:'flex-start', gap:12 }}>
               <div style={{ color:'var(--orange)', flexShrink:0, marginTop:2 }}>{item.icon}</div>

@@ -1,7 +1,8 @@
 'use client';
 
 import { useCart } from '@/contexts/CartContext';
-import { fmt, WA_NUMBER } from '@/lib/menuData';
+import { fmt } from '@/lib/menuData';
+import { useSettings } from '@/contexts/SettingsContext';
 import { TrashIcon, WAIcon } from './icons';
 import { useGeolocation } from '@/hooks/useGeolocation';
 
@@ -38,6 +39,7 @@ async function logOrder(
 
 export default function CartDrawer() {
   const { items, updateQty, removeItem, clearCart, total, count, isOpen, setIsOpen } = useCart();
+  const { waNumber } = useSettings();
   const { state: geo, request: requestGeo, clear: clearGeo } = useGeolocation();
 
   const locationUrl = geo.status === 'success' ? geo.locationUrl : undefined;
@@ -52,7 +54,7 @@ export default function CartDrawer() {
     lines.push('');
     lines.push(`💰 TOTAL: ${fmt(total)}`);
     if (locationUrl) lines.push(`📍 Mi ubicación: ${locationUrl}`);
-    return `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(lines.join('\n'))}`;
+    return `https://wa.me/${waNumber}?text=${encodeURIComponent(lines.join('\n'))}`;
   };
 
   const handleSend = () => {

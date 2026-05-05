@@ -18,13 +18,12 @@ export type MenuItem = {
 export type MenuItemUpdate = Partial<Pick<MenuItem, 'name' | 'desc' | 'price' | 'priceNormal' | 'priceXL' | 'visible' | 'imageUrl'>>;
 
 export async function getMenuItems(): Promise<MenuItem[]> {
-  const snap = await getAdminDb()
-    .collection('menu_items')
-    .orderBy('category')
-    .orderBy('sortOrder')
-    .get();
-
-  return snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as MenuItem));
+  const snap = await getAdminDb().collection('menu_items').get();
+  const items = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as MenuItem));
+  return items.sort((a, b) => {
+    if (a.category !== b.category) return a.category.localeCompare(b.category);
+    return (a.sortOrder ?? 0) - (b.sortOrder ?? 0);
+  });
 }
 
 export async function updateMenuItem(id: string, update: MenuItemUpdate): Promise<void> {

@@ -17,8 +17,14 @@ const DEFAULT: Settings = {
 
 export async function getSettings(): Promise<Settings> {
   const doc = await getAdminDb().collection('settings').doc('main').get();
-  if (!doc.exists) return DEFAULT;
-  return { ...DEFAULT, ...doc.data() } as Settings;
+  if (!doc.exists) return { ...DEFAULT };
+  const d = doc.data()!;
+  return {
+    waNumber: typeof d.waNumber === 'string' ? d.waNumber : DEFAULT.waNumber,
+    address:  typeof d.address  === 'string' ? d.address  : DEFAULT.address,
+    schedule: typeof d.schedule === 'string' ? d.schedule : DEFAULT.schedule,
+    isOpen:   typeof d.isOpen   === 'boolean'? d.isOpen   : DEFAULT.isOpen,
+  };
 }
 
 export async function updateSettings(update: Partial<Settings>): Promise<void> {

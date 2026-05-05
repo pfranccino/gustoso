@@ -14,7 +14,10 @@
       "Bash(npm run *)",
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(curl -s http://localhost:3002/admin/dashboard)",
+      "mcp__Claude_in_Chrome__tabs_context_mcp",
+      "Bash(curl -v http://localhost:3002/admin/dashboard)"
     ]
   }
 }

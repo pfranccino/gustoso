@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { CartProvider } from '@/contexts/CartContext';
+import { SettingsProvider, PublicSettings } from '@/contexts/SettingsContext';
 import Nav from './Nav';
 import Hero from './Hero';
 import MenuSection from './MenuSection';
@@ -15,7 +16,7 @@ import FloatingWA from './FloatingWA';
 import CartBar from './CartBar';
 import CartDrawer from './CartDrawer';
 
-export default function AppShell() {
+export default function AppShell({ settings }: { settings: PublicSettings }) {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -25,6 +26,7 @@ export default function AppShell() {
   }, []);
 
   return (
+    <SettingsProvider value={settings}>
     <CartProvider>
       <div style={{ maxWidth:'var(--max)', margin:'0 auto', position:'relative' }}>
         <Nav scrolled={scrolled}/>
@@ -47,5 +49,6 @@ export default function AppShell() {
         <CartDrawer/>
       </div>
     </CartProvider>
+    </SettingsProvider>
   );
 }
