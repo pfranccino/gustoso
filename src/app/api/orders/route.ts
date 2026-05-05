@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
       total,
       itemCount:  items.reduce((s: number, i: { qty: number }) => s + i.qty, 0),
       sessionId,
-      locationUrl,
+      locationUrl: locationUrl ?? null,
     });
 
     return NextResponse.json({ id });

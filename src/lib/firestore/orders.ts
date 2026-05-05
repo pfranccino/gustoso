@@ -14,7 +14,7 @@ export type NewOrder = {
   total: number;
   itemCount: number;
   sessionId: string;
-  locationUrl?: string;
+  locationUrl?: string | null;
 };
 
 export type Order = {
