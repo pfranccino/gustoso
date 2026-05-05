@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useRef, useState } from 'react';
 import { useLiveMetrics } from '@/hooks/useLiveMetrics';
 import { DayBucket, RecentOrder } from '@/lib/firestore/metrics';
 
@@ -39,7 +40,7 @@ function BarChart({ days }: { days: DayBucket[] }) {
   );
 }
 
-function OrdersTable({ orders }: { orders: RecentOrder[] }) {
+function OrdersTable({ orders, newIds }: { orders: RecentOrder[]; newIds: Set<string> }) {
   if (orders.length === 0) {
     return <p style={{ fontSize: 13, color: 'var(--text-muted)', padding: '16px 0' }}>Aún no hay pedidos registrados.</p>;
   }
@@ -55,7 +56,7 @@ function OrdersTable({ orders }: { orders: RecentOrder[] }) {
         </thead>
         <tbody>
           {orders.map(o => (
-            <tr key={o.id} style={{ borderBottom: '1px solid var(--border)' }}>
+            <tr key={o.id} style={{ borderBottom: '1px solid var(--border)', animation: newIds.has(o.id) ? 'slideIn 0.4s ease, flash 1.2s ease' : undefined }}>
               <td style={{ padding: '8px 10px', whiteSpace: 'nowrap', color: 'var(--text-muted)' }}>
                 {new Date(o.createdAt).toLocaleString('es-CL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
               </td>
@@ -74,6 +75,33 @@ function OrdersTable({ orders }: { orders: RecentOrder[] }) {
 
 export default function DashboardPage() {
   const { metrics, loading, error } = useLiveMetrics();
+
+  // Track which order IDs are new since last snapshot
+  const prevIdsRef = useRef<Set<string>>(new Set());
+  const [newIds, setNewIds] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (!metrics) return;
+    const currentIds = metrics.lastOrders.map(o => o.id);
+    const current = new Set(currentIds);
+    const fresh   = new Set(currentIds.filter(id => !prevIdsRef.current.has(id)));
+    if (prevIdsRef.current.size > 0 && fresh.size > 0) {
+      setNewIds(fresh);
+      setTimeout(() => setNewIds(new Set()), 1500);
+    }
+    prevIdsRef.current = current;
+  }, [metrics]);
+
+  // Track KPI changes for flash animation
+  const prevTotal = useRef<number | null>(null);
+  const [kpiFlash, setKpiFlash] = useState(false);
+  useEffect(() => {
+    if (metrics && prevTotal.current !== null && metrics.totalRevenue !== prevTotal.current) {
+      setKpiFlash(true);
+      setTimeout(() => setKpiFlash(false), 1200);
+    }
+    if (metrics) prevTotal.current = metrics.totalRevenue;
+  }, [metrics?.totalRevenue]);
 
   const kpis = [
     { label: 'Total recaudado', value: metrics ? fmt(metrics.totalRevenue) : '—', emoji: '💰' },
@@ -102,7 +130,7 @@ export default function DashboardPage() {
       {/* KPI cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12, marginBottom: 28 }}>
         {kpis.map(kpi => (
-          <div key={kpi.label} style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '20px 16px' }}>
+          <div key={kpi.label} style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '20px 16px', animation: kpiFlash ? 'flash 1.2s ease' : undefined }}>
             <div style={{ fontSize: 22, marginBottom: 8 }}>{kpi.emoji}</div>
             <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 26, color: 'var(--orange)', marginBottom: 4, wordBreak: 'break-word' }}>
               {loading ? <span style={{ opacity: 0.3 }}>—</span> : kpi.value}
@@ -129,7 +157,7 @@ export default function DashboardPage() {
         </div>
         {loading
           ? <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>Cargando…</p>
-          : <OrdersTable orders={metrics?.lastOrders ?? []} />
+          : <OrdersTable orders={metrics?.lastOrders ?? []} newIds={newIds} />
         }
       </div>
     </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { MENU_DATA } from '@/lib/menuData';
+import { MenuItem } from '@/lib/firestore/menuItems';
 import SimpleCard from './SimpleCard';
 import DualCard from './DualCard';
 import SectionHeader from './SectionHeader';
@@ -26,7 +26,7 @@ function SizeHint() {
   );
 }
 
-export default function MenuSection() {
+export default function MenuSection({ items }: { items: MenuItem[] }) {
   const [activeTab, setActiveTab] = useState<TabId>('vienesas');
   const tabBarRef = useRef<HTMLDivElement>(null);
 
@@ -43,15 +43,39 @@ export default function MenuSection() {
 
   const listStyle: React.CSSProperties = { display:'flex', flexDirection:'column', gap:10 };
 
+  const catItems = items.filter(i => i.category === activeTab && i.visible);
+  const isDual = (i: MenuItem) => i.priceNormal != null;
+
   const renderContent = () => {
-    switch (activeTab) {
-      case 'vienesas':  return <div style={listStyle}>{MENU_DATA.vienesas.items.map(i => <SimpleCard key={i.name} item={i}/>)}</div>;
-      case 'as':        return <div style={listStyle}>{MENU_DATA.as.items.map(i => <SimpleCard key={i.name} item={i}/>)}</div>;
-      case 'churrasco': return <div><SizeHint/><div style={listStyle}>{MENU_DATA.churrasco.items.map(i => <DualCard key={i.name} item={i}/>)}</div></div>;
-      case 'mechada':   return <div><SizeHint/><div style={listStyle}>{MENU_DATA.mechada.items.map(i => <DualCard key={i.name} item={i}/>)}</div></div>;
-      case 'burrito':   return <BurritoBuilder/>;
-      case 'papas':     return <div>{MENU_DATA.papas.groups.map(g => <div key={g.name}><SectionHeader title={g.name}/><div style={listStyle}>{g.items.map(i => <SimpleCard key={i.name} item={i}/>)}</div></div>)}</div>;
+    if (activeTab === 'burrito') return <BurritoBuilder/>;
+
+    if (activeTab === 'papas') {
+      const grouped = catItems.reduce<Record<string, MenuItem[]>>((acc, it) => {
+        const g = it.group ?? 'Papas & Más';
+        (acc[g] ??= []).push(it);
+        return acc;
+      }, {});
+      return (
+        <div>
+          {Object.entries(grouped).map(([g, its]) => (
+            <div key={g}>
+              <SectionHeader title={g}/>
+              <div style={listStyle}>{its.map(i => isDual(i) ? <DualCard key={i.id} item={i}/> : <SimpleCard key={i.id} item={i}/>)}</div>
+            </div>
+          ))}
+        </div>
+      );
     }
+
+    const hasDual = catItems.some(isDual);
+    return (
+      <div>
+        {hasDual && <SizeHint/>}
+        <div style={listStyle}>
+          {catItems.map(i => isDual(i) ? <DualCard key={i.id} item={i}/> : <SimpleCard key={i.id} item={i}/>)}
+        </div>
+      </div>
+    );
   };
 
   return (

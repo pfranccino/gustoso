@@ -26,3 +26,5 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--text);min-
 .fade-up-3{animation:fadeUp .7s .3s ease both}
 @keyframes pulse-ring{0%{transform:scale(1);opacity:.7}100%{transform:scale(1.6);opacity:0}}
 @keyframes slideUp{from{transform:translateY(100%);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes flash{0%{background:rgba(242,100,25,0.18)}100%{background:transparent}}
+@keyframes slideIn{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:translateX(0)}}

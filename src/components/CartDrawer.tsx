@@ -47,8 +47,10 @@ export default function CartDrawer() {
   const buildWAMsg = () => {
     const lines = ["Hola Gustoso's! Quiero hacer un pedido 🛒", ''];
     items.forEach((item, i) => {
-      lines.push(`${i + 1}. ${item.qty}x ${item.name}${item.size ? ` (${item.size.toUpperCase()})` : ''} — ${fmt(item.price * item.qty)}`);
+      const extrasTotal = (item.extras ?? []).reduce((s, e) => s + e.price, 0);
+      lines.push(`${i + 1}. ${item.qty}x ${item.name}${item.size ? ` (${item.size.toUpperCase()})` : ''} — ${fmt((item.price + extrasTotal) * item.qty)}`);
       if (item.desc) lines.push(`   📋 ${item.desc}`);
+      if (item.extras?.length) lines.push(`   ➕ ${item.extras.map(e => e.price > 0 ? `${e.name} (+${fmt(e.price)})` : e.name).join(', ')}`);
       if (item.note) lines.push(`   📝 Nota: ${item.note}`);
     });
     lines.push('');
@@ -100,6 +102,7 @@ export default function CartDrawer() {
                         {item.size && <span style={{ fontSize:12, color:'var(--orange)', fontWeight:900, marginLeft:6, background:'rgba(242,100,25,0.1)', padding:'1px 5px', borderRadius:4 }}>{item.size.toUpperCase()}</span>}
                       </div>
                       {item.desc && <div style={{ fontSize:12, color:'var(--text-muted)', marginTop:2, lineHeight:1.4 }}>{item.desc}</div>}
+                      {item.extras && item.extras.length > 0 && <div style={{ fontSize:12, color:'var(--orange)', marginTop:2, lineHeight:1.5 }}>➕ {item.extras.map(e => e.name).join(', ')}</div>}
                       {item.note && <div style={{ fontSize:12, color:'var(--orange)', marginTop:3, fontStyle:'italic' }}>📝 {item.note}</div>}
                     </div>
                     <button onClick={() => removeItem(item.id)} style={{ color:'var(--text-muted)', background:'transparent', border:'none', cursor:'pointer', padding:4, flexShrink:0, opacity:.6 }}><TrashIcon size={14}/></button>
@@ -110,7 +113,7 @@ export default function CartDrawer() {
                       <span style={{ padding:'0 10px', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:16, color:'var(--text)' }}>{item.qty}</span>
                       <button onClick={() => updateQty(item.id, 1)} style={{ width:32, height:32, border:'none', background:'transparent', cursor:'pointer', fontSize:16, color:'var(--orange)', display:'flex', alignItems:'center', justifyContent:'center' }}>+</button>
                     </div>
-                    <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:18, color:'var(--yellow)' }}>{fmt(item.price * item.qty)}</div>
+                    <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:18, color:'var(--yellow)' }}>{fmt((item.price + (item.extras ?? []).reduce((s, e) => s + e.price, 0)) * item.qty)}</div>
                   </div>
                 </div>
               ))}

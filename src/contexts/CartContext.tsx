@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useCallback, useContext, useRef, useState } from 'react';
+import { Extra } from '@/lib/firestore/menuItems';
 
 export type CartItem = {
   id: number;
@@ -9,6 +10,7 @@ export type CartItem = {
   price: number;
   size?: string;
   note?: string;
+  extras?: Extra[];
   qty: number;
   alwaysNew?: boolean;
 };
@@ -40,7 +42,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       const idx = prev.findIndex(p =>
         p.name === item.name &&
         (p.size  || '') === (item.size  || '') &&
-        (p.note  || '') === (item.note  || '')
+        (p.note  || '') === (item.note  || '') &&
+        JSON.stringify(p.extras ?? []) === JSON.stringify(item.extras ?? [])
       );
       if (idx >= 0) {
         const updated = [...prev];
@@ -56,7 +59,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setItems(prev => prev.map(p => p.id === id ? { ...p, qty: Math.max(0, p.qty + delta) } : p).filter(p => p.qty > 0)), []);
   const clearCart  = useCallback(() => setItems([]), []);
 
-  const total = items.reduce((s, i) => s + i.price * i.qty, 0);
+  const total = items.reduce((s, i) => {
+    const extrasTotal = (i.extras ?? []).reduce((e, x) => e + x.price, 0);
+    return s + (i.price + extrasTotal) * i.qty;
+  }, 0);
   const count = items.reduce((s, i) => s + i.qty, 0);
 
   return (

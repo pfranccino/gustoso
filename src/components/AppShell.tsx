@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { CartProvider } from '@/contexts/CartContext';
 import { SettingsProvider, PublicSettings } from '@/contexts/SettingsContext';
+import { MenuItem } from '@/lib/firestore/menuItems';
 import Nav from './Nav';
 import Hero from './Hero';
 import MenuSection from './MenuSection';
@@ -16,7 +17,7 @@ import FloatingWA from './FloatingWA';
 import CartBar from './CartBar';
 import CartDrawer from './CartDrawer';
 
-export default function AppShell({ settings }: { settings: PublicSettings }) {
+export default function AppShell({ settings, menuItems }: { settings: PublicSettings; menuItems: MenuItem[] }) {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -32,7 +33,7 @@ export default function AppShell({ settings }: { settings: PublicSettings }) {
         <Nav scrolled={scrolled}/>
         <Hero/>
         <div className="section-divider"></div>
-        <MenuSection/>
+        <MenuSection items={menuItems}/>
         <div className="section-divider"></div>
         <Gallery/>
         <div className="section-divider"></div>
