@@ -48,13 +48,13 @@ async function logOrder(
 
 export default function CartDrawer() {
   const { items, updateQty, removeItem, clearCart, total, count, isOpen, setIsOpen } = useCart();
-  const { waNumber } = useSettings();
+  const { waNumber, waGreeting, waFooter } = useSettings();
   const { state: geo, request: requestGeo, clear: clearGeo } = useGeolocation();
 
   const locationUrl = geo.status === 'success' ? geo.locationUrl : undefined;
 
   const buildWAMsg = (orderId: string) => {
-    const lines = [`🧾 Pedido ${orderId}`, "Hola Gustoso's! Quiero hacer un pedido 🛒", ''];
+    const lines = [`🧾 Pedido ${orderId}`, waGreeting, ''];
     items.forEach((item, i) => {
       const extrasTotal = (item.extras ?? []).reduce((s, e) => s + e.price, 0);
       lines.push(`${i + 1}. ${item.qty}x ${item.name}${item.size ? ` (${item.size.toUpperCase()})` : ''} — ${fmt((item.price + extrasTotal) * item.qty)}`);
@@ -66,6 +66,7 @@ export default function CartDrawer() {
     lines.push('');
     lines.push(`💰 TOTAL: ${fmt(total)}`);
     if (locationUrl) lines.push(`📍 Mi ubicación: ${locationUrl}`);
+    if (waFooter) lines.push('', waFooter);
     return `https://wa.me/${waNumber}?text=${encodeURIComponent(lines.join('\n'))}`;
   };
 

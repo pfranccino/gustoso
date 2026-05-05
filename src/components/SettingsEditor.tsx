@@ -64,6 +64,47 @@ export default function SettingsEditor({ initial }: { initial: Settings }) {
         </div>
       </div>
 
+      {/* Mensaje WhatsApp */}
+      <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '20px', marginBottom: 16 }}>
+        <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 18, color: 'var(--text)', marginBottom: 4 }}>
+          💬 Mensaje de pedido
+        </div>
+        <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>
+          Personaliza el texto que el cliente envía por WhatsApp.
+        </div>
+
+        <label style={LABEL}>Saludo (primera línea)</label>
+        <input
+          style={{ ...INPUT, marginBottom: 14 }}
+          value={form.waGreeting}
+          onChange={e => set('waGreeting', e.target.value)}
+          placeholder="Hola Gustoso's! Quiero hacer un pedido 🛒"
+        />
+
+        <label style={LABEL}>Cierre (opcional, al final del mensaje)</label>
+        <input
+          style={{ ...INPUT, marginBottom: 16 }}
+          value={form.waFooter}
+          onChange={e => set('waFooter', e.target.value)}
+          placeholder="Ej: ¡Gracias! Te esperamos 🙌"
+        />
+
+        {/* Preview */}
+        <div style={{ fontSize: 11, fontWeight: 700, color: '#A0541A', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 8 }}>
+          Vista previa
+        </div>
+        <div style={{ background: '#e9fbe9', border: '1px solid #c3e6c3', borderRadius: 10, padding: '12px 14px', fontFamily: 'monospace', fontSize: 12, color: '#1a3a1a', lineHeight: 1.8, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+{`🧾 Pedido GST-ABCD
+${form.waGreeting}
+
+1. 1x Vienesa Alemana — $2.800
+   ❌ Sin: Chucrut
+2. 2x AS Italiano — $9.000
+
+💰 TOTAL: $11.800${form.waFooter ? `\n\n${form.waFooter}` : ''}`}
+        </div>
+      </div>
+
       {/* Dirección */}
       <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '20px', marginBottom: 16 }}>
         <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 18, color: 'var(--text)', marginBottom: 16 }}>

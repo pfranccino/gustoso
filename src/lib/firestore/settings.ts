@@ -2,17 +2,21 @@ import { getAdminDb } from '@/lib/firebase/admin';
 import { FieldValue } from 'firebase-admin/firestore';
 
 export type Settings = {
-  waNumber: string;
-  address: string;
-  schedule: string;
-  isOpen: boolean;
+  waNumber:   string;
+  address:    string;
+  schedule:   string;
+  isOpen:     boolean;
+  waGreeting: string;
+  waFooter:   string;
 };
 
 const DEFAULT: Settings = {
-  waNumber: '56985219094',
-  address:  'Marino José Manuel Ramírez #1641',
-  schedule: 'Lunes a Domingo 12:00 – 22:00',
-  isOpen:   true,
+  waNumber:   '56985219094',
+  address:    'Marino José Manuel Ramírez #1641',
+  schedule:   'Lunes a Domingo 12:00 – 22:00',
+  isOpen:     true,
+  waGreeting: "Hola Gustoso's! Quiero hacer un pedido 🛒",
+  waFooter:   '',
 };
 
 export async function getSettings(): Promise<Settings> {
@@ -20,10 +24,12 @@ export async function getSettings(): Promise<Settings> {
   if (!doc.exists) return { ...DEFAULT };
   const d = doc.data()!;
   return {
-    waNumber: typeof d.waNumber === 'string' ? d.waNumber : DEFAULT.waNumber,
-    address:  typeof d.address  === 'string' ? d.address  : DEFAULT.address,
-    schedule: typeof d.schedule === 'string' ? d.schedule : DEFAULT.schedule,
-    isOpen:   typeof d.isOpen   === 'boolean'? d.isOpen   : DEFAULT.isOpen,
+    waNumber:   typeof d.waNumber   === 'string'  ? d.waNumber   : DEFAULT.waNumber,
+    address:    typeof d.address    === 'string'  ? d.address    : DEFAULT.address,
+    schedule:   typeof d.schedule   === 'string'  ? d.schedule   : DEFAULT.schedule,
+    isOpen:     typeof d.isOpen     === 'boolean' ? d.isOpen     : DEFAULT.isOpen,
+    waGreeting: typeof d.waGreeting === 'string'  ? d.waGreeting : DEFAULT.waGreeting,
+    waFooter:   typeof d.waFooter   === 'string'  ? d.waFooter   : DEFAULT.waFooter,
   };
 }
 
