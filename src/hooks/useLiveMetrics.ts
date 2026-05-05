@@ -78,12 +78,12 @@ export function useLiveMetrics() {
 
     const unsubAuth = onAuthStateChanged(getClientAuth(), (user) => {
       if (unsubSnap) { unsubSnap(); unsubSnap = undefined; }
-      if (!user) { setError(true); setLoading(false); return; }
+      if (!user) return; // esperar — onAuthStateChanged vuelve a disparar con el usuario
 
       const q = query(collection(getClientFirestore(), 'orders'), orderBy('createdAt', 'desc'));
       unsubSnap = onSnapshot(
         q,
-        (snap) => { setMetrics(computeMetrics(snap.docs)); setLoading(false); },
+        (snap) => { setMetrics(computeMetrics(snap.docs)); setLoading(false); setError(false); },
         ()     => { setError(true); setLoading(false); },
       );
     });
