@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react';
 import { MenuItem } from '@/lib/firestore/menuItems';
+import { BurritoConfig } from '@/lib/firestore/burritoConfig';
 import SimpleCard from './SimpleCard';
 import DualCard from './DualCard';
 import SectionHeader from './SectionHeader';
@@ -26,7 +27,7 @@ function SizeHint() {
   );
 }
 
-export default function MenuSection({ items }: { items: MenuItem[] }) {
+export default function MenuSection({ items, burritoConfig }: { items: MenuItem[]; burritoConfig: BurritoConfig }) {
   const [activeTab, setActiveTab] = useState<TabId>('vienesas');
   const tabBarRef = useRef<HTMLDivElement>(null);
 
@@ -47,7 +48,7 @@ export default function MenuSection({ items }: { items: MenuItem[] }) {
   const isDual = (i: MenuItem) => i.priceNormal != null;
 
   const renderContent = () => {
-    if (activeTab === 'burrito') return <BurritoBuilder/>;
+    if (activeTab === 'burrito') return <BurritoBuilder config={burritoConfig}/>;
 
     if (activeTab === 'papas') {
       const grouped = catItems.reduce<Record<string, MenuItem[]>>((acc, it) => {
