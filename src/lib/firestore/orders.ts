@@ -17,6 +17,8 @@ export type NewOrder = {
   locationUrl?: string | null;
 };
 
+export type OrderStatus = 'pending' | 'confirmed' | 'rejected';
+
 export type Order = {
   id: string;
   createdAt: string;
@@ -24,15 +26,21 @@ export type Order = {
   itemCount: number;
   sessionId: string;
   locationUrl?: string;
+  status: OrderStatus;
   items: OrderItem[];
 };
 
 export async function createOrder(order: NewOrder) {
   const ref = await getAdminDb().collection('orders').add({
     ...order,
+    status: 'pending',
     createdAt: FieldValue.serverTimestamp(),
   });
   return ref.id;
+}
+
+export async function updateOrderStatus(id: string, status: OrderStatus): Promise<void> {
+  await getAdminDb().collection('orders').doc(id).update({ status, updatedAt: FieldValue.serverTimestamp() });
 }
 
 export async function getOrders(limit = 50): Promise<Order[]> {
@@ -53,6 +61,7 @@ export async function getOrders(limit = 50): Promise<Order[]> {
       itemCount: d.itemCount ?? 0,
       sessionId: d.sessionId ?? '',
       locationUrl: d.locationUrl ?? undefined,
+      status: (d.status ?? 'pending') as OrderStatus,
       items: d.items ?? [],
     };
   });
