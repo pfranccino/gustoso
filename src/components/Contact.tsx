@@ -14,7 +14,7 @@ export default function Contact() {
           <h2 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:32, color:'var(--text)', marginTop:6 }}>Cómo llegar</h2>
         </div>
         <div style={{ width:'100%', height:200, background:'var(--bg3)', borderRadius:'var(--radius)', border:'1px solid var(--border)', marginBottom:16, overflow:'hidden' }}>
-          <iframe title="Ubicación Gustoso's" src="https://maps.google.com/maps?q=Marino+Jose+Manuel+Ramirez+1641&output=embed&z=15" width="100%" height="100%" style={{ border:'none' }} loading="lazy"></iframe>
+          <iframe title="Ubicación Gustoso's" src={`https://maps.google.com/maps?q=${encodeURIComponent(address)}&output=embed&z=15`} width="100%" height="100%" style={{ border:'none' }} loading="lazy"></iframe>
         </div>
         <div style={{ display:'flex', flexDirection:'column', gap:10, marginBottom:20 }}>
           {[
