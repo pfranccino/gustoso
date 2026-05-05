@@ -143,7 +143,20 @@ export default function CartDrawer() {
                 </div>
               )}
               {geo.status === 'denied' && (
-                <div style={{ fontSize:12, color:'var(--text-muted)', textAlign:'center', padding:'6px' }}>Permiso denegado — el pedido se envía igual sin ubicación</div>
+                <div style={{ fontSize:12, color:'var(--text-muted)', textAlign:'center', padding:'6px' }}>
+                  Permiso bloqueado — actívalo en el candado 🔒 de la barra del navegador
+                </div>
+              )}
+              {geo.status === 'unavailable' && (
+                <div style={{ fontSize:12, color:'var(--text-muted)', textAlign:'center', padding:'6px' }}>
+                  Ubicación no disponible — activa los servicios de ubicación en tu dispositivo
+                </div>
+              )}
+              {geo.status === 'timeout' && (
+                <div style={{ fontSize:12, color:'var(--text-muted)', textAlign:'center', padding:'6px', display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
+                  <span>No respondió a tiempo</span>
+                  <button onClick={requestGeo} style={{ fontSize:11, fontWeight:700, color:'var(--orange)', background:'transparent', border:'none', cursor:'pointer', textDecoration:'underline' }}>Reintentar</button>
+                </div>
               )}
               {geo.status === 'error' && (
                 <div style={{ fontSize:12, color:'var(--text-muted)', textAlign:'center', padding:'6px' }}>No se pudo obtener la ubicación</div>

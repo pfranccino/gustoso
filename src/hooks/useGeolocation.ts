@@ -7,6 +7,8 @@ type GeoState =
   | { status: 'loading' }
   | { status: 'success'; locationUrl: string }
   | { status: 'denied' }
+  | { status: 'unavailable' }
+  | { status: 'timeout' }
   | { status: 'error' };
 
 export function useGeolocation() {
@@ -24,9 +26,12 @@ export function useGeolocation() {
         setState({ status: 'success', locationUrl });
       },
       (err) => {
-        setState(err.code === err.PERMISSION_DENIED ? { status: 'denied' } : { status: 'error' });
+        if (err.code === err.PERMISSION_DENIED)   setState({ status: 'denied' });
+        else if (err.code === err.POSITION_UNAVAILABLE) setState({ status: 'unavailable' });
+        else if (err.code === err.TIMEOUT)        setState({ status: 'timeout' });
+        else                                      setState({ status: 'error' });
       },
-      { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 }
+      { enableHighAccuracy: false, timeout: 20000, maximumAge: 120000 }
     );
   };
 
