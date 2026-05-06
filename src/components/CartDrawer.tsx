@@ -7,7 +7,7 @@ import { useSettings } from '@/contexts/SettingsContext';
 import { TrashIcon, WAIcon } from './icons';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { PaymentMethod } from '@/lib/firestore/orders';
-import { DeliveryConfig } from '@/lib/firestore/settings';
+import { DeliveryConfig } from '@/lib/firestore/settingsTypes';
 
 function getSessionId(): string {
   const key = 'gustosos_sid';

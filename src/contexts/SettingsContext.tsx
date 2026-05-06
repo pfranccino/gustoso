@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext } from 'react';
-import { DeliveryConfig, DEFAULT_DELIVERY } from '@/lib/firestore/settings';
+import { DeliveryConfig, DEFAULT_DELIVERY } from '@/lib/firestore/settingsTypes';
 
 export type { DeliveryConfig };
 

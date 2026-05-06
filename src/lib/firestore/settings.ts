@@ -1,33 +1,9 @@
 import { getAdminDb } from '@/lib/firebase/admin';
 import { FieldValue } from 'firebase-admin/firestore';
-
-export type DeliveryZone = { maxKm: number; price: number };
-
-export type DeliveryConfig = {
-  enabled:          boolean;
-  restaurantLat:    number;
-  restaurantLng:    number;
-  zones:            DeliveryZone[];  // ordenadas por maxKm ascendente
-  extraPricePerKm:  number;          // precio/km más allá de la última zona (0 = no disponible)
-};
-
-export const DEFAULT_DELIVERY: DeliveryConfig = {
-  enabled:         false,
-  restaurantLat:   0,
-  restaurantLng:   0,
-  zones:           [{ maxKm: 2, price: 1500 }, { maxKm: 5, price: 2500 }],
-  extraPricePerKm: 500,
-};
-
-export type Settings = {
-  waNumber:   string;
-  address:    string;
-  schedule:   string;
-  isOpen:     boolean;
-  waGreeting: string;
-  waFooter:   string;
-  delivery:   DeliveryConfig;
-};
+import type { DeliveryZone, DeliveryConfig, Settings } from './settingsTypes';
+import { DEFAULT_DELIVERY } from './settingsTypes';
+export type { DeliveryZone, DeliveryConfig, Settings } from './settingsTypes';
+export { DEFAULT_DELIVERY } from './settingsTypes';
 
 const DEFAULT: Settings = {
   waNumber:   '56985219094',

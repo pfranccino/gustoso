@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { Settings, DeliveryZone } from '@/lib/firestore/settings';
+import { Settings, DeliveryZone } from '@/lib/firestore/settingsTypes';
 
 const INPUT: React.CSSProperties = {
   display: 'block', width: '100%', padding: '11px 13px',
