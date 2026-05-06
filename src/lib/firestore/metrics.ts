@@ -60,7 +60,8 @@ export async function getMetrics(): Promise<Metrics> {
     orderCount++;
 
     for (const item of d.items ?? []) {
-      productCount[item.name] = (productCount[item.name] ?? 0) + (item.qty ?? 1);
+      const key = item.size ? `${item.name} (${String(item.size).toUpperCase()})` : item.name;
+      productCount[key] = (productCount[key] ?? 0) + (item.qty ?? 1);
     }
 
     if (d.createdAt instanceof Timestamp) {
