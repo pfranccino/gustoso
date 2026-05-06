@@ -196,8 +196,9 @@ export default function CartDrawer() {
                 </div>
               )}
               {geo.status === 'denied' && (
-                <div style={{ fontSize:12, color:'#dc2626', textAlign:'center', padding:'6px', background:'rgba(220,38,38,0.05)', borderRadius:8 }}>
-                  🔒 Permiso bloqueado — actívalo en la barra del navegador
+                <div style={{ fontSize:12, color:'#dc2626', padding:'8px 10px', background:'rgba(220,38,38,0.05)', borderRadius:8, lineHeight:1.5 }}>
+                  🔒 <strong>Ubicación bloqueada para este sitio.</strong>{' '}
+                  Toca el candado en la barra del navegador → <em>Permisos → Ubicación → Permitir</em>, y se activará automáticamente.
                 </div>
               )}
               {(geo.status === 'unavailable') && (
