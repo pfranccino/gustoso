@@ -181,7 +181,7 @@ function StatusSelector({ current, onStatus, busy }: {
 }) {
   const cfg = STATUS_CFG[current];
   return (
-    <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
+    <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end' }}>
       <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: .5, flexShrink: 0 }}>Estado</span>
       <select
         value={current}
