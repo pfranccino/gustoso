@@ -11,12 +11,16 @@ export type BurritoConfig = {
   salsas:      BurritoItem[];
   adicionales: BurritoItem[];
   // Límites y cobro por extras
-  toppingsMax:         number;  // máximo seleccionable
-  toppingsLibres:      number;  // cuántos van incluidos sin costo
-  toppingExtraPrecio:  number;  // precio por cada topping sobre el límite libre
+  toppingsMax:         number;
+  toppingsLibres:      number;
+  toppingExtraPrecio:  number;
   salsasMax:           number;
   salsasLibres:        number;
   salsaExtraPrecio:    number;
+  // Extra proteína
+  proteinaExtraHabilitada:   boolean;
+  proteinaExtraPrecioNormal: number;  // costo al pedir tamaño Normal
+  proteinaExtraPrecioXL:     number;  // costo al pedir tamaño XL
 };
 
 /** Convierte tanto el formato antiguo (string) como el nuevo (objeto) */
@@ -70,6 +74,9 @@ export const DEFAULT_BURRITO: BurritoConfig = {
   salsasMax:          5,
   salsasLibres:       2,
   salsaExtraPrecio:   0,
+  proteinaExtraHabilitada:   false,
+  proteinaExtraPrecioNormal: 0,
+  proteinaExtraPrecioXL:     0,
 };
 
 export async function getBurritoConfig(): Promise<BurritoConfig> {
@@ -89,6 +96,9 @@ export async function getBurritoConfig(): Promise<BurritoConfig> {
     salsasMax:           Number(d.salsasMax            ?? DEFAULT_BURRITO.salsasMax),
     salsasLibres:        Number(d.salsasLibres         ?? DEFAULT_BURRITO.salsasLibres),
     salsaExtraPrecio:    Number(d.salsaExtraPrecio     ?? DEFAULT_BURRITO.salsaExtraPrecio),
+    proteinaExtraHabilitada:   Boolean(d.proteinaExtraHabilitada   ?? false),
+    proteinaExtraPrecioNormal: Number(d.proteinaExtraPrecioNormal  ?? 0),
+    proteinaExtraPrecioXL:     Number(d.proteinaExtraPrecioXL      ?? 0),
   };
 }
 

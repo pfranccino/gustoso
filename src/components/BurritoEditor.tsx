@@ -281,6 +281,46 @@ export default function BurritoEditor({ initial }: { initial: BurritoConfig }) {
         </div>
       </div>
 
+      {/* Extra proteína */}
+      <div style={sectionStyle}>
+        <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:18, color:'var(--text)', marginBottom:4 }}>
+          🍗 Extra Proteína
+        </div>
+        <div style={{ fontSize:12, color:'var(--text-muted)', marginBottom:16 }}>
+          Permite al cliente pedir doble porción de su proteína elegida pagando un adicional.
+        </div>
+
+        {/* Toggle habilitada */}
+        <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:16 }}>
+          <button onClick={() => { setConfig(c => ({ ...c, proteinaExtraHabilitada: !c.proteinaExtraHabilitada })); setSaved(false); }}
+            style={{ flexShrink:0, width:36, height:20, borderRadius:999, border:'none',
+              background: config.proteinaExtraHabilitada ? '#F26419' : '#d1d5db',
+              cursor:'pointer', position:'relative', transition:'background .2s' }}>
+            <span style={{ position:'absolute', top:3, left: config.proteinaExtraHabilitada ? 17 : 3, width:14, height:14, borderRadius:'50%', background:'#fff', transition:'left .2s' }}/>
+          </button>
+          <span style={{ fontSize:13, fontWeight:700, color:'var(--text)' }}>
+            {config.proteinaExtraHabilitada ? 'Habilitada — aparece en el paso Proteína' : 'Deshabilitada'}
+          </span>
+        </div>
+
+        {config.proteinaExtraHabilitada && (
+          <div style={{ display:'flex', gap:10, flexWrap:'wrap' }}>
+            <div style={{ display:'flex', flexDirection:'column', gap:4, flex:1, minWidth:120 }}>
+              <label style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', letterSpacing:.5, textTransform:'uppercase' }}>Precio extra Normal ($)</label>
+              <input type="number" min={0} value={config.proteinaExtraPrecioNormal}
+                onChange={e => { setConfig(c => ({ ...c, proteinaExtraPrecioNormal: parseInt(e.target.value, 10) || 0 })); setSaved(false); }}
+                style={{ ...INPUT }} />
+            </div>
+            <div style={{ display:'flex', flexDirection:'column', gap:4, flex:1, minWidth:120 }}>
+              <label style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', letterSpacing:.5, textTransform:'uppercase' }}>Precio extra XL ($)</label>
+              <input type="number" min={0} value={config.proteinaExtraPrecioXL}
+                onChange={e => { setConfig(c => ({ ...c, proteinaExtraPrecioXL: parseInt(e.target.value, 10) || 0 })); setSaved(false); }}
+                style={{ ...INPUT }} />
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Toppings */}
       {renderSimpleSection('toppings')}
 

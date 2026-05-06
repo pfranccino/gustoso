@@ -12,11 +12,12 @@ export default function BurritoBuilder({ config }: { config: BurritoConfig }) {
   const [relleno,  setRelleno]  = useState<BurritoItem | null>(null);
   const [proteina, setProteina] = useState<BurritoProtein | null>(null);
   const [size,     setSize]     = useState<'normal' | 'xl'>('normal');
-  const [toppings,    setToppings]    = useState<BurritoItem[]>([]);
-  const [salsas,      setSalsas]      = useState<BurritoItem[]>([]);
-  const [adicionales, setAdicionales] = useState<BurritoItem[]>([]);
-  const [note,        setNote]        = useState('');
-  const [done,        setDone]        = useState(false);
+  const [toppings,      setToppings]      = useState<BurritoItem[]>([]);
+  const [salsas,        setSalsas]        = useState<BurritoItem[]>([]);
+  const [adicionales,   setAdicionales]   = useState<BurritoItem[]>([]);
+  const [extraProteina, setExtraProteina] = useState(false);
+  const [note,          setNote]          = useState('');
+  const [done,          setDone]          = useState(false);
 
   // Solo mostrar ítems visibles
   const visRellenos    = config.rellenos.filter(r => r.visible);
@@ -54,16 +55,21 @@ export default function BurritoBuilder({ config }: { config: BurritoConfig }) {
 
   const basePrice    = proteina ? (size === 'normal' ? proteina.normal : proteina.xl) : 0;
   const adicionalesCost = adicionales.reduce((s, i) => s + i.price, 0);
-  const extrasPrice  = toppingsExtraCost + salsasExtraCost + adicionalesCost;
+  const extraProteinaPrecio = extraProteina
+    ? (size === 'normal' ? (config.proteinaExtraPrecioNormal ?? 0) : (config.proteinaExtraPrecioXL ?? 0))
+    : 0;
+  const extrasPrice  = toppingsExtraCost + salsasExtraCost + adicionalesCost + extraProteinaPrecio;
   const price        = basePrice + extrasPrice;
 
   const reset = () => {
     setStep(0); setFormat(null); setRelleno(null); setProteina(null);
-    setSize('normal'); setToppings([]); setSalsas([]); setAdicionales([]); setNote(''); setDone(false);
+    setSize('normal'); setToppings([]); setSalsas([]); setAdicionales([]);
+    setExtraProteina(false); setNote(''); setDone(false);
   };
 
   const addToCart = () => {
     const extrasList = [
+      ...(extraProteina && extraProteinaPrecio > 0 ? [{ name: 'Extra proteína', price: extraProteinaPrecio }] : []),
       ...(toppingsExtraQty > 0 && tXtra > 0 ? [{ name: `${toppingsExtraQty} topping${toppingsExtraQty > 1 ? 's' : ''} extra`, price: toppingsExtraCost }] : []),
       ...(salsasExtraQty   > 0 && sXtra > 0 ? [{ name: `${salsasExtraQty} salsa${salsasExtraQty > 1 ? 's' : ''} extra`,   price: salsasExtraCost   }] : []),
       ...adicionales.filter(a => a.price > 0),
@@ -124,6 +130,7 @@ export default function BurritoBuilder({ config }: { config: BurritoConfig }) {
           ['Formato',  format==='bowl' ? 'Bowl' : 'Burrito'],
           ['Relleno',  relleno?.name],
           ['Proteína', `${proteina?.name} (${size.toUpperCase()}) — ${fmt(basePrice)}`],
+          ...(extraProteina ? [['Extra proteína', `Doble ${proteina?.name} +${fmt(extraProteinaPrecio)}`]] : []),
           ['Toppings', toppings.length ? toppings.map(t => t.name).join(', ') : '—'],
           ['Salsas',   salsas.length   ? salsas.map(s => s.name).join(', ')   : '—'],
           ...(adicionales.length ? [['Adicionales', adicionales.map(a => `${a.name} (+${fmt(a.price)})`).join(', ')]] : []),
@@ -218,7 +225,7 @@ export default function BurritoBuilder({ config }: { config: BurritoConfig }) {
           <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:22, marginBottom:4, color:'var(--text)' }}>Proteína</div>
           <div style={{ display:'flex', gap:8, margin:'8px 0 12px' }}>
             {(['normal','xl'] as const).map(s => (
-              <button key={s} onClick={() => setSize(s)}
+              <button key={s} onClick={() => { setSize(s); setExtraProteina(false); }}
                 style={{ flex:1, padding:'7px', borderRadius:999, border:`2px solid ${size===s?'var(--orange)':'var(--border)'}`, background: size===s?'rgba(242,100,25,0.1)':'var(--card)', color: size===s?'var(--orange)':'var(--text-muted)', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:13, cursor:'pointer', textTransform:'uppercase', transition:'all .2s' }}>
                 {s==='xl'?'XL':'Normal'}
               </button>
@@ -233,6 +240,38 @@ export default function BurritoBuilder({ config }: { config: BurritoConfig }) {
               </button>
             ))}
           </div>
+
+          {/* Extra proteína — solo si el admin la habilitó y ya eligió una proteína */}
+          {config.proteinaExtraHabilitada && proteina && (() => {
+            const xPrecio = size === 'normal'
+              ? (config.proteinaExtraPrecioNormal ?? 0)
+              : (config.proteinaExtraPrecioXL     ?? 0);
+            if (xPrecio === 0) return null;
+            return (
+              <button onClick={() => setExtraProteina(v => !v)}
+                style={{ marginTop:12, width:'100%', padding:'13px 16px', borderRadius:'var(--radius-sm)', border:`2px solid ${extraProteina ? 'var(--orange)' : 'var(--border)'}`, background: extraProteina ? 'rgba(242,100,25,0.1)' : 'var(--card)', cursor:'pointer', transition:'all .2s', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+                  <span style={{ fontSize:20 }}>🍗</span>
+                  <div style={{ textAlign:'left' }}>
+                    <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:800, fontSize:16, color: extraProteina ? 'var(--orange)' : 'var(--text)' }}>
+                      Extra proteína
+                    </div>
+                    <div style={{ fontSize:11, color:'var(--text-muted)', fontWeight:500 }}>
+                      Doble porción de {proteina.name}
+                    </div>
+                  </div>
+                </div>
+                <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                  <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:16, color: extraProteina ? 'var(--orange)' : 'var(--yellow)' }}>
+                    +{fmt(xPrecio)}
+                  </span>
+                  <div style={{ width:22, height:22, borderRadius:'50%', border:`2px solid ${extraProteina ? 'var(--orange)' : 'var(--border)'}`, background: extraProteina ? 'var(--orange)' : 'transparent', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                    {extraProteina && <span style={{ color:'#fff', fontSize:13, fontWeight:900, lineHeight:1 }}>✓</span>}
+                  </div>
+                </div>
+              </button>
+            );
+          })()}
         </div>
       )}
 
