@@ -7,26 +7,27 @@ import { BurritoConfig, BurritoItem, BurritoProtein } from '@/lib/firestore/burr
 
 export default function BurritoBuilder({ config }: { config: BurritoConfig }) {
   const { addItem, setIsOpen } = useCart();
-  const [step,     setStep]     = useState(0);
-  const [format,   setFormat]   = useState<'burrito' | 'bowl' | null>(null);
-  const [relleno,  setRelleno]  = useState<BurritoItem | null>(null);
-  const [proteina, setProteina] = useState<BurritoProtein | null>(null);
-  const [size,     setSize]     = useState<'normal' | 'xl'>('normal');
+  const [step,          setStep]          = useState(0);
+  const [format,        setFormat]        = useState<'burrito' | 'bowl' | null>(null);
+  const [relleno,       setRelleno]       = useState<BurritoItem | null>(null);
+  const [proteina,      setProteina]      = useState<BurritoProtein | null>(null);
+  const [size,          setSize]          = useState<'normal' | 'xl'>('normal');
   const [toppings,      setToppings]      = useState<BurritoItem[]>([]);
   const [salsas,        setSalsas]        = useState<BurritoItem[]>([]);
   const [adicionales,   setAdicionales]   = useState<BurritoItem[]>([]);
-  const [extraProteina, setExtraProteina] = useState(false);
+  // null = sin extra proteína, BurritoProtein = la proteína elegida como extra
+  const [extraProteina, setExtraProteina] = useState<BurritoProtein | null>(null);
   const [note,          setNote]          = useState('');
   const [done,          setDone]          = useState(false);
 
-  // Solo mostrar ítems visibles
+  // Solo ítems visibles
   const visRellenos    = config.rellenos.filter(r => r.visible);
   const visProteinas   = config.proteinas.filter(p => p.visible);
   const visToppings    = config.toppings.filter(t => t.visible);
   const visSalsas      = config.salsas.filter(s => s.visible);
   const visAdicionales = (config.adicionales ?? []).filter(a => a.visible);
 
-  // Límites desde config
+  // Límites
   const tMax  = config.toppingsMax        ?? 5;
   const tLib  = config.toppingsLibres     ?? 5;
   const tXtra = config.toppingExtraPrecio ?? 0;
@@ -34,7 +35,7 @@ export default function BurritoBuilder({ config }: { config: BurritoConfig }) {
   const sLib  = config.salsasLibres       ?? 2;
   const sXtra = config.salsaExtraPrecio   ?? 0;
 
-  // Incluir paso Adicionales solo si hay al menos uno configurado
+  // Pasos dinámicos
   const steps = visAdicionales.length > 0
     ? ['Formato', 'Relleno', 'Proteína', 'Toppings', 'Salsas', 'Adicionales']
     : ['Formato', 'Relleno', 'Proteína', 'Toppings', 'Salsas'];
@@ -45,38 +46,47 @@ export default function BurritoBuilder({ config }: { config: BurritoConfig }) {
     else if (arr.length < max) setArr([...arr, val]);
   };
 
-  const canNext  = [format !== null, relleno !== null, proteina !== null, true, true, true];
+  const canNext = [format !== null, relleno !== null, proteina !== null, true, true, true];
 
-  // Precio extra por toppings/salsas sobre el límite libre
-  const toppingsExtraQty = Math.max(0, toppings.length - tLib);
-  const salsasExtraQty   = Math.max(0, salsas.length   - sLib);
+  // Precios
+  const toppingsExtraQty  = Math.max(0, toppings.length - tLib);
+  const salsasExtraQty    = Math.max(0, salsas.length   - sLib);
   const toppingsExtraCost = toppingsExtraQty * tXtra;
   const salsasExtraCost   = salsasExtraQty   * sXtra;
+  const adicionalesCost   = adicionales.reduce((s, i) => s + i.price, 0);
 
-  const basePrice    = proteina ? (size === 'normal' ? proteina.normal : proteina.xl) : 0;
-  const adicionalesCost = adicionales.reduce((s, i) => s + i.price, 0);
+  // Precio de la proteína extra = precio plano configurado por admin (independiente de cuál elijan)
   const extraProteinaPrecio = extraProteina
     ? (size === 'normal' ? (config.proteinaExtraPrecioNormal ?? 0) : (config.proteinaExtraPrecioXL ?? 0))
     : 0;
-  const extrasPrice  = toppingsExtraCost + salsasExtraCost + adicionalesCost + extraProteinaPrecio;
-  const price        = basePrice + extrasPrice;
+
+  const basePrice   = proteina ? (size === 'normal' ? proteina.normal : proteina.xl) : 0;
+  const extrasPrice = toppingsExtraCost + salsasExtraCost + adicionalesCost + extraProteinaPrecio;
+  const price       = basePrice + extrasPrice;
 
   const reset = () => {
     setStep(0); setFormat(null); setRelleno(null); setProteina(null);
     setSize('normal'); setToppings([]); setSalsas([]); setAdicionales([]);
-    setExtraProteina(false); setNote(''); setDone(false);
+    setExtraProteina(null); setNote(''); setDone(false);
   };
 
   const addToCart = () => {
     const extrasList = [
-      ...(extraProteina && extraProteinaPrecio > 0 ? [{ name: 'Extra proteína', price: extraProteinaPrecio }] : []),
-      ...(toppingsExtraQty > 0 && tXtra > 0 ? [{ name: `${toppingsExtraQty} topping${toppingsExtraQty > 1 ? 's' : ''} extra`, price: toppingsExtraCost }] : []),
-      ...(salsasExtraQty   > 0 && sXtra > 0 ? [{ name: `${salsasExtraQty} salsa${salsasExtraQty > 1 ? 's' : ''} extra`,   price: salsasExtraCost   }] : []),
+      ...(extraProteina && extraProteinaPrecio > 0
+        ? [{ name: `Extra proteína: ${extraProteina.name}`, price: extraProteinaPrecio }]
+        : []),
+      ...(toppingsExtraQty > 0 && tXtra > 0
+        ? [{ name: `${toppingsExtraQty} topping${toppingsExtraQty > 1 ? 's' : ''} extra`, price: toppingsExtraCost }]
+        : []),
+      ...(salsasExtraQty > 0 && sXtra > 0
+        ? [{ name: `${salsasExtraQty} salsa${salsasExtraQty > 1 ? 's' : ''} extra`, price: salsasExtraCost }]
+        : []),
       ...adicionales.filter(a => a.price > 0),
     ];
     const desc = [
       `${format === 'bowl' ? 'Bowl' : 'Burrito'} · ${relleno!.name}`,
       `${proteina!.name} (${size.toUpperCase()})`,
+      extraProteina ? `+ Extra: ${extraProteina.name}` : null,
       toppings.length ? `Toppings: ${toppings.map(t => t.name).join(', ')}` : null,
       salsas.length   ? `Salsas: ${salsas.map(s => s.name).join(', ')}`     : null,
     ].filter(Boolean).join(' · ');
@@ -93,9 +103,8 @@ export default function BurritoBuilder({ config }: { config: BurritoConfig }) {
     reset();
   };
 
-  /* ── helpers de UI ───────────────────────────────────────────── */
+  /* ── LimitBadge ───────────────────────────────────────────────── */
 
-  // Chip de info para límites (toppings / salsas)
   function LimitBadge({ selected, libre, max, xtraPrecio, label }: {
     selected: number; libre: number; max: number; xtraPrecio: number; label: string;
   }) {
@@ -127,10 +136,12 @@ export default function BurritoBuilder({ config }: { config: BurritoConfig }) {
       <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:26, color:'var(--orange)', marginBottom:6 }}>¡Listo tu burrito!</div>
       <div style={{ background:'var(--bg2)', border:'1px solid var(--border)', borderRadius:'var(--radius)', padding:'16px', textAlign:'left', marginBottom:16 }}>
         {[
-          ['Formato',  format==='bowl' ? 'Bowl' : 'Burrito'],
+          ['Formato',  format === 'bowl' ? 'Bowl' : 'Burrito'],
           ['Relleno',  relleno?.name],
           ['Proteína', `${proteina?.name} (${size.toUpperCase()}) — ${fmt(basePrice)}`],
-          ...(extraProteina ? [['Extra proteína', `Doble ${proteina?.name} +${fmt(extraProteinaPrecio)}`]] : []),
+          ...(extraProteina
+            ? [['Extra proteína', `${extraProteina.name}${extraProteinaPrecio > 0 ? ` +${fmt(extraProteinaPrecio)}` : ' (incluida)'}`]]
+            : []),
           ['Toppings', toppings.length ? toppings.map(t => t.name).join(', ') : '—'],
           ['Salsas',   salsas.length   ? salsas.map(s => s.name).join(', ')   : '—'],
           ...(adicionales.length ? [['Adicionales', adicionales.map(a => `${a.name} (+${fmt(a.price)})`).join(', ')]] : []),
@@ -220,60 +231,81 @@ export default function BurritoBuilder({ config }: { config: BurritoConfig }) {
       )}
 
       {/* Step 2 — Proteína */}
-      {step === 2 && (
-        <div>
-          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:22, marginBottom:4, color:'var(--text)' }}>Proteína</div>
-          <div style={{ display:'flex', gap:8, margin:'8px 0 12px' }}>
-            {(['normal','xl'] as const).map(s => (
-              <button key={s} onClick={() => { setSize(s); setExtraProteina(false); }}
-                style={{ flex:1, padding:'7px', borderRadius:999, border:`2px solid ${size===s?'var(--orange)':'var(--border)'}`, background: size===s?'rgba(242,100,25,0.1)':'var(--card)', color: size===s?'var(--orange)':'var(--text-muted)', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:13, cursor:'pointer', textTransform:'uppercase', transition:'all .2s' }}>
-                {s==='xl'?'XL':'Normal'}
-              </button>
-            ))}
-          </div>
-          <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-            {visProteinas.map(p => (
-              <button key={p.name} onClick={() => setProteina(p)}
-                style={{ background: proteina?.name===p.name?'rgba(242,100,25,0.1)':'var(--card)', border:`2px solid ${proteina?.name===p.name?'var(--orange)':'var(--border)'}`, borderRadius:'var(--radius-sm)', padding:'12px 16px', cursor:'pointer', transition:'all .2s', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:16, color: proteina?.name===p.name?'var(--orange)':'var(--text)' }}>{p.name}</span>
-                <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:17, color:'var(--yellow)' }}>{fmt(size==='normal'?p.normal:p.xl)}</span>
-              </button>
-            ))}
-          </div>
+      {step === 2 && (() => {
+        const xPrecio = size === 'normal'
+          ? (config.proteinaExtraPrecioNormal ?? 0)
+          : (config.proteinaExtraPrecioXL     ?? 0);
+        const showExtra = config.proteinaExtraHabilitada && proteina && xPrecio > 0;
 
-          {/* Extra proteína — solo si el admin la habilitó y ya eligió una proteína */}
-          {config.proteinaExtraHabilitada && proteina && (() => {
-            const xPrecio = size === 'normal'
-              ? (config.proteinaExtraPrecioNormal ?? 0)
-              : (config.proteinaExtraPrecioXL     ?? 0);
-            if (xPrecio === 0) return null;
-            return (
-              <button onClick={() => setExtraProteina(v => !v)}
-                style={{ marginTop:12, width:'100%', padding:'13px 16px', borderRadius:'var(--radius-sm)', border:`2px solid ${extraProteina ? 'var(--orange)' : 'var(--border)'}`, background: extraProteina ? 'rgba(242,100,25,0.1)' : 'var(--card)', cursor:'pointer', transition:'all .2s', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                  <span style={{ fontSize:20 }}>🍗</span>
-                  <div style={{ textAlign:'left' }}>
-                    <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:800, fontSize:16, color: extraProteina ? 'var(--orange)' : 'var(--text)' }}>
-                      Extra proteína
+        return (
+          <div>
+            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:22, marginBottom:4, color:'var(--text)' }}>Proteína</div>
+
+            {/* Tamaño */}
+            <div style={{ display:'flex', gap:8, margin:'8px 0 12px' }}>
+              {(['normal','xl'] as const).map(s => (
+                <button key={s} onClick={() => { setSize(s); setExtraProteina(null); }}
+                  style={{ flex:1, padding:'7px', borderRadius:999, border:`2px solid ${size===s?'var(--orange)':'var(--border)'}`, background: size===s?'rgba(242,100,25,0.1)':'var(--card)', color: size===s?'var(--orange)':'var(--text-muted)', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:13, cursor:'pointer', textTransform:'uppercase', transition:'all .2s' }}>
+                  {s==='xl'?'XL':'Normal'}
+                </button>
+              ))}
+            </div>
+
+            {/* Lista principal */}
+            <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+              {visProteinas.map(p => (
+                <button key={p.name} onClick={() => setProteina(p)}
+                  style={{ background: proteina?.name===p.name?'rgba(242,100,25,0.1)':'var(--card)', border:`2px solid ${proteina?.name===p.name?'var(--orange)':'var(--border)'}`, borderRadius:'var(--radius-sm)', padding:'12px 16px', cursor:'pointer', transition:'all .2s', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                  <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:16, color: proteina?.name===p.name?'var(--orange)':'var(--text)' }}>{p.name}</span>
+                  <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:17, color:'var(--yellow)' }}>{fmt(size==='normal'?p.normal:p.xl)}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Extra proteína — selección libre */}
+            {showExtra && (
+              <div style={{ marginTop:16, borderTop:'1px solid var(--border)', paddingTop:14 }}>
+                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
+                  <div>
+                    <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:800, fontSize:16, color:'var(--text)' }}>
+                      🍗 Agregar proteína extra
                     </div>
-                    <div style={{ fontSize:11, color:'var(--text-muted)', fontWeight:500 }}>
-                      Doble porción de {proteina.name}
+                    <div style={{ fontSize:11, color:'var(--text-muted)', marginTop:2 }}>
+                      Puede ser la misma u otra · +{fmt(xPrecio)} c/u
                     </div>
                   </div>
+                  {extraProteina && (
+                    <button onClick={() => setExtraProteina(null)}
+                      style={{ fontSize:12, color:'#dc2626', background:'transparent', border:'1px solid rgba(220,38,38,0.3)', borderRadius:999, padding:'3px 10px', cursor:'pointer', fontWeight:700 }}>
+                      Quitar
+                    </button>
+                  )}
                 </div>
-                <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-                  <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:16, color: extraProteina ? 'var(--orange)' : 'var(--yellow)' }}>
-                    +{fmt(xPrecio)}
-                  </span>
-                  <div style={{ width:22, height:22, borderRadius:'50%', border:`2px solid ${extraProteina ? 'var(--orange)' : 'var(--border)'}`, background: extraProteina ? 'var(--orange)' : 'transparent', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                    {extraProteina && <span style={{ color:'#fff', fontSize:13, fontWeight:900, lineHeight:1 }}>✓</span>}
-                  </div>
+
+                <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+                  {visProteinas.map(p => {
+                    const sel = extraProteina?.name === p.name;
+                    return (
+                      <button key={p.name} onClick={() => setExtraProteina(sel ? null : p)}
+                        style={{ background: sel?'rgba(242,100,25,0.08)':'var(--bg2)', border:`1.5px solid ${sel?'var(--orange)':'var(--border)'}`, borderRadius:'var(--radius-sm)', padding:'10px 14px', cursor:'pointer', transition:'all .2s', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                        <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                          <div style={{ width:18, height:18, borderRadius:'50%', border:`2px solid ${sel?'var(--orange)':'var(--border)'}`, background: sel?'var(--orange)':'transparent', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, fontSize:10, color:'#fff', fontWeight:900 }}>
+                            {sel ? '✓' : ''}
+                          </div>
+                          <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:15, color: sel?'var(--orange)':'var(--text)' }}>{p.name}</span>
+                        </div>
+                        <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:14, color: sel?'var(--orange)':'var(--text-muted)' }}>
+                          +{fmt(xPrecio)}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
-              </button>
-            );
-          })()}
-        </div>
-      )}
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {/* Step 3 — Toppings */}
       {step === 3 && (
@@ -282,8 +314,8 @@ export default function BurritoBuilder({ config }: { config: BurritoConfig }) {
           <LimitBadge selected={toppings.length} libre={tLib} max={tMax} xtraPrecio={tXtra} label="toppings" />
           <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
             {visToppings.map(t => {
-              const sel   = toppings.some(x => x.name === t.name);
-              const maxed = !sel && toppings.length >= tMax;
+              const sel     = toppings.some(x => x.name === t.name);
+              const maxed   = !sel && toppings.length >= tMax;
               const esExtra = !sel && toppings.length >= tLib;
               return (
                 <button key={t.name} onClick={() => !maxed && toggleArr(toppings, setToppings, t, tMax)}
@@ -306,8 +338,8 @@ export default function BurritoBuilder({ config }: { config: BurritoConfig }) {
           <LimitBadge selected={salsas.length} libre={sLib} max={sMax} xtraPrecio={sXtra} label="salsas" />
           <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
             {visSalsas.map(s => {
-              const sel   = salsas.some(x => x.name === s.name);
-              const maxed = !sel && salsas.length >= sMax;
+              const sel     = salsas.some(x => x.name === s.name);
+              const maxed   = !sel && salsas.length >= sMax;
               const esExtra = !sel && salsas.length >= sLib;
               return (
                 <button key={s.name} onClick={() => !maxed && toggleArr(salsas, setSalsas, s, sMax)}
@@ -323,11 +355,13 @@ export default function BurritoBuilder({ config }: { config: BurritoConfig }) {
         </div>
       )}
 
-      {/* Step 5 — Adicionales (solo si hay configurados) */}
+      {/* Step 5 — Adicionales */}
       {step === 5 && visAdicionales.length > 0 && (
         <div>
           <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:22, marginBottom:4, color:'var(--text)' }}>Adicionales</div>
-          <div style={{ fontSize:12, color:'var(--text-muted)', marginBottom:12 }}>Extras opcionales con costo adicional</div>
+          <div style={{ fontSize:12, color:'var(--text-muted)', marginBottom:12 }}>
+            Extras con costo — doble porción de un ingrediente, extra queso, etc.
+          </div>
           <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
             {visAdicionales.map(a => {
               const sel = adicionales.some(x => x.name === a.name);
@@ -343,7 +377,7 @@ export default function BurritoBuilder({ config }: { config: BurritoConfig }) {
         </div>
       )}
 
-      {/* Nav buttons */}
+      {/* Nav */}
       <div style={{ display:'flex', gap:10, marginTop:20 }}>
         {step > 0
           ? <button onClick={() => setStep(s => s - 1)}
