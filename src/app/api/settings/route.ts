@@ -31,7 +31,7 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
-  const allowed: (keyof Settings)[] = ['waNumber', 'address', 'schedule', 'isOpen', 'waGreeting', 'waFooter'];
+  const allowed: (keyof Settings)[] = ['waNumber', 'address', 'schedule', 'isOpen', 'waGreeting', 'waFooter', 'delivery'];
   const update: Partial<Settings> = {};
   for (const key of allowed) {
     if (key in body) (update as Record<string, unknown>)[key] = body[key];
