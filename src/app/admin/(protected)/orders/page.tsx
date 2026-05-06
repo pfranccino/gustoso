@@ -179,17 +179,35 @@ function StatusSelector({ current, onStatus, busy }: {
   onStatus: (s: OrderStatus) => void;
   busy: boolean;
 }) {
+  const cfg = STATUS_CFG[current];
   return (
-    <div style={{ display:'flex', flexWrap:'wrap', gap:5, marginTop:10 }}>
-      {ALL_STATUSES.filter(s => s !== current).map(s => {
-        const cfg = STATUS_CFG[s];
-        return (
-          <button key={s} onClick={() => onStatus(s)} disabled={busy}
-            style={{ padding:'5px 11px', borderRadius:999, border:`1.5px solid ${cfg.color}22`, background:'transparent', color:cfg.color, fontSize:12, fontWeight:700, cursor: busy ? 'not-allowed' : 'pointer', opacity: busy ? 0.5 : 1, transition:'background .15s' }}>
-            {cfg.emoji} {cfg.label}
-          </button>
-        );
-      })}
+    <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
+      <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: .5, flexShrink: 0 }}>Estado</span>
+      <select
+        value={current}
+        disabled={busy}
+        onChange={e => onStatus(e.target.value as OrderStatus)}
+        style={{
+          flex: 1,
+          padding: '6px 10px',
+          borderRadius: 8,
+          border: `1.5px solid ${cfg.color}55`,
+          background: cfg.bg,
+          color: cfg.color,
+          fontFamily: "'Barlow Condensed',sans-serif",
+          fontWeight: 700,
+          fontSize: 14,
+          cursor: busy ? 'not-allowed' : 'pointer',
+          opacity: busy ? 0.6 : 1,
+          outline: 'none',
+        }}
+      >
+        {ALL_STATUSES.map(s => (
+          <option key={s} value={s}>
+            {STATUS_CFG[s].emoji} {STATUS_CFG[s].label}
+          </option>
+        ))}
+      </select>
     </div>
   );
 }

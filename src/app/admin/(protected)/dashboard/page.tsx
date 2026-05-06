@@ -132,12 +132,34 @@ export default function DashboardPage() {
         {kpis.map(kpi => (
           <div key={kpi.label} style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '20px 16px', animation: kpiFlash ? 'flash 1.2s ease' : undefined }}>
             <div style={{ fontSize: 22, marginBottom: 8 }}>{kpi.emoji}</div>
-            <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 26, color: 'var(--orange)', marginBottom: 2, wordBreak: 'break-word', lineHeight: 1.1 }}>
-              {loading ? <span style={{ opacity: 0.3 }}>—</span> : kpi.value}
-            </div>
-            {kpi.sub && !loading && (
-              <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4 }}>{kpi.sub}</div>
+
+            {kpi.label === 'Producto top' ? (
+              /* Render especial: nombre como texto de producto, no como valor numérico */
+              loading ? (
+                <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 26, color: 'var(--orange)', marginBottom: 2, opacity: 0.3 }}>—</div>
+              ) : metrics?.topProduct ? (
+                <>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)', marginBottom: 2, lineHeight: 1.3, wordBreak: 'break-word' }}>
+                    {metrics.topProduct.name}
+                  </div>
+                  <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 22, color: 'var(--orange)', marginBottom: 2 }}>
+                    {metrics.topProduct.qty} vendidos
+                  </div>
+                </>
+              ) : (
+                <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 2 }}>Sin datos</div>
+              )
+            ) : (
+              <>
+                <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 26, color: 'var(--orange)', marginBottom: 2, wordBreak: 'break-word', lineHeight: 1.1 }}>
+                  {loading ? <span style={{ opacity: 0.3 }}>—</span> : kpi.value}
+                </div>
+                {kpi.sub && !loading && (
+                  <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4 }}>{kpi.sub}</div>
+                )}
+              </>
             )}
+
             <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: 0.5, textTransform: 'uppercase' }}>{kpi.label}</div>
           </div>
         ))}
