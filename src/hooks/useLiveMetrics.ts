@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { collection, onSnapshot, orderBy, query, QueryDocumentSnapshot } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { getClientFirestore, getClientAuth } from '@/lib/firebase/client';
-import { Metrics, DayBucket, RecentOrder } from '@/lib/firestore/metrics';
+import { Metrics, DayBucket, RecentOrder, TopProduct } from '@/lib/firestore/metrics';
 
 function dateKey(ts: { toDate(): Date }): string {
   const d = ts.toDate();
@@ -61,7 +61,8 @@ function computeMetrics(docs: QueryDocumentSnapshot[]): Metrics {
     }
   }
 
-  const topProduct = Object.entries(productCount).sort((a, b) => b[1] - a[1])[0]?.[0] ?? '—';
+  const topEntry = Object.entries(productCount).sort((a, b) => b[1] - a[1])[0];
+  const topProduct: TopProduct | null = topEntry ? { name: topEntry[0], qty: topEntry[1] } : null;
   const avgTicket = orderCount > 0 ? totalRevenue / orderCount : 0;
   const last14Days = last14DayKeys().map(k => dayMap[k] ?? { date: k, total: 0, count: 0 });
 

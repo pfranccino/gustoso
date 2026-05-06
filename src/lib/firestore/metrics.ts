@@ -3,11 +3,13 @@ import { Timestamp } from 'firebase-admin/firestore';
 
 export type DayBucket = { date: string; total: number; count: number };
 
+export type TopProduct = { name: string; qty: number };
+
 export type Metrics = {
   totalRevenue: number;
   orderCount: number;
   avgTicket: number;
-  topProduct: string;
+  topProduct: TopProduct | null;
   last14Days: DayBucket[];
   lastOrders: RecentOrder[];
 };
@@ -85,7 +87,8 @@ export async function getMetrics(): Promise<Metrics> {
     }
   }
 
-  const topProduct = Object.entries(productCount).sort((a, b) => b[1] - a[1])[0]?.[0] ?? '—';
+  const topEntry = Object.entries(productCount).sort((a, b) => b[1] - a[1])[0];
+  const topProduct: TopProduct | null = topEntry ? { name: topEntry[0], qty: topEntry[1] } : null;
   const avgTicket = orderCount > 0 ? totalRevenue / orderCount : 0;
 
   const keys = last14DayKeys();
