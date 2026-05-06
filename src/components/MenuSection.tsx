@@ -105,7 +105,7 @@ export default function MenuSection({ items, burritoConfig, promotions }: { item
     ? items.filter(i =>
         i.visible && (
           i.name.toLowerCase().includes(q) ||
-          i.ingredients.some(ing => ing.toLowerCase().includes(q))
+          i.ingredients.some(ing => ing.enabled && ing.name.toLowerCase().includes(q))
         )
       )
     : [];

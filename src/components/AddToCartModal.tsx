@@ -90,18 +90,18 @@ export default function AddToCartModal({ item, onClose }: { item: MenuItem; onCl
           </div>
         )}
 
-        {/* Ingredientes — el cliente puede quitar los que no quiere */}
-        {item.ingredients.length > 0 && (
+        {/* Ingredientes — el cliente puede quitar los que no quiere (solo los habilitados) */}
+        {item.ingredients.filter(i => i.enabled).length > 0 && (
           <div style={{ marginBottom:16 }}>
             <div style={{ fontSize:12, fontWeight:700, color:'var(--text-muted)', letterSpacing:1, textTransform:'uppercase', marginBottom:4 }}>Ingredientes</div>
             <div style={{ fontSize:11, color:'var(--text-muted)', marginBottom:8 }}>Toca para quitar</div>
             <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
-              {item.ingredients.map(ing => {
-                const removed = removedIngredients.includes(ing);
+              {item.ingredients.filter(i => i.enabled).map(ing => {
+                const removed = removedIngredients.includes(ing.name);
                 return (
-                  <button key={ing} onClick={() => toggleIngredient(ing)}
+                  <button key={ing.name} onClick={() => toggleIngredient(ing.name)}
                     style={{ padding:'5px 12px', borderRadius:999, border:`1.5px solid ${removed ? 'rgba(220,38,38,0.5)' : 'var(--border)'}`, background: removed ? 'rgba(220,38,38,0.07)' : 'var(--bg2)', cursor:'pointer', fontFamily:"'Barlow',sans-serif", fontWeight:600, fontSize:13, color: removed ? '#dc2626' : 'var(--text)', textDecoration: removed ? 'line-through' : 'none', transition:'all .15s' }}>
-                    {ing}
+                    {ing.name}
                   </button>
                 );
               })}

@@ -1,7 +1,14 @@
 import { getAdminDb } from '@/lib/firebase/admin';
 import { FieldValue } from 'firebase-admin/firestore';
 
-export type Extra = { name: string; price: number };
+export type Extra      = { name: string; price: number };
+export type Ingredient = { name: string; enabled: boolean };
+
+function parseIngredient(val: unknown): Ingredient {
+  if (typeof val === 'string') return { name: val, enabled: true };
+  const v = val as Record<string, unknown>;
+  return { name: String(v.name ?? ''), enabled: v.enabled !== false };
+}
 
 export type MenuItem = {
   id: string;
@@ -16,7 +23,7 @@ export type MenuItem = {
   visible: boolean;
   sortOrder: number;
   extras: Extra[];
-  ingredients: string[];
+  ingredients: Ingredient[];
 };
 
 export type NewMenuItem = {
@@ -27,7 +34,7 @@ export type NewMenuItem = {
   priceNormal?: number | null;
   priceXL?: number | null;
   extras?: Extra[];
-  ingredients?: string[];
+  ingredients?: Ingredient[];
   visible?: boolean;
 };
 
@@ -49,8 +56,8 @@ export async function getMenuItems(): Promise<MenuItem[]> {
       imageUrl:    d.imageUrl    ?? null,
       visible:     d.visible     ?? true,
       sortOrder:   d.sortOrder   ?? 0,
-      extras:      Array.isArray(d.extras) ? d.extras : [],
-      ingredients: Array.isArray(d.ingredients) ? d.ingredients : [],
+      extras:      Array.isArray(d.extras)      ? d.extras      : [],
+      ingredients: Array.isArray(d.ingredients) ? d.ingredients.map(parseIngredient) : [],
     };
   });
   return items.sort((a, b) => {
@@ -64,19 +71,19 @@ export async function createMenuItem(data: NewMenuItem): Promise<string> {
     .where('category', '==', data.category).get();
   const sortOrder = maxSnap.docs.length;
   const ref = await getAdminDb().collection('menu_items').add({
-    category:   data.category,
-    name:       data.name,
-    desc:       data.desc ?? null,
-    price:      data.price ?? null,
+    category:    data.category,
+    name:        data.name,
+    desc:        data.desc ?? null,
+    price:       data.price ?? null,
     priceNormal: data.priceNormal ?? null,
-    priceXL:    data.priceXL ?? null,
+    priceXL:     data.priceXL ?? null,
     extras:      data.extras ?? [],
     ingredients: data.ingredients ?? [],
     imageUrl:    null,
-    group:      null,
-    visible:    data.visible ?? true,
+    group:       null,
+    visible:     data.visible ?? true,
     sortOrder,
-    createdAt:  FieldValue.serverTimestamp(),
+    createdAt:   FieldValue.serverTimestamp(),
   });
   return ref.id;
 }

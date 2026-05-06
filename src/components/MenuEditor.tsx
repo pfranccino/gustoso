@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition, useRef, useImperativeHandle, forwardRef } from 'react';
-import { MenuItem, Extra } from '@/lib/firestore/menuItems';
+import { MenuItem, Extra, Ingredient } from '@/lib/firestore/menuItems';
 
 const CATEGORIES = [
   { id:'vienesas',  label:'🌭 Vienesas' },
@@ -23,7 +23,7 @@ type EditState = {
   priceNormal: string;
   priceXL: string;
   extras: Extra[];
-  ingredients: string[];
+  ingredients: Ingredient[];
 };
 
 type CreateState = {
@@ -35,7 +35,7 @@ type CreateState = {
   priceNormal: string;
   priceXL: string;
   extras: Extra[];
-  ingredients: string[];
+  ingredients: Ingredient[];
   visible: boolean;
 };
 
@@ -274,7 +274,7 @@ export default function MenuEditor({ initialItems }: { initialItems: MenuItem[] 
                     <div style={{ fontWeight:700, fontSize:14, color:'var(--text)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{item.name}</div>
                     {item.desc && <div style={{ fontSize:12, color:'var(--text-muted)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{item.desc}</div>}
                     <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
-                      {item.ingredients.length > 0 && <div style={{ fontSize:11, color:'var(--text-muted)', fontWeight:600 }}>🥬 {item.ingredients.length} ingrediente{item.ingredients.length > 1 ? 's' : ''}</div>}
+                      {item.ingredients.length > 0 && (() => { const en = item.ingredients.filter(i => i.enabled).length; const tot = item.ingredients.length; return <div style={{ fontSize:11, color: en < tot ? '#d97706' : 'var(--text-muted)', fontWeight:600 }}>🥬 {en < tot ? `${en}/${tot}` : tot} ingrediente{tot > 1 ? 's' : ''}</div>; })()}
                       {item.extras.length > 0 && <div style={{ fontSize:11, color:'var(--orange)', fontWeight:600 }}>➕ {item.extras.length} extra{item.extras.length > 1 ? 's' : ''}</div>}
                     </div>
                   </div>
@@ -385,15 +385,19 @@ function ModalActions({ onSave, onCancel, isPending, saveLabel = 'Guardar' }: { 
 
 type IngredientsHandle = { flush: () => void };
 
-const IngredientsEditor = forwardRef<IngredientsHandle, { ingredients: string[]; onChange: (v: string[]) => void }>(
+const IngredientsEditor = forwardRef<IngredientsHandle, { ingredients: Ingredient[]; onChange: (v: Ingredient[]) => void }>(
 function IngredientsEditor({ ingredients, onChange }, ref) {
   const [newName, setNewName] = useState('');
 
   const add = () => {
     const name = newName.trim();
-    if (!name) return;
-    onChange([...ingredients, name]);
+    if (!name || ingredients.some(i => i.name === name)) return;
+    onChange([...ingredients, { name, enabled: true }]);
     setNewName('');
+  };
+
+  const toggle = (idx: number) => {
+    onChange(ingredients.map((ing, i) => i === idx ? { ...ing, enabled: !ing.enabled } : ing));
   };
 
   useImperativeHandle(ref, () => ({ flush: () => { if (newName.trim()) add(); } }));
@@ -403,16 +407,24 @@ function IngredientsEditor({ ingredients, onChange }, ref) {
       <div style={{ fontSize:11, fontWeight:700, color:'#A0541A', letterSpacing:1, textTransform:'uppercase', marginBottom:6 }}>
         Ingredientes
       </div>
-      <div style={{ fontSize:11, color:'#999', marginBottom:8 }}>El cliente podrá quitar los que no quiere</div>
+      <div style={{ fontSize:11, color:'#999', marginBottom:8 }}>
+        Activos = visibles al cliente · Desactivados = ocultos (sin perderlos)
+      </div>
 
       {ingredients.length > 0 && (
         <div style={{ display:'flex', flexWrap:'wrap', gap:6, marginBottom:10 }}>
           {ingredients.map((ing, i) => (
-            <span key={i} style={{ display:'inline-flex', alignItems:'center', gap:5, background:'#FFF9F5', border:'1px solid rgba(242,100,25,0.2)', borderRadius:999, padding:'4px 10px', fontSize:13, fontWeight:600, color:'#1A0800' }}>
-              {ing}
-              <button onClick={() => onChange(ingredients.filter((_, j) => j !== i))}
-                style={{ fontSize:14, color:'#dc2626', background:'transparent', border:'none', cursor:'pointer', fontWeight:700, lineHeight:1, padding:'0 2px' }}>✕</button>
-            </span>
+            <button key={i} onClick={() => toggle(i)}
+              title={ing.enabled ? 'Clic para desactivar' : 'Clic para activar'}
+              style={{ display:'inline-flex', alignItems:'center', gap:6, borderRadius:999, padding:'5px 12px', fontSize:13, fontWeight:600, cursor:'pointer', border:'1.5px solid', transition:'all .15s',
+                background:     ing.enabled ? '#FFF9F5'               : 'rgba(0,0,0,0.04)',
+                borderColor:    ing.enabled ? 'rgba(242,100,25,0.35)' : 'rgba(0,0,0,0.12)',
+                color:          ing.enabled ? '#1A0800'               : '#aaa',
+                textDecoration: ing.enabled ? 'none'                  : 'line-through',
+              }}>
+              <span style={{ width:8, height:8, borderRadius:'50%', flexShrink:0, background: ing.enabled ? '#F26419' : '#d1d5db', transition:'background .15s' }}/>
+              {ing.name}
+            </button>
           ))}
         </div>
       )}
