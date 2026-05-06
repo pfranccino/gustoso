@@ -5,7 +5,7 @@ import { updateOrderStatus, addOrderNote, OrderStatus } from '@/lib/firestore/or
 export const dynamic = 'force-dynamic';
 
 const VALID_STATUSES: OrderStatus[] = [
-  'pending', 'confirmed', 'rejected', 'delivered', 'returned', 'no_answer', 'quote',
+  'pending', 'confirmed', 'on_the_way', 'delivered', 'rejected', 'returned', 'no_answer', 'quote',
 ];
 
 export async function PATCH(

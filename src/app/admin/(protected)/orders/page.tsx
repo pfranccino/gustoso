@@ -10,13 +10,14 @@ const fmt = (n: number) =>
 /* ── configuración de estados ──────────────────── */
 
 const STATUS_CFG: Record<OrderStatus, { label: string; color: string; bg: string; dot: string; emoji: string }> = {
-  pending:   { label: 'Pendiente',    color: '#d97706', bg: 'rgba(217,119,6,0.1)',   dot: '#f59e0b', emoji: '⏳' },
-  confirmed: { label: 'Confirmado',   color: '#16a34a', bg: 'rgba(22,163,74,0.1)',   dot: '#22c55e', emoji: '✅' },
-  delivered: { label: 'Entregado',    color: '#2563eb', bg: 'rgba(37,99,235,0.1)',   dot: '#3b82f6', emoji: '📦' },
-  rejected:  { label: 'Rechazado',    color: '#dc2626', bg: 'rgba(220,38,38,0.1)',   dot: '#ef4444', emoji: '❌' },
-  returned:  { label: 'Devuelto',     color: '#7c3aed', bg: 'rgba(124,58,237,0.1)',  dot: '#8b5cf6', emoji: '🔄' },
-  no_answer: { label: 'No contestó',  color: '#6b7280', bg: 'rgba(107,114,128,0.1)', dot: '#9ca3af', emoji: '📵' },
-  quote:     { label: 'Cotización',   color: '#0891b2', bg: 'rgba(8,145,178,0.1)',   dot: '#06b6d4', emoji: '📋' },
+  pending:     { label: 'Pendiente',    color: '#d97706', bg: 'rgba(217,119,6,0.1)',   dot: '#f59e0b', emoji: '⏳' },
+  confirmed:   { label: 'Confirmado',   color: '#16a34a', bg: 'rgba(22,163,74,0.1)',   dot: '#22c55e', emoji: '✅' },
+  on_the_way:  { label: 'En camino',    color: '#ea580c', bg: 'rgba(234,88,12,0.1)',   dot: '#f97316', emoji: '🛵' },
+  delivered:   { label: 'Entregado',    color: '#2563eb', bg: 'rgba(37,99,235,0.1)',   dot: '#3b82f6', emoji: '📦' },
+  rejected:    { label: 'Rechazado',    color: '#dc2626', bg: 'rgba(220,38,38,0.1)',   dot: '#ef4444', emoji: '❌' },
+  returned:    { label: 'Devuelto',     color: '#7c3aed', bg: 'rgba(124,58,237,0.1)',  dot: '#8b5cf6', emoji: '🔄' },
+  no_answer:   { label: 'No contestó',  color: '#6b7280', bg: 'rgba(107,114,128,0.1)', dot: '#9ca3af', emoji: '📵' },
+  quote:       { label: 'Cotización',   color: '#0891b2', bg: 'rgba(8,145,178,0.1)',   dot: '#06b6d4', emoji: '📋' },
 };
 
 const ALL_STATUSES = Object.keys(STATUS_CFG) as OrderStatus[];

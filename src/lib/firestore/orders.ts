@@ -26,8 +26,9 @@ export type NewOrder = {
 export type OrderStatus =
   | 'pending'
   | 'confirmed'
-  | 'rejected'
+  | 'on_the_way'
   | 'delivered'
+  | 'rejected'
   | 'returned'
   | 'no_answer'
   | 'quote';
