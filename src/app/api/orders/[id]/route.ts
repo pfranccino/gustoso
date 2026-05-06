@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifySession } from '@/lib/auth/verifySession';
-import { updateOrderStatus, OrderStatus } from '@/lib/firestore/orders';
+import { updateOrderStatus, addOrderNote, OrderStatus } from '@/lib/firestore/orders';
 
 export const dynamic = 'force-dynamic';
 
-const VALID_STATUSES: OrderStatus[] = ['pending', 'confirmed', 'rejected'];
+const VALID_STATUSES: OrderStatus[] = [
+  'pending', 'confirmed', 'rejected', 'delivered', 'returned', 'no_answer', 'quote',
+];
 
 export async function PATCH(
   request: NextRequest,
@@ -17,17 +19,23 @@ export async function PATCH(
   const { id } = params;
   if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
 
-  let body: { status?: OrderStatus };
+  let body: { status?: OrderStatus; note?: string };
   try { body = await request.json(); } catch {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
-  if (!body.status || !VALID_STATUSES.includes(body.status)) {
-    return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
-  }
-
   try {
-    await updateOrderStatus(id, body.status);
+    if (body.status) {
+      if (!VALID_STATUSES.includes(body.status))
+        return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
+      await updateOrderStatus(id, body.status);
+    }
+
+    if (typeof body.note === 'string' && body.note.trim()) {
+      const note = await addOrderNote(id, body.note.trim());
+      return NextResponse.json({ ok: true, note });
+    }
+
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error('orders PATCH error', err);

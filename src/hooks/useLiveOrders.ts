@@ -21,6 +21,7 @@ function docToOrder(doc: QueryDocumentSnapshot): Order {
     discountAmount: d.discountAmount ?? undefined,
     status:         (d.status        ?? 'pending') as OrderStatus,
     items:          d.items          ?? [],
+    notes:          Array.isArray(d.notes) ? d.notes : [],
   };
 }
 

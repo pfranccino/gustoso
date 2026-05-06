@@ -23,7 +23,19 @@ export type NewOrder = {
   discountAmount?: number | null;
 };
 
-export type OrderStatus = 'pending' | 'confirmed' | 'rejected';
+export type OrderStatus =
+  | 'pending'
+  | 'confirmed'
+  | 'rejected'
+  | 'delivered'
+  | 'returned'
+  | 'no_answer'
+  | 'quote';
+
+export type OrderNote = {
+  text: string;
+  createdAt: string;
+};
 
 export type Order = {
   id: string;
@@ -38,6 +50,7 @@ export type Order = {
   discountAmount?: number;
   status: OrderStatus;
   items: OrderItem[];
+  notes: OrderNote[];
 };
 
 export async function createOrder(order: NewOrder) {
@@ -55,6 +68,15 @@ export async function updateOrderStatus(id: string, status: OrderStatus): Promis
   await getAdminDb().collection('orders').doc(id).update({ status, updatedAt: FieldValue.serverTimestamp() });
 }
 
+export async function addOrderNote(id: string, text: string): Promise<OrderNote> {
+  const note: OrderNote = { text, createdAt: new Date().toISOString() };
+  await getAdminDb().collection('orders').doc(id).update({
+    notes: FieldValue.arrayUnion(note),
+    updatedAt: FieldValue.serverTimestamp(),
+  });
+  return note;
+}
+
 export async function getOrders(limit = 50): Promise<Order[]> {
   const snap = await getAdminDb()
     .collection('orders')
@@ -65,18 +87,19 @@ export async function getOrders(limit = 50): Promise<Order[]> {
   return snap.docs.map(doc => {
     const d = doc.data();
     return {
-      id: doc.id,
-      createdAt: d.createdAt instanceof Timestamp
-        ? d.createdAt.toDate().toISOString()
-        : new Date().toISOString(),
-      total: d.total ?? 0,
-      itemCount: d.itemCount ?? 0,
-      orderId: d.orderId ?? undefined,
-      sessionId: d.sessionId ?? '',
-      locationUrl:   d.locationUrl   ?? undefined,
-      paymentMethod: d.paymentMethod ?? undefined,
-      status: (d.status ?? 'pending') as OrderStatus,
-      items: d.items ?? [],
+      id:             doc.id,
+      createdAt:      d.createdAt instanceof Timestamp ? d.createdAt.toDate().toISOString() : new Date().toISOString(),
+      total:          d.total          ?? 0,
+      itemCount:      d.itemCount      ?? 0,
+      orderId:        d.orderId        ?? undefined,
+      sessionId:      d.sessionId      ?? '',
+      locationUrl:    d.locationUrl    ?? undefined,
+      paymentMethod:  d.paymentMethod  ?? undefined,
+      discountCode:   d.discountCode   ?? undefined,
+      discountAmount: d.discountAmount ?? undefined,
+      status:         (d.status        ?? 'pending') as OrderStatus,
+      items:          d.items          ?? [],
+      notes:          Array.isArray(d.notes) ? d.notes : [],
     };
   });
 }
