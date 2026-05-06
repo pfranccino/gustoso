@@ -70,15 +70,17 @@ function FilterChips<T extends string>({ label, options, value, onChange }: {
 
 function exportCSV(orders: Order[]) {
   const BOM = '﻿';
-  const headers = ['Código', 'Fecha', 'Estado', 'Método de pago', 'Productos', 'Total', 'Descuento', 'Notas', 'Ubicación'];
+  const headers = ['Código', 'Fecha', 'Estado', 'Método de pago', 'Productos', 'Subtotal', 'Descuento', 'Delivery', 'Total', 'Notas', 'Ubicación'];
   const rows = orders.map(o => [
     o.orderId ?? '',
     new Date(o.createdAt).toLocaleString('es-CL', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }),
     STATUS_CFG[o.status].label,
     o.paymentMethod ? PAYMENT_LABEL[o.paymentMethod].replace(/^\S+\s/, '') : 'Sin especificar',
     o.items.map(it => `${it.qty}x ${it.name}${it.size ? ` (${it.size})` : ''}`).join(' | '),
-    o.total,
+    o.discountAmount ? o.total - (o.deliveryFee ?? 0) + o.discountAmount : o.total - (o.deliveryFee ?? 0),
     o.discountCode ? `${o.discountCode} (-${o.discountAmount ?? 0})` : '',
+    o.deliveryFee ?? '',
+    o.total,
     (o.notes ?? []).map(n => n.text).join(' / '),
     o.locationUrl ?? '',
   ]);
@@ -262,6 +264,11 @@ function OrderCard({ order, onStatus, onAddNote }: {
           {order.discountCode && (
             <div style={{ fontSize:12, color:'#16a34a', marginTop:2, fontWeight:600 }}>
               🏷 {order.discountCode} -{fmt(order.discountAmount ?? 0)}
+            </div>
+          )}
+          {order.deliveryFee != null && (
+            <div style={{ fontSize:12, color:'var(--text-muted)', marginTop:2, fontWeight:600 }}>
+              🛵 Delivery: {fmt(order.deliveryFee)}
             </div>
           )}
         </div>

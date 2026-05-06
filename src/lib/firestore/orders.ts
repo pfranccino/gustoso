@@ -100,6 +100,7 @@ export async function getOrders(limit = 50): Promise<Order[]> {
       paymentMethod:  d.paymentMethod  ?? undefined,
       discountCode:   d.discountCode   ?? undefined,
       discountAmount: d.discountAmount ?? undefined,
+      deliveryFee:    d.deliveryFee    ?? undefined,
       status:         (d.status        ?? 'pending') as OrderStatus,
       items:          d.items          ?? [],
       notes:          Array.isArray(d.notes) ? d.notes : [],
