@@ -1,10 +1,12 @@
 'use client';
 
+import { useState } from 'react';
 import { useCart } from '@/contexts/CartContext';
 import { fmt } from '@/lib/menuData';
 import { useSettings } from '@/contexts/SettingsContext';
 import { TrashIcon, WAIcon } from './icons';
 import { useGeolocation } from '@/hooks/useGeolocation';
+import { PaymentMethod } from '@/lib/firestore/orders';
 
 function getSessionId(): string {
   const key = 'gustosos_sid';
@@ -17,7 +19,7 @@ function getSessionId(): string {
 }
 
 function generateOrderId(): string {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // sin 0/O, 1/I/L para evitar confusión
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let code = 'GST-';
   for (let i = 0; i < 4; i++) code += chars[Math.floor(Math.random() * chars.length)];
   return code;
@@ -27,29 +29,42 @@ async function logOrder(
   items: ReturnType<typeof useCart>['items'],
   total: number,
   orderId: string,
-  locationUrl?: string
+  locationUrl?: string,
+  paymentMethod?: PaymentMethod,
 ) {
   try {
     await fetch('/api/orders', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        items,
-        total,
-        orderId,
+        items, total, orderId,
         sessionId: getSessionId(),
         locationUrl,
+        paymentMethod,
       }),
     });
   } catch {
-    // fire-and-forget — no bloquea el pedido si falla
+    // fire-and-forget
   }
 }
+
+const PAYMENT_OPTIONS: { id: PaymentMethod; label: string; emoji: string }[] = [
+  { id: 'efectivo',      label: 'Efectivo',      emoji: '💵' },
+  { id: 'transferencia', label: 'Transferencia',  emoji: '🏦' },
+  { id: 'debito',        label: 'Débito/Crédito', emoji: '💳' },
+];
+
+const PAYMENT_LABEL: Record<PaymentMethod, string> = {
+  efectivo:      'Efectivo',
+  transferencia: 'Transferencia',
+  debito:        'Débito / Crédito',
+};
 
 export default function CartDrawer() {
   const { items, updateQty, removeItem, clearCart, total, count, isOpen, setIsOpen } = useCart();
   const { waNumber, waGreeting, waFooter } = useSettings();
   const { state: geo, request: requestGeo, clear: clearGeo } = useGeolocation();
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
 
   const locationUrl = geo.status === 'success' ? geo.locationUrl : undefined;
 
@@ -58,21 +73,22 @@ export default function CartDrawer() {
     items.forEach((item, i) => {
       const extrasTotal = (item.extras ?? []).reduce((s, e) => s + e.price, 0);
       lines.push(`${i + 1}. ${item.qty}x ${item.name}${item.size ? ` (${item.size.toUpperCase()})` : ''} — ${fmt((item.price + extrasTotal) * item.qty)}`);
-      if (item.desc) lines.push(`   📋 ${item.desc}`);
-      if (item.removedIngredients?.length) lines.push(`   ❌ Sin: ${item.removedIngredients.join(', ')}`);
-      if (item.extras?.length) lines.push(`   ➕ ${item.extras.map(e => e.price > 0 ? `${e.name} (+${fmt(e.price)})` : e.name).join(', ')}`);
-      if (item.note) lines.push(`   📝 Nota: ${item.note}`);
+      if (item.desc)                         lines.push(`   📋 ${item.desc}`);
+      if (item.removedIngredients?.length)   lines.push(`   ❌ Sin: ${item.removedIngredients.join(', ')}`);
+      if (item.extras?.length)               lines.push(`   ➕ ${item.extras.map(e => e.price > 0 ? `${e.name} (+${fmt(e.price)})` : e.name).join(', ')}`);
+      if (item.note)                         lines.push(`   📝 Nota: ${item.note}`);
     });
     lines.push('');
     lines.push(`💰 TOTAL: ${fmt(total)}`);
-    if (locationUrl) lines.push(`📍 Mi ubicación: ${locationUrl}`);
-    if (waFooter) lines.push('', waFooter);
+    if (paymentMethod) lines.push(`💳 Pago: ${PAYMENT_LABEL[paymentMethod]}`);
+    if (locationUrl)   lines.push(`📍 Mi ubicación: ${locationUrl}`);
+    if (waFooter)      lines.push('', waFooter);
     return `https://wa.me/${waNumber}?text=${encodeURIComponent(lines.join('\n'))}`;
   };
 
   const handleSend = () => {
     const orderId = generateOrderId();
-    logOrder(items, total, orderId, locationUrl);
+    logOrder(items, total, orderId, locationUrl, paymentMethod ?? undefined);
     window.open(buildWAMsg(orderId), '_blank');
   };
 
@@ -80,7 +96,7 @@ export default function CartDrawer() {
 
   return (
     <div style={{ position:'fixed', inset:0, zIndex:600, display:'flex', flexDirection:'column', justifyContent:'flex-end', alignItems:'center' }}>
-      <div onClick={() => setIsOpen(false)} style={{ position:'absolute', inset:0, background:'rgba(0,0,0,0.5)', backdropFilter:'blur(4px)' }}></div>
+      <div onClick={() => setIsOpen(false)} style={{ position:'absolute', inset:0, background:'rgba(0,0,0,0.5)', backdropFilter:'blur(4px)' }}/>
       <div style={{ position:'relative', zIndex:1, width:'100%', maxWidth:'var(--max)', background:'var(--card)', borderRadius:'var(--radius) var(--radius) 0 0', maxHeight:'85dvh', display:'flex', flexDirection:'column', animation:'slideUp .3s ease', boxShadow:'0 -8px 40px rgba(0,0,0,0.3)' }}>
 
         {/* Header */}
@@ -114,8 +130,8 @@ export default function CartDrawer() {
                         {item.size && <span style={{ fontSize:12, color:'var(--orange)', fontWeight:900, marginLeft:6, background:'rgba(242,100,25,0.1)', padding:'1px 5px', borderRadius:4 }}>{item.size.toUpperCase()}</span>}
                       </div>
                       {item.desc && <div style={{ fontSize:12, color:'var(--text-muted)', marginTop:2, lineHeight:1.4 }}>{item.desc}</div>}
-                      {item.removedIngredients && item.removedIngredients.length > 0 && <div style={{ fontSize:12, color:'#ef4444', marginTop:2, lineHeight:1.5 }}>❌ Sin: {item.removedIngredients.join(', ')}</div>}
-                      {item.extras && item.extras.length > 0 && <div style={{ fontSize:12, color:'var(--orange)', marginTop:2, lineHeight:1.5 }}>➕ {item.extras.map(e => e.name).join(', ')}</div>}
+                      {item.removedIngredients?.length ? <div style={{ fontSize:12, color:'#ef4444', marginTop:2, lineHeight:1.5 }}>❌ Sin: {item.removedIngredients.join(', ')}</div> : null}
+                      {item.extras?.length ? <div style={{ fontSize:12, color:'var(--orange)', marginTop:2, lineHeight:1.5 }}>➕ {item.extras.map(e => e.name).join(', ')}</div> : null}
                       {item.note && <div style={{ fontSize:12, color:'var(--orange)', marginTop:3, fontStyle:'italic' }}>📝 {item.note}</div>}
                     </div>
                     <button onClick={() => removeItem(item.id)} style={{ color:'var(--text-muted)', background:'transparent', border:'none', cursor:'pointer', padding:4, flexShrink:0, opacity:.6 }}><TrashIcon size={14}/></button>
@@ -137,12 +153,33 @@ export default function CartDrawer() {
         {/* Footer */}
         {items.length > 0 && (
           <div style={{ padding:'16px 20px 32px', borderTop:'1px solid var(--border)', flexShrink:0 }}>
-            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12 }}>
+
+            {/* Total */}
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
               <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:16, color:'var(--text-muted)' }}>TOTAL</span>
               <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:28, color:'var(--text)' }}>{fmt(total)}</span>
             </div>
 
-            {/* Geolocation */}
+            {/* Método de pago */}
+            <div style={{ marginBottom:12 }}>
+              <div style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', letterSpacing:.5, textTransform:'uppercase', marginBottom:7 }}>
+                Método de pago
+              </div>
+              <div style={{ display:'flex', gap:6 }}>
+                {PAYMENT_OPTIONS.map(opt => {
+                  const sel = paymentMethod === opt.id;
+                  return (
+                    <button key={opt.id} onClick={() => setPaymentMethod(sel ? null : opt.id)}
+                      style={{ flex:1, padding:'9px 4px', borderRadius:10, border:`2px solid ${sel ? 'var(--orange)' : 'var(--border)'}`, background: sel ? 'rgba(242,100,25,0.08)' : 'var(--bg2)', cursor:'pointer', transition:'all .15s', display:'flex', flexDirection:'column', alignItems:'center', gap:3 }}>
+                      <span style={{ fontSize:18 }}>{opt.emoji}</span>
+                      <span style={{ fontSize:11, fontWeight:700, color: sel ? 'var(--orange)' : 'var(--text-muted)', lineHeight:1.2, textAlign:'center' }}>{opt.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Ubicación */}
             <div style={{ marginBottom:12 }}>
               {geo.status === 'idle' && (
                 <button onClick={requestGeo} style={{ width:'100%', padding:'9px', borderRadius:'var(--radius-sm)', border:'1px dashed var(--border)', background:'transparent', color:'var(--text-muted)', fontSize:13, fontWeight:600, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
@@ -159,23 +196,20 @@ export default function CartDrawer() {
                 </div>
               )}
               {geo.status === 'denied' && (
-                <div style={{ fontSize:12, color:'var(--text-muted)', textAlign:'center', padding:'6px' }}>
-                  Permiso bloqueado — actívalo en el candado 🔒 de la barra del navegador
+                <div style={{ fontSize:12, color:'#dc2626', textAlign:'center', padding:'6px', background:'rgba(220,38,38,0.05)', borderRadius:8 }}>
+                  🔒 Permiso bloqueado — actívalo en la barra del navegador
                 </div>
               )}
-              {geo.status === 'unavailable' && (
+              {(geo.status === 'unavailable') && (
                 <div style={{ fontSize:12, color:'var(--text-muted)', textAlign:'center', padding:'6px' }}>
-                  Ubicación no disponible — activa los servicios de ubicación en tu dispositivo
+                  Ubicación no disponible en este dispositivo
                 </div>
               )}
-              {geo.status === 'timeout' && (
+              {(geo.status === 'timeout' || geo.status === 'error') && (
                 <div style={{ fontSize:12, color:'var(--text-muted)', textAlign:'center', padding:'6px', display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
-                  <span>No respondió a tiempo</span>
+                  <span>No se pudo obtener la ubicación</span>
                   <button onClick={requestGeo} style={{ fontSize:11, fontWeight:700, color:'var(--orange)', background:'transparent', border:'none', cursor:'pointer', textDecoration:'underline' }}>Reintentar</button>
                 </div>
-              )}
-              {geo.status === 'error' && (
-                <div style={{ fontSize:12, color:'var(--text-muted)', textAlign:'center', padding:'6px' }}>No se pudo obtener la ubicación</div>
               )}
             </div>
 

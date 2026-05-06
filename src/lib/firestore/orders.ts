@@ -9,6 +9,8 @@ export type OrderItem = {
   subtotal: number;
 };
 
+export type PaymentMethod = 'efectivo' | 'transferencia' | 'debito';
+
 export type NewOrder = {
   items: OrderItem[];
   total: number;
@@ -16,6 +18,7 @@ export type NewOrder = {
   sessionId: string;
   orderId?: string;
   locationUrl?: string | null;
+  paymentMethod?: PaymentMethod | null;
 };
 
 export type OrderStatus = 'pending' | 'confirmed' | 'rejected';
@@ -28,6 +31,7 @@ export type Order = {
   itemCount: number;
   sessionId: string;
   locationUrl?: string;
+  paymentMethod?: PaymentMethod;
   status: OrderStatus;
   items: OrderItem[];
 };
@@ -63,7 +67,8 @@ export async function getOrders(limit = 50): Promise<Order[]> {
       itemCount: d.itemCount ?? 0,
       orderId: d.orderId ?? undefined,
       sessionId: d.sessionId ?? '',
-      locationUrl: d.locationUrl ?? undefined,
+      locationUrl:   d.locationUrl   ?? undefined,
+      paymentMethod: d.paymentMethod ?? undefined,
       status: (d.status ?? 'pending') as OrderStatus,
       items: d.items ?? [],
     };

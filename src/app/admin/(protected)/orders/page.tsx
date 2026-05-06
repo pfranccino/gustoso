@@ -48,6 +48,11 @@ function OrderCard({ order, onStatus }: { order: Order; onStatus: (id: string, s
             )}
             <span style={{ fontSize:12, fontWeight:700, color:'var(--text-muted)' }}>{date} · {time}</span>
             <StatusBadge status={order.status}/>
+            {order.paymentMethod && (
+              <span style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', background:'var(--bg2)', padding:'2px 7px', borderRadius:6, border:'1px solid var(--border)' }}>
+                { order.paymentMethod === 'efectivo' ? '💵 Efectivo' : order.paymentMethod === 'transferencia' ? '🏦 Transferencia' : '💳 Débito/Crédito' }
+              </span>
+            )}
             {order.locationUrl && (
               <a href={order.locationUrl} target="_blank" rel="noopener noreferrer"
                 style={{ fontSize:11, color:'var(--orange)', textDecoration:'none', fontWeight:600 }}>📍 Ubicación</a>

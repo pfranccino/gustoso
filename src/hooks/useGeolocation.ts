@@ -1,11 +1,9 @@
-'use client';
-
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 
 type GeoState =
   | { status: 'idle' }
   | { status: 'loading' }
-  | { status: 'success'; locationUrl: string }
+  | { status: 'success'; locationUrl: string; lat: number; lng: number }
   | { status: 'denied' }
   | { status: 'unavailable' }
   | { status: 'timeout' }
@@ -14,28 +12,37 @@ type GeoState =
 export function useGeolocation() {
   const [state, setState] = useState<GeoState>({ status: 'idle' });
 
-  const request = () => {
-    if (!navigator.geolocation) {
-      setState({ status: 'error' });
+  const request = useCallback(() => {
+    if (typeof navigator === 'undefined' || !navigator.geolocation) {
+      setState({ status: 'unavailable' });
       return;
     }
     setState({ status: 'loading' });
     navigator.geolocation.getCurrentPosition(
       ({ coords }) => {
-        const locationUrl = `https://maps.google.com/?q=${coords.latitude},${coords.longitude}`;
-        setState({ status: 'success', locationUrl });
+        const { latitude: lat, longitude: lng } = coords;
+        const locationUrl = `https://maps.google.com/?q=${lat},${lng}`;
+        setState({ status: 'success', locationUrl, lat, lng });
       },
       (err) => {
-        if (err.code === err.PERMISSION_DENIED)   setState({ status: 'denied' });
-        else if (err.code === err.POSITION_UNAVAILABLE) setState({ status: 'unavailable' });
-        else if (err.code === err.TIMEOUT)        setState({ status: 'timeout' });
-        else                                      setState({ status: 'error' });
+        switch (err.code) {
+          case GeolocationPositionError.PERMISSION_DENIED:
+            setState({ status: 'denied' }); break;
+          case GeolocationPositionError.POSITION_UNAVAILABLE:
+            setState({ status: 'unavailable' }); break;
+          case GeolocationPositionError.TIMEOUT:
+            setState({ status: 'timeout' }); break;
+          default:
+            setState({ status: 'error' });
+        }
       },
-      { enableHighAccuracy: false, timeout: 20000, maximumAge: 120000 }
+      // enableHighAccuracy:true mejora la precisión en móvil
+      // timeout amplio para redes lentas
+      { enableHighAccuracy: true, timeout: 30000, maximumAge: 60000 }
     );
-  };
+  }, []);
 
-  const clear = () => setState({ status: 'idle' });
+  const clear = useCallback(() => setState({ status: 'idle' }), []);
 
   return { state, request, clear };
 }

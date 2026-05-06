@@ -15,8 +15,9 @@ function docToOrder(doc: QueryDocumentSnapshot): Order {
     total:       d.total       ?? 0,
     itemCount:   d.itemCount   ?? 0,
     sessionId:   d.sessionId   ?? '',
-    locationUrl: d.locationUrl ?? undefined,
-    status:      (d.status     ?? 'pending') as OrderStatus,
+    locationUrl:   d.locationUrl   ?? undefined,
+    paymentMethod: d.paymentMethod ?? undefined,
+    status:        (d.status       ?? 'pending') as OrderStatus,
     items:       d.items       ?? [],
   };
 }
