@@ -9,16 +9,18 @@ import { Order, OrderStatus } from '@/lib/firestore/orders';
 function docToOrder(doc: QueryDocumentSnapshot): Order {
   const d = doc.data();
   return {
-    id:          doc.id,
-    orderId:     d.orderId ?? undefined,
-    createdAt:   d.createdAt instanceof Timestamp ? d.createdAt.toDate().toISOString() : new Date().toISOString(),
-    total:       d.total       ?? 0,
-    itemCount:   d.itemCount   ?? 0,
-    sessionId:   d.sessionId   ?? '',
-    locationUrl:   d.locationUrl   ?? undefined,
-    paymentMethod: d.paymentMethod ?? undefined,
-    status:        (d.status       ?? 'pending') as OrderStatus,
-    items:       d.items       ?? [],
+    id:             doc.id,
+    orderId:        d.orderId        ?? undefined,
+    createdAt:      d.createdAt instanceof Timestamp ? d.createdAt.toDate().toISOString() : new Date().toISOString(),
+    total:          d.total          ?? 0,
+    itemCount:      d.itemCount      ?? 0,
+    sessionId:      d.sessionId      ?? '',
+    locationUrl:    d.locationUrl    ?? undefined,
+    paymentMethod:  d.paymentMethod  ?? undefined,
+    discountCode:   d.discountCode   ?? undefined,
+    discountAmount: d.discountAmount ?? undefined,
+    status:         (d.status        ?? 'pending') as OrderStatus,
+    items:          d.items          ?? [],
   };
 }
 

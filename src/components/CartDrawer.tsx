@@ -25,12 +25,15 @@ function generateOrderId(): string {
   return code;
 }
 
+type AppliedDiscount = { code: string; type: 'fixed' | 'percent'; value: number; display: string; amount: number };
+
 async function logOrder(
   items: ReturnType<typeof useCart>['items'],
   total: number,
   orderId: string,
   locationUrl?: string,
   paymentMethod?: PaymentMethod,
+  discountCode?: string,
 ) {
   try {
     await fetch('/api/orders', {
@@ -41,6 +44,7 @@ async function logOrder(
         sessionId: getSessionId(),
         locationUrl,
         paymentMethod,
+        discountCode,
       }),
     });
   } catch {
@@ -64,9 +68,62 @@ export default function CartDrawer() {
   const { items, updateQty, removeItem, clearCart, total, count, isOpen, setIsOpen } = useCart();
   const { waNumber, waGreeting, waFooter } = useSettings();
   const { state: geo, request: requestGeo, clear: clearGeo } = useGeolocation();
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
+  const [paymentMethod, setPaymentMethod]   = useState<PaymentMethod | null>(null);
+  const [discountInput, setDiscountInput]   = useState('');
+  const [discountStatus, setDiscountStatus] = useState<'idle' | 'loading' | 'applied' | 'error'>('idle');
+  const [discountError,  setDiscountError]  = useState('');
+  const [appliedDiscount, setAppliedDiscount] = useState<AppliedDiscount | null>(null);
 
   const locationUrl = geo.status === 'success' ? geo.locationUrl : undefined;
+
+  /* ── descuento ───────────────────────────── */
+
+  function calcDiscount(dis: AppliedDiscount, rawTotal: number): number {
+    return dis.type === 'percent'
+      ? Math.round(rawTotal * dis.value / 100)
+      : dis.value;
+  }
+
+  const discountAmount = appliedDiscount ? calcDiscount(appliedDiscount, total) : 0;
+  const finalTotal     = Math.max(0, total - discountAmount);
+
+  async function applyDiscount() {
+    const code = discountInput.trim().toUpperCase();
+    if (!code) return;
+    setDiscountStatus('loading');
+    setDiscountError('');
+    try {
+      const res  = await fetch('/api/discounts/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code }),
+      });
+      const data = await res.json();
+      if (data.valid) {
+        const amount = data.type === 'percent'
+          ? Math.round(total * data.value / 100)
+          : data.value;
+        setAppliedDiscount({ code, type: data.type, value: data.value, display: data.display, amount });
+        setDiscountStatus('applied');
+        setDiscountInput('');
+      } else {
+        setDiscountError(data.error ?? 'Código inválido');
+        setDiscountStatus('error');
+      }
+    } catch {
+      setDiscountError('Error al validar el código');
+      setDiscountStatus('error');
+    }
+  }
+
+  function removeDiscount() {
+    setAppliedDiscount(null);
+    setDiscountStatus('idle');
+    setDiscountInput('');
+    setDiscountError('');
+  }
+
+  /* ── mensaje WhatsApp ────────────────────── */
 
   const buildWAMsg = (orderId: string) => {
     const lines = [`🧾 Pedido ${orderId}`, waGreeting, ''];
@@ -79,7 +136,9 @@ export default function CartDrawer() {
       if (item.note)                         lines.push(`   📝 Nota: ${item.note}`);
     });
     lines.push('');
-    lines.push(`💰 TOTAL: ${fmt(total)}`);
+    lines.push(`💰 Subtotal: ${fmt(total)}`);
+    if (appliedDiscount) lines.push(`🏷 Descuento (${appliedDiscount.code}): -${fmt(discountAmount)}`);
+    lines.push(`💰 TOTAL: ${fmt(finalTotal)}`);
     if (paymentMethod) lines.push(`💳 Pago: ${PAYMENT_LABEL[paymentMethod]}`);
     if (locationUrl)   lines.push(`📍 Mi ubicación: ${locationUrl}`);
     if (waFooter)      lines.push('', waFooter);
@@ -88,7 +147,7 @@ export default function CartDrawer() {
 
   const handleSend = () => {
     const orderId = generateOrderId();
-    logOrder(items, total, orderId, locationUrl, paymentMethod ?? undefined);
+    logOrder(items, finalTotal, orderId, locationUrl, paymentMethod ?? undefined, appliedDiscount?.code);
     window.open(buildWAMsg(orderId), '_blank');
   };
 
@@ -155,9 +214,55 @@ export default function CartDrawer() {
           <div style={{ padding:'16px 20px 32px', borderTop:'1px solid var(--border)', flexShrink:0 }}>
 
             {/* Total */}
-            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
-              <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:16, color:'var(--text-muted)' }}>TOTAL</span>
-              <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:28, color:'var(--text)' }}>{fmt(total)}</span>
+            <div style={{ marginBottom:14 }}>
+              {appliedDiscount && (
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:4 }}>
+                  <span style={{ fontSize:13, color:'var(--text-muted)' }}>Subtotal</span>
+                  <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:16, color:'var(--text-muted)' }}>{fmt(total)}</span>
+                </div>
+              )}
+              {appliedDiscount && (
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:4 }}>
+                  <span style={{ fontSize:13, color:'#16a34a', fontWeight:700 }}>🏷 {appliedDiscount.display}</span>
+                  <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:16, color:'#16a34a' }}>-{fmt(discountAmount)}</span>
+                </div>
+              )}
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:16, color:'var(--text-muted)' }}>TOTAL</span>
+                <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:28, color:'var(--text)' }}>{fmt(finalTotal)}</span>
+              </div>
+            </div>
+
+            {/* Código de descuento */}
+            <div style={{ marginBottom:12 }}>
+              {discountStatus !== 'applied' ? (
+                <div>
+                  <div style={{ display:'flex', gap:6 }}>
+                    <input
+                      value={discountInput}
+                      onChange={e => { setDiscountInput(e.target.value.toUpperCase()); setDiscountStatus('idle'); setDiscountError(''); }}
+                      onKeyDown={e => e.key === 'Enter' && applyDiscount()}
+                      placeholder="Código de descuento"
+                      style={{ flex:1, padding:'8px 12px', borderRadius:8, border:`1.5px solid ${discountStatus === 'error' ? '#dc2626' : 'var(--border)'}`, background:'var(--bg2)', color:'var(--text)', fontSize:13, fontFamily:"'Barlow',sans-serif", outline:'none' }}
+                    />
+                    <button onClick={applyDiscount} disabled={discountStatus === 'loading' || !discountInput.trim()}
+                      style={{ padding:'8px 14px', borderRadius:8, border:'none', background:'var(--orange)', color:'#fff', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:14, cursor: (discountStatus === 'loading' || !discountInput.trim()) ? 'not-allowed' : 'pointer', opacity: (discountStatus === 'loading' || !discountInput.trim()) ? 0.6 : 1, whiteSpace:'nowrap' }}>
+                      {discountStatus === 'loading' ? '…' : 'Aplicar'}
+                    </button>
+                  </div>
+                  {discountStatus === 'error' && (
+                    <div style={{ fontSize:12, color:'#dc2626', marginTop:5, fontWeight:600 }}>⚠ {discountError}</div>
+                  )}
+                </div>
+              ) : (
+                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', background:'rgba(22,163,74,0.08)', border:'1px solid rgba(22,163,74,0.25)', borderRadius:8, padding:'8px 12px' }}>
+                  <div>
+                    <span style={{ fontSize:13, color:'#16a34a', fontWeight:700 }}>🏷 {appliedDiscount?.code}</span>
+                    <span style={{ fontSize:12, color:'#16a34a', marginLeft:6 }}>{appliedDiscount?.display}</span>
+                  </div>
+                  <button onClick={removeDiscount} style={{ fontSize:12, color:'var(--text-muted)', background:'transparent', border:'none', cursor:'pointer', fontWeight:600 }}>Quitar</button>
+                </div>
+              )}
             </div>
 
             {/* Método de pago */}
@@ -201,7 +306,7 @@ export default function CartDrawer() {
                   Toca el candado en la barra del navegador → <em>Permisos → Ubicación → Permitir</em>, y se activará automáticamente.
                 </div>
               )}
-              {(geo.status === 'unavailable') && (
+              {geo.status === 'unavailable' && (
                 <div style={{ fontSize:12, color:'var(--text-muted)', textAlign:'center', padding:'6px' }}>
                   Ubicación no disponible en este dispositivo
                 </div>

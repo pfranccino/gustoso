@@ -19,6 +19,8 @@ export type NewOrder = {
   orderId?: string;
   locationUrl?: string | null;
   paymentMethod?: PaymentMethod | null;
+  discountCode?: string | null;
+  discountAmount?: number | null;
 };
 
 export type OrderStatus = 'pending' | 'confirmed' | 'rejected';
@@ -32,6 +34,8 @@ export type Order = {
   sessionId: string;
   locationUrl?: string;
   paymentMethod?: PaymentMethod;
+  discountCode?: string;
+  discountAmount?: number;
   status: OrderStatus;
   items: OrderItem[];
 };
@@ -39,6 +43,8 @@ export type Order = {
 export async function createOrder(order: NewOrder) {
   const ref = await getAdminDb().collection('orders').add({
     ...order,
+    discountCode:   order.discountCode   ?? null,
+    discountAmount: order.discountAmount ?? null,
     status: 'pending',
     createdAt: FieldValue.serverTimestamp(),
   });
