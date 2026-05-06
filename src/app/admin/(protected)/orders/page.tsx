@@ -188,7 +188,6 @@ function StatusSelector({ current, onStatus, busy }: {
         disabled={busy}
         onChange={e => onStatus(e.target.value as OrderStatus)}
         style={{
-          flex: 1,
           padding: '6px 10px',
           borderRadius: 8,
           border: `1.5px solid ${cfg.color}55`,
