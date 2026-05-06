@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { Settings } from '@/lib/firestore/settings';
+import { Settings, DeliveryZone } from '@/lib/firestore/settings';
 
 const INPUT: React.CSSProperties = {
   display: 'block', width: '100%', padding: '11px 13px',
@@ -151,6 +151,117 @@ ${form.waGreeting}
             {form.isOpen ? 'Local abierto' : 'Local cerrado'}
           </span>
         </div>
+      </div>
+
+      {/* Delivery */}
+      <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '20px', marginBottom: 16 }}>
+        <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 18, color: 'var(--text)', marginBottom: 4 }}>
+          🛵 Delivery
+        </div>
+        <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>
+          Calcula el costo según distancia desde el local al cliente (línea recta).
+        </div>
+
+        {/* Toggle */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+          <button
+            onClick={() => setForm(f => ({ ...f, delivery: { ...f.delivery, enabled: !f.delivery.enabled } }))}
+            style={{ width: 44, height: 24, borderRadius: 999, border: 'none', background: form.delivery.enabled ? '#F26419' : '#d1d5db', cursor: 'pointer', position: 'relative', transition: 'background .2s', flexShrink: 0 }}>
+            <span style={{ position: 'absolute', top: 3, left: form.delivery.enabled ? 22 : 3, width: 18, height: 18, borderRadius: '50%', background: '#fff', transition: 'left .2s' }}/>
+          </button>
+          <span style={{ fontSize: 14, fontWeight: 600, color: form.delivery.enabled ? 'var(--orange)' : 'var(--text-muted)' }}>
+            {form.delivery.enabled ? 'Delivery habilitado' : 'Delivery deshabilitado'}
+          </span>
+        </div>
+
+        {form.delivery.enabled && (
+          <>
+            {/* Coordenadas */}
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ ...LABEL, marginBottom: 4 }}>Coordenadas del local</label>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>
+                Abre <a href={`https://maps.google.com/?q=${encodeURIComponent(form.address)}`} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--orange)' }}>Google Maps</a>, haz clic derecho sobre el local → &quot;¿Qué hay aquí?&quot; y copia las coordenadas.
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <div>
+                  <label style={{ ...LABEL, fontSize: 10 }}>Latitud</label>
+                  <input type="number" step="any"
+                    value={form.delivery.restaurantLat || ''}
+                    onChange={e => setForm(f => ({ ...f, delivery: { ...f.delivery, restaurantLat: parseFloat(e.target.value) || 0 } }))}
+                    placeholder="-33.4513"
+                    style={INPUT} />
+                </div>
+                <div>
+                  <label style={{ ...LABEL, fontSize: 10 }}>Longitud</label>
+                  <input type="number" step="any"
+                    value={form.delivery.restaurantLng || ''}
+                    onChange={e => setForm(f => ({ ...f, delivery: { ...f.delivery, restaurantLng: parseFloat(e.target.value) || 0 } }))}
+                    placeholder="-70.6653"
+                    style={INPUT} />
+                </div>
+              </div>
+            </div>
+
+            {/* Zonas */}
+            <div style={{ marginBottom: 16 }}>
+              <label style={LABEL}>Zonas de precio</label>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 10 }}>Hasta X km → precio fijo. Ordenadas de menor a mayor distancia.</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {form.delivery.zones.map((zone, i) => (
+                  <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    <div style={{ flex: 1 }}>
+                      <label style={{ ...LABEL, fontSize: 10 }}>Hasta (km)</label>
+                      <input type="number" min="0" step="0.5"
+                        value={zone.maxKm}
+                        onChange={e => {
+                          const zones = form.delivery.zones.map((z, j) => j === i ? { ...z, maxKm: parseFloat(e.target.value) || 0 } : z);
+                          setForm(f => ({ ...f, delivery: { ...f.delivery, zones } }));
+                        }}
+                        style={INPUT} />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <label style={{ ...LABEL, fontSize: 10 }}>Precio ($)</label>
+                      <input type="number" min="0"
+                        value={zone.price}
+                        onChange={e => {
+                          const zones = form.delivery.zones.map((z, j) => j === i ? { ...z, price: parseInt(e.target.value) || 0 } : z);
+                          setForm(f => ({ ...f, delivery: { ...f.delivery, zones } }));
+                        }}
+                        style={INPUT} />
+                    </div>
+                    <button
+                      onClick={() => setForm(f => ({ ...f, delivery: { ...f.delivery, zones: f.delivery.zones.filter((_, j) => j !== i) } }))}
+                      style={{ marginTop: 18, padding: '8px 10px', borderRadius: 8, border: '1px solid rgba(220,38,38,0.3)', background: 'transparent', color: '#dc2626', fontSize: 14, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <button
+                onClick={() => {
+                  const last = form.delivery.zones[form.delivery.zones.length - 1];
+                  const newZone: DeliveryZone = { maxKm: last ? last.maxKm + 3 : 2, price: last ? last.price + 500 : 1500 };
+                  setForm(f => ({ ...f, delivery: { ...f.delivery, zones: [...f.delivery.zones, newZone] } }));
+                }}
+                style={{ marginTop: 10, padding: '7px 16px', borderRadius: 999, border: '1.5px dashed rgba(242,100,25,0.4)', background: 'transparent', color: '#F26419', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+                + Agregar zona
+              </button>
+            </div>
+
+            {/* Precio por km extra */}
+            <div>
+              <label style={LABEL}>Precio por km adicional (más allá de la última zona)</label>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>
+                Pon 0 si no quieres hacer delivery fuera de las zonas definidas.
+              </div>
+              <input type="number" min="0"
+                value={form.delivery.extraPricePerKm}
+                onChange={e => setForm(f => ({ ...f, delivery: { ...f.delivery, extraPricePerKm: parseInt(e.target.value) || 0 } }))}
+                placeholder="500"
+                style={INPUT} />
+            </div>
+          </>
+        )}
       </div>
 
       {/* Save */}

@@ -7,6 +7,7 @@ import { useSettings } from '@/contexts/SettingsContext';
 import { TrashIcon, WAIcon } from './icons';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { PaymentMethod } from '@/lib/firestore/orders';
+import { DeliveryConfig } from '@/lib/firestore/settings';
 
 function getSessionId(): string {
   const key = 'gustosos_sid';
@@ -27,6 +28,34 @@ function generateOrderId(): string {
 
 type AppliedDiscount = { code: string; type: 'fixed' | 'percent'; value: number; display: string; amount: number };
 
+/* ── Haversine distance (km) ─────────────────── */
+function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function calcDeliveryFee(distKm: number, cfg: DeliveryConfig): number | null {
+  const sorted = [...cfg.zones].sort((a, b) => a.maxKm - b.maxKm);
+  const zone = sorted.find(z => distKm <= z.maxKm);
+  if (zone) return zone.price;
+  if (cfg.extraPricePerKm > 0 && sorted.length > 0) {
+    const last = sorted[sorted.length - 1];
+    const extra = Math.ceil(distKm - last.maxKm);
+    return last.price + extra * cfg.extraPricePerKm;
+  }
+  return null; // fuera de zona de cobertura
+}
+
+function parseLatLng(locationUrl: string): { lat: number; lng: number } | null {
+  const m = locationUrl.match(/q=([-\d.]+),([-\d.]+)/);
+  if (!m) return null;
+  return { lat: parseFloat(m[1]), lng: parseFloat(m[2]) };
+}
+
 async function logOrder(
   items: ReturnType<typeof useCart>['items'],
   total: number,
@@ -34,6 +63,7 @@ async function logOrder(
   locationUrl?: string,
   paymentMethod?: PaymentMethod,
   discountCode?: string,
+  deliveryFee?: number,
 ) {
   try {
     await fetch('/api/orders', {
@@ -45,6 +75,7 @@ async function logOrder(
         locationUrl,
         paymentMethod,
         discountCode,
+        deliveryFee,
       }),
     });
   } catch {
@@ -66,7 +97,7 @@ const PAYMENT_LABEL: Record<PaymentMethod, string> = {
 
 export default function CartDrawer() {
   const { items, updateQty, removeItem, clearCart, total, count, isOpen, setIsOpen } = useCart();
-  const { waNumber, waGreeting, waFooter } = useSettings();
+  const { waNumber, waGreeting, waFooter, delivery } = useSettings();
   const { state: geo, request: requestGeo, clear: clearGeo } = useGeolocation();
   const [paymentMethod, setPaymentMethod]   = useState<PaymentMethod | null>(null);
   const [discountInput, setDiscountInput]   = useState('');
@@ -75,6 +106,18 @@ export default function CartDrawer() {
   const [appliedDiscount, setAppliedDiscount] = useState<AppliedDiscount | null>(null);
 
   const locationUrl = geo.status === 'success' ? geo.locationUrl : undefined;
+
+  /* ── delivery fee ────────────────────────── */
+  const deliveryInfo = (() => {
+    if (!delivery?.enabled || !locationUrl) return null;
+    if (!delivery.restaurantLat || !delivery.restaurantLng) return null;
+    const coords = parseLatLng(locationUrl);
+    if (!coords) return null;
+    const distKm = haversineKm(delivery.restaurantLat, delivery.restaurantLng, coords.lat, coords.lng);
+    const fee    = calcDeliveryFee(distKm, delivery);
+    return { distKm, fee };
+  })();
+  const deliveryFee = deliveryInfo?.fee ?? null;
 
   /* ── descuento ───────────────────────────── */
 
@@ -85,7 +128,7 @@ export default function CartDrawer() {
   }
 
   const discountAmount = appliedDiscount ? calcDiscount(appliedDiscount, total) : 0;
-  const finalTotal     = Math.max(0, total - discountAmount);
+  const finalTotal     = Math.max(0, total - discountAmount) + (deliveryFee ?? 0);
 
   async function applyDiscount() {
     const code = discountInput.trim().toUpperCase();
@@ -138,6 +181,8 @@ export default function CartDrawer() {
     lines.push('');
     lines.push(`💰 Subtotal: ${fmt(total)}`);
     if (appliedDiscount) lines.push(`🏷 Descuento (${appliedDiscount.code}): -${fmt(discountAmount)}`);
+    if (deliveryFee != null) lines.push(`🛵 Delivery (${deliveryInfo!.distKm.toFixed(1)} km): ${fmt(deliveryFee)}`);
+    if (deliveryInfo && deliveryInfo.fee === null) lines.push(`🛵 Delivery: fuera de cobertura`);
     lines.push(`💰 TOTAL: ${fmt(finalTotal)}`);
     if (paymentMethod) lines.push(`💳 Pago: ${PAYMENT_LABEL[paymentMethod]}`);
     if (locationUrl)   lines.push(`📍 Mi ubicación: ${locationUrl}`);
@@ -147,7 +192,7 @@ export default function CartDrawer() {
 
   const handleSend = () => {
     const orderId = generateOrderId();
-    logOrder(items, finalTotal, orderId, locationUrl, paymentMethod ?? undefined, appliedDiscount?.code);
+    logOrder(items, finalTotal, orderId, locationUrl, paymentMethod ?? undefined, appliedDiscount?.code, deliveryFee ?? undefined);
     window.open(buildWAMsg(orderId), '_blank');
   };
 
@@ -225,6 +270,17 @@ export default function CartDrawer() {
                 <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:4 }}>
                   <span style={{ fontSize:13, color:'#16a34a', fontWeight:700 }}>🏷 {appliedDiscount.display}</span>
                   <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:16, color:'#16a34a' }}>-{fmt(discountAmount)}</span>
+                </div>
+              )}
+              {deliveryFee != null && (
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:4 }}>
+                  <span style={{ fontSize:13, color:'var(--text-muted)', fontWeight:600 }}>🛵 Delivery · {deliveryInfo!.distKm.toFixed(1)} km</span>
+                  <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:16, color:'var(--text)' }}>{fmt(deliveryFee)}</span>
+                </div>
+              )}
+              {deliveryInfo && deliveryInfo.fee === null && (
+                <div style={{ fontSize:12, color:'#dc2626', fontWeight:600, marginBottom:4 }}>
+                  🛵 {deliveryInfo.distKm.toFixed(1)} km — fuera de nuestra zona de cobertura
                 </div>
               )}
               <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>

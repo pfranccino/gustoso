@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { items, total, sessionId, locationUrl, orderId, paymentMethod, discountCode } = body;
+    const { items, total, sessionId, locationUrl, orderId, paymentMethod, discountCode, deliveryFee } = body;
 
     if (!items?.length || !total || !sessionId) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -35,7 +35,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const finalTotal = discountAmount ? Math.max(0, total - discountAmount) : total;
+    const fee = typeof deliveryFee === 'number' && deliveryFee > 0 ? deliveryFee : 0;
+    const finalTotal = Math.max(0, total - (discountAmount ?? 0)) + fee;
 
     const id = await createOrder({
       items:          orderItems,
@@ -47,6 +48,7 @@ export async function POST(request: NextRequest) {
       paymentMethod:  paymentMethod ?? null,
       discountCode:   validatedCode ?? null,
       discountAmount: discountAmount ?? null,
+      deliveryFee:    fee || null,
     });
 
     return NextResponse.json({ id });

@@ -21,6 +21,7 @@ export type NewOrder = {
   paymentMethod?: PaymentMethod | null;
   discountCode?: string | null;
   discountAmount?: number | null;
+  deliveryFee?: number | null;
 };
 
 export type OrderStatus =
@@ -49,6 +50,7 @@ export type Order = {
   paymentMethod?: PaymentMethod;
   discountCode?: string;
   discountAmount?: number;
+  deliveryFee?: number;
   status: OrderStatus;
   items: OrderItem[];
   notes: OrderNote[];

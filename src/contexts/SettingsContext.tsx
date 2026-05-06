@@ -1,6 +1,9 @@
 'use client';
 
 import { createContext, useContext } from 'react';
+import { DeliveryConfig, DEFAULT_DELIVERY } from '@/lib/firestore/settings';
+
+export type { DeliveryConfig };
 
 export type PublicSettings = {
   waNumber:   string;
@@ -9,6 +12,7 @@ export type PublicSettings = {
   schedule:   string;
   waGreeting: string;
   waFooter:   string;
+  delivery:   DeliveryConfig;
 };
 
 const DEFAULT: PublicSettings = {
@@ -18,6 +22,7 @@ const DEFAULT: PublicSettings = {
   schedule:   'Lunes a Domingo 12:00 – 22:00',
   waGreeting: "Hola Gustoso's! Quiero hacer un pedido 🛒",
   waFooter:   '',
+  delivery:   { ...DEFAULT_DELIVERY },
 };
 
 const SettingsContext = createContext<PublicSettings>(DEFAULT);
