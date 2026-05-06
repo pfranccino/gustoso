@@ -7,7 +7,7 @@ const NAV_ITEMS = [
   { href: '/admin/dashboard',  label: 'Dashboard',    emoji: '📊' },
   { href: '/admin/menu',       label: 'Menú',         emoji: '🍔' },
   { href: '/admin/burrito',    label: 'Burrito',      emoji: '🌯' },
-  { href: '/admin/promotions', label: 'Promos',       emoji: '🏷️' },
+  { href: '/admin/promotions', label: 'Promos',       emoji: '🎁' },
   { href: '/admin/orders',     label: 'Pedidos',      emoji: '📋' },
   { href: '/admin/discounts',  label: 'Descuentos',   emoji: '🏷' },
   { href: '/admin/settings',   label: 'Configuración',emoji: '⚙️' },

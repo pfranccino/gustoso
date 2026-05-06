@@ -182,7 +182,15 @@ export default function DiscountsEditor({ initial }: { initial: DiscountCode[] }
   const [editing,  setEditing]  = useState<DiscountCode | null>(null);
   const [form,     setForm]     = useState<FormState>(EMPTY);
   const [error,    setError]    = useState('');
+  const [copied,   setCopied]   = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  function copyCode(code: string) {
+    navigator.clipboard.writeText(code).then(() => {
+      setCopied(code);
+      setTimeout(() => setCopied(null), 2000);
+    });
+  }
 
   function openCreate() {
     setForm({ ...EMPTY, code: genCode() });
@@ -318,6 +326,10 @@ export default function DiscountsEditor({ initial }: { initial: DiscountCode[] }
               </div>
 
               <div style={{ display:'flex', gap:6, flexShrink:0 }}>
+                <button onClick={() => copyCode(c.code)}
+                  style={{ padding:'5px 10px', borderRadius:8, border:'1px solid var(--border)', background: copied === c.code ? 'rgba(22,163,74,0.08)' : 'transparent', color: copied === c.code ? '#16a34a' : 'var(--text-muted)', fontSize:12, fontWeight:700, cursor:'pointer', transition:'all .2s', whiteSpace:'nowrap' }}>
+                  {copied === c.code ? '✓ Copiado' : '📋 Copiar'}
+                </button>
                 <button onClick={() => openEdit(c)}
                   style={{ padding:'5px 12px', borderRadius:8, border:'1px solid var(--border)', background:'transparent', color:'var(--text)', fontSize:12, fontWeight:700, cursor:'pointer' }}>
                   Editar
