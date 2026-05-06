@@ -1,12 +1,14 @@
 import { getPromotions, Promotion } from '@/lib/firestore/promotions';
+import { getMenuItems, MenuItem } from '@/lib/firestore/menuItems';
 import PromotionsEditor from '@/components/PromotionsEditor';
 
 export const dynamic = 'force-dynamic';
 
 export default async function PromotionsPage() {
   let promos: Promotion[] = [];
+  let menuItems: MenuItem[] = [];
   try {
-    promos = await getPromotions();
+    [promos, menuItems] = await Promise.all([getPromotions(), getMenuItems()]);
   } catch {}
 
   return (
@@ -19,7 +21,7 @@ export default async function PromotionsPage() {
           Crea y gestiona combos y ofertas especiales. Aparecen en la pestaña &quot;Promos&quot; del menú.
         </p>
       </div>
-      <PromotionsEditor initial={promos} />
+      <PromotionsEditor initial={promos} menuItems={menuItems} />
     </div>
   );
 }

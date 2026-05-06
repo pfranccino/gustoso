@@ -20,9 +20,9 @@ export async function POST(request: NextRequest) {
   }
   try {
     const body = await request.json();
-    const { category, name, desc, price, priceNormal, priceXL, extras, visible } = body;
+    const { category, name, desc, price, priceNormal, priceXL, extras, ingredients, visible } = body;
     if (!category || !name) return NextResponse.json({ error: 'category and name required' }, { status: 400 });
-    const id = await createMenuItem({ category, name, desc, price, priceNormal, priceXL, extras, visible });
+    const id = await createMenuItem({ category, name, desc, price, priceNormal, priceXL, extras, ingredients, visible });
     return NextResponse.json({ id });
   } catch (err) {
     console.error('menu POST error', err);

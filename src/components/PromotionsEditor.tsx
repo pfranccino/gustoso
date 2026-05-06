@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { Promotion } from '@/lib/firestore/promotions';
+import { MenuItem } from '@/lib/firestore/menuItems';
 
 const INPUT: React.CSSProperties = {
   padding: '8px 11px', borderRadius: 8,
@@ -13,36 +14,137 @@ const INPUT: React.CSSProperties = {
 
 const BADGES = ['', 'PROMO', 'OFERTA', 'NUEVO', 'COMBO', 'ESPECIAL'];
 
+const CATEGORY_LABEL: Record<string, string> = {
+  vienesas:  '🌭 Vienesas',
+  as:        '🥪 AS',
+  churrasco: '🥩 Churrasco',
+  mechada:   '🥖 Mechada',
+  papas:     '🍟 Papas & Más',
+};
+
 type FormState = {
   name: string;
   description: string;
   price: string;
   badge: string;
-  items: string;   // comma-separated in the textarea
+  selectedItems: string[];   // names of selected menu items
+  customItems: string;       // extra items typed manually (one per line)
   visible: boolean;
 };
 
 const EMPTY_FORM: FormState = {
-  name: '', description: '', price: '', badge: 'PROMO', items: '', visible: true,
+  name: '', description: '', price: '', badge: 'PROMO',
+  selectedItems: [], customItems: '', visible: true,
 };
 
-function toForm(p: Promotion): FormState {
+function toForm(p: Promotion, menuItems: MenuItem[]): FormState {
+  const menuNames = new Set(menuItems.map(m => m.name));
+  const selected  = p.items.filter(it => menuNames.has(it));
+  const custom    = p.items.filter(it => !menuNames.has(it)).join('\n');
   return {
-    name:        p.name,
-    description: p.description,
-    price:       p.price > 0 ? String(p.price) : '',
-    badge:       p.badge,
-    items:       p.items.join('\n'),
-    visible:     p.visible,
+    name:          p.name,
+    description:   p.description,
+    price:         p.price > 0 ? String(p.price) : '',
+    badge:         p.badge,
+    selectedItems: selected,
+    customItems:   custom,
+    visible:       p.visible,
   };
 }
 
+function buildItemsList(f: FormState): string[] {
+  const custom = f.customItems.split('\n').map(s => s.trim()).filter(Boolean);
+  return [...f.selectedItems, ...custom];
+}
+
+/* ── ItemPicker ─────────────────────────────────────────── */
+
+function ItemPicker({
+  menuItems,
+  selected,
+  onChange,
+}: {
+  menuItems: MenuItem[];
+  selected: string[];
+  onChange: (v: string[]) => void;
+}) {
+  const [search, setSearch] = useState('');
+  const visible = menuItems.filter(m => m.visible);
+  const filtered = search.trim()
+    ? visible.filter(m => m.name.toLowerCase().includes(search.toLowerCase()))
+    : visible;
+
+  // Group by category
+  const groups: Record<string, MenuItem[]> = {};
+  for (const m of filtered) {
+    (groups[m.category] ??= []).push(m);
+  }
+
+  function toggle(name: string) {
+    onChange(
+      selected.includes(name)
+        ? selected.filter(s => s !== name)
+        : [...selected, name],
+    );
+  }
+
+  return (
+    <div>
+      <input
+        value={search}
+        onChange={e => setSearch(e.target.value)}
+        placeholder="Buscar producto…"
+        style={{ ...INPUT, marginBottom: 8 }}
+      />
+      <div style={{ maxHeight: 220, overflowY: 'auto', border: '1.5px solid rgba(242,100,25,0.18)', borderRadius: 8, background: '#fff' }}>
+        {Object.entries(groups).map(([cat, items]) => (
+          <div key={cat}>
+            <div style={{ fontSize: 10, fontWeight: 800, color: '#A0541A', letterSpacing: 1, textTransform: 'uppercase', padding: '7px 12px 3px', background: 'rgba(242,100,25,0.04)', borderBottom: '1px solid rgba(242,100,25,0.08)' }}>
+              {CATEGORY_LABEL[cat] ?? cat}
+            </div>
+            {items.map(m => {
+              const sel = selected.includes(m.name);
+              return (
+                <label key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', cursor: 'pointer', background: sel ? 'rgba(242,100,25,0.06)' : 'transparent', borderBottom: '1px solid rgba(0,0,0,0.04)', transition: 'background .1s' }}>
+                  <input type="checkbox" checked={sel} onChange={() => toggle(m.name)}
+                    style={{ accentColor: '#F26419', width: 15, height: 15, flexShrink: 0 }} />
+                  <span style={{ flex: 1, fontSize: 13, fontWeight: sel ? 700 : 500, color: sel ? '#1A0800' : '#555' }}>{m.name}</span>
+                  <span style={{ fontSize: 12, color: '#A0541A', fontWeight: 600 }}>
+                    {m.priceNormal != null
+                      ? `$${m.priceNormal.toLocaleString('es-CL')} / $${m.priceXL!.toLocaleString('es-CL')}`
+                      : `$${(m.price ?? 0).toLocaleString('es-CL')}`}
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+        ))}
+        {Object.keys(groups).length === 0 && (
+          <div style={{ padding: '16px', fontSize: 13, color: '#999', textAlign: 'center' }}>Sin resultados</div>
+        )}
+      </div>
+      {selected.length > 0 && (
+        <div style={{ marginTop: 6, display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+          {selected.map(name => (
+            <span key={name} style={{ fontSize: 11, background: 'rgba(242,100,25,0.1)', color: '#A0541A', padding: '3px 9px', borderRadius: 4, fontWeight: 700 }}>
+              ✓ {name}
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── PromoModal ─────────────────────────────────────────── */
+
 function PromoModal({
-  title, form, setForm, onSave, onCancel, saving,
+  title, form, setForm, menuItems, onSave, onCancel, saving,
 }: {
   title: string;
   form: FormState;
   setForm: React.Dispatch<React.SetStateAction<FormState>>;
+  menuItems: MenuItem[];
   onSave: () => void;
   onCancel: () => void;
   saving: boolean;
@@ -91,13 +193,25 @@ function PromoModal({
             </div>
           </div>
 
-          {/* Items included */}
+          {/* Products picker */}
           <div>
             <label style={{ fontSize:12, fontWeight:700, color:'var(--text-muted)', letterSpacing:.5, textTransform:'uppercase', display:'block', marginBottom:5 }}>
-              Incluye (uno por línea)
+              Productos incluidos
             </label>
-            <textarea value={form.items} onChange={e => setForm(f => ({ ...f, items: e.target.value }))}
-              placeholder={"Completo italiano\nBebida 500ml"} rows={4}
+            <ItemPicker
+              menuItems={menuItems}
+              selected={form.selectedItems}
+              onChange={selectedItems => setForm(f => ({ ...f, selectedItems }))}
+            />
+          </div>
+
+          {/* Custom items (extras not in menu) */}
+          <div>
+            <label style={{ fontSize:12, fontWeight:700, color:'var(--text-muted)', letterSpacing:.5, textTransform:'uppercase', display:'block', marginBottom:5 }}>
+              Extras no listados en el menú <span style={{ fontWeight:400, textTransform:'none', fontSize:11 }}>(opcional, uno por línea)</span>
+            </label>
+            <textarea value={form.customItems} onChange={e => setForm(f => ({ ...f, customItems: e.target.value }))}
+              placeholder={"Bebida 500ml\nAliño especial"} rows={3}
               style={{ ...INPUT, resize:'vertical', lineHeight:1.5 }} />
           </div>
 
@@ -132,7 +246,9 @@ function PromoModal({
   );
 }
 
-export default function PromotionsEditor({ initial }: { initial: Promotion[] }) {
+/* ── PromotionsEditor ───────────────────────────────────── */
+
+export default function PromotionsEditor({ initial, menuItems }: { initial: Promotion[]; menuItems: MenuItem[] }) {
   const [promos, setPromos] = useState<Promotion[]>(initial);
   const [creating, setCreating] = useState(false);
   const [editing,  setEditing]  = useState<Promotion | null>(null);
@@ -148,7 +264,7 @@ export default function PromotionsEditor({ initial }: { initial: Promotion[] }) 
       description: f.description.trim(),
       price:       parseInt(f.price, 10) || 0,
       badge:       f.badge,
-      items:       f.items.split('\n').map(s => s.trim()).filter(Boolean),
+      items:       buildItemsList(f),
       visible:     f.visible,
       imageUrl:    null as null,
       sortOrder:   0,
@@ -162,7 +278,7 @@ export default function PromotionsEditor({ initial }: { initial: Promotion[] }) 
   }
 
   function openEdit(p: Promotion) {
-    setForm(toForm(p));
+    setForm(toForm(p, menuItems));
     setEditing(p);
     setError('');
   }
@@ -237,7 +353,6 @@ export default function PromotionsEditor({ initial }: { initial: Promotion[] }) 
           setError('Ya existen promociones — no se sobreescribieron.');
           return;
         }
-        // Refrescar la página para mostrar las promos recién creadas
         window.location.reload();
       } catch {
         setError('Error al cargar ejemplos.');
@@ -321,11 +436,11 @@ export default function PromotionsEditor({ initial }: { initial: Promotion[] }) 
 
       {/* Modals */}
       {creating && (
-        <PromoModal title="Nueva promoción" form={form} setForm={setForm}
+        <PromoModal title="Nueva promoción" form={form} setForm={setForm} menuItems={menuItems}
           onSave={handleCreate} onCancel={() => setCreating(false)} saving={isPending} />
       )}
       {editing && (
-        <PromoModal title="Editar promoción" form={form} setForm={setForm}
+        <PromoModal title="Editar promoción" form={form} setForm={setForm} menuItems={menuItems}
           onSave={handleUpdate} onCancel={() => setEditing(null)} saving={isPending} />
       )}
     </div>
