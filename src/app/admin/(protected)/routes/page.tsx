@@ -47,10 +47,10 @@ function nearestNeighbor(origin: { lat: number; lng: number }, stops: Stop[]): S
   return route;
 }
 
-function buildMapsUrl(route: Stop[]): string {
-  /* Solo las paradas de entrega en orden — Maps arranca desde ubicación actual */
-  const stops = route.map(s => `${s.lat},${s.lng}`).join('/');
-  return `https://www.google.com/maps/dir//${stops}`;
+function buildMapsUrl(origin: { lat: number; lng: number }, route: Stop[]): string {
+  /* El local como origen fijo → Maps no pide punto de partida */
+  const points = [`${origin.lat},${origin.lng}`, ...route.map(s => `${s.lat},${s.lng}`)];
+  return `https://www.google.com/maps/dir/${points.join('/')}`;
 }
 
 function totalDistance(origin: { lat: number; lng: number }, route: Stop[]): number {
@@ -167,7 +167,7 @@ export default function RoutesPage() {
 
   const canCalculate = selected.size >= 1;
   const dist = route ? totalDistance(restaurantOrigin, route) : null;
-  const mapsUrl = route && route.length > 0 ? buildMapsUrl(route) : null;
+  const mapsUrl = route && route.length > 0 ? buildMapsUrl(restaurantOrigin, route) : null;
 
   const STATUS_LABEL: Record<string, string> = {
     pending: '⏳ Pendiente', confirmed: '✅ Confirmado', on_the_way: '🛵 En camino',
