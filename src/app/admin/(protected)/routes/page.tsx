@@ -67,6 +67,9 @@ function totalDistance(origin: { lat: number; lng: number }, route: Stop[]): num
 
 const FAKE_NAMES = ['Empanada x2', 'AS Italiano', 'Vienesa Alemana', 'Burrito XL', 'Combo familiar'];
 
+/* Coordenadas reales del local */
+const RESTAURANT = { lat: -32.853746, lng: -70.593497 };
+
 /* Límites aproximados de Los Andes, Chile */
 const LOS_ANDES = { latMin: -32.870, latMax: -32.820, lngMin: -70.620, lngMax: -70.575 };
 
@@ -109,14 +112,14 @@ export default function RoutesPage() {
     ...fakeOrders,
   ];
 
-  /* punto de partida: local si está configurado, sino primer pedido seleccionado */
+  /* punto de partida: coordenadas Firestore si están cargadas, sino las reales hardcodeadas */
   const restaurantOrigin =
     delivery?.restaurantLat && delivery?.restaurantLng
       ? { lat: delivery.restaurantLat, lng: delivery.restaurantLng }
-      : null;
+      : RESTAURANT;
 
   /* ── paradas de prueba ── */
-  const fakeOrigin = restaurantOrigin ?? { lat: -32.845, lng: -70.598 }; // centro Los Andes si no hay config
+  const fakeOrigin = restaurantOrigin;
   function addFake() {
     const o = makeFakeOrder(fakeOrigin);
     setFakeOrders(prev => [...prev, o]);
@@ -165,8 +168,8 @@ export default function RoutesPage() {
   }
 
   const canCalculate = selected.size >= 1;
-  const dist = route && restaurantOrigin ? totalDistance(restaurantOrigin, route) : null;
-  const mapsUrl = route && restaurantOrigin ? buildMapsUrl(restaurantOrigin, route) : null;
+  const dist = route ? totalDistance(restaurantOrigin, route) : null;
+  const mapsUrl = route && route.length > 0 ? buildMapsUrl(restaurantOrigin, route) : null;
 
   const STATUS_LABEL: Record<string, string> = {
     pending: '⏳ Pendiente', confirmed: '✅ Confirmado', on_the_way: '🛵 En camino',
@@ -203,12 +206,6 @@ export default function RoutesPage() {
         </div>
       </div>
 
-      {/* Sin coordenadas del local */}
-      {!restaurantOrigin && (
-        <div style={{ background: 'rgba(217,119,6,0.08)', border: '1px solid rgba(217,119,6,0.3)', borderRadius: 'var(--radius)', padding: '12px 16px', marginBottom: 16, fontSize: 13, color: '#92400e' }}>
-          ⚠️ Configura las coordenadas del local en <strong>Configuración → Delivery</strong> para que la ruta parta desde el local.
-        </div>
-      )}
 
       <div style={{ display: 'grid', gridTemplateColumns: route ? '1fr 1fr' : '1fr', gap: 16, alignItems: 'start' }}>
 
@@ -358,13 +355,6 @@ export default function RoutesPage() {
                 </a>
               )}
 
-              {!mapsUrl && route.length > 0 && (
-                <a href={`https://www.google.com/maps/dir/${route.map(s => `${s.lat},${s.lng}`).join('/')}`}
-                  target="_blank" rel="noopener noreferrer"
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 20, padding: '13px', borderRadius: 999, background: '#4285F4', color: '#fff', fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 18, textDecoration: 'none' }}>
-                  🗺 Abrir en Google Maps
-                </a>
-              )}
             </div>
           </div>
         )}
