@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { href: '/admin/burrito',    label: 'Burrito',      emoji: '🌯' },
   { href: '/admin/promotions', label: 'Promos',       emoji: '🎁' },
   { href: '/admin/orders',     label: 'Pedidos',      emoji: '📋' },
+  { href: '/admin/routes',     label: 'Rutas',        emoji: '🗺️' },
   { href: '/admin/discounts',  label: 'Descuentos',   emoji: '🏷' },
   { href: '/admin/settings',   label: 'Configuración',emoji: '⚙️' },
 ];
