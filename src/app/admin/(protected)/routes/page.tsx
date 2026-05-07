@@ -66,13 +66,17 @@ function totalDistance(origin: { lat: number; lng: number }, route: Stop[]): num
 }
 
 const FAKE_NAMES = ['Empanada x2', 'AS Italiano', 'Vienesa Alemana', 'Burrito XL', 'Combo familiar'];
+
+/* Límites aproximados de Los Andes, Chile */
+const LOS_ANDES = { latMin: -32.870, latMax: -32.820, lngMin: -70.620, lngMax: -70.575 };
+
 let fakeCounter = 0;
 
-function makeFakeOrder(origin: { lat: number; lng: number }): Order {
+function makeFakeOrder(_origin: { lat: number; lng: number }): Order {
   fakeCounter++;
-  /* punto aleatorio dentro de ~5 km en línea recta */
-  const lat = origin.lat + (Math.random() - 0.5) * 0.08;
-  const lng = origin.lng + (Math.random() - 0.5) * 0.08;
+  /* punto aleatorio dentro del radio urbano de Los Andes */
+  const lat = LOS_ANDES.latMin + Math.random() * (LOS_ANDES.latMax - LOS_ANDES.latMin);
+  const lng = LOS_ANDES.lngMin + Math.random() * (LOS_ANDES.lngMax - LOS_ANDES.lngMin);
   const name = FAKE_NAMES[Math.floor(Math.random() * FAKE_NAMES.length)];
   const qty  = Math.floor(Math.random() * 3) + 1;
   const price = (Math.floor(Math.random() * 5) + 2) * 1000;
@@ -112,7 +116,7 @@ export default function RoutesPage() {
       : null;
 
   /* ── paradas de prueba ── */
-  const fakeOrigin = restaurantOrigin ?? { lat: -33.4513, lng: -70.6653 }; // Santiago si no hay config
+  const fakeOrigin = restaurantOrigin ?? { lat: -32.845, lng: -70.598 }; // centro Los Andes si no hay config
   function addFake() {
     const o = makeFakeOrder(fakeOrigin);
     setFakeOrders(prev => [...prev, o]);
