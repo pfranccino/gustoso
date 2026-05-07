@@ -14,11 +14,10 @@ const BADGE_COLOR: Record<string, { bg: string; color: string }> = {
 };
 
 export default function PromoCard({ promo }: { promo: Promotion }) {
-  const { addItem, setIsOpen } = useCart();
+  const { addItem } = useCart();
 
   function handleAdd() {
     addItem({ name: promo.name, desc: promo.description, price: promo.price });
-    setIsOpen(true);
   }
 
   const badge = promo.badge ? BADGE_COLOR[promo.badge] : null;

@@ -47,12 +47,10 @@ function nearestNeighbor(origin: { lat: number; lng: number }, stops: Stop[]): S
   return route;
 }
 
-function buildMapsUrl(origin: { lat: number; lng: number }, route: Stop[]): string {
-  const points = [
-    `${origin.lat},${origin.lng}`,
-    ...route.map(s => `${s.lat},${s.lng}`),
-  ];
-  return `https://www.google.com/maps/dir/${points.join('/')}`;
+function buildMapsUrl(route: Stop[]): string {
+  /* Solo las paradas de entrega en orden — Maps arranca desde ubicación actual */
+  const stops = route.map(s => `${s.lat},${s.lng}`).join('/');
+  return `https://www.google.com/maps/dir//${stops}`;
 }
 
 function totalDistance(origin: { lat: number; lng: number }, route: Stop[]): number {
@@ -169,7 +167,7 @@ export default function RoutesPage() {
 
   const canCalculate = selected.size >= 1;
   const dist = route ? totalDistance(restaurantOrigin, route) : null;
-  const mapsUrl = route && route.length > 0 ? buildMapsUrl(restaurantOrigin, route) : null;
+  const mapsUrl = route && route.length > 0 ? buildMapsUrl(route) : null;
 
   const STATUS_LABEL: Record<string, string> = {
     pending: '⏳ Pendiente', confirmed: '✅ Confirmado', on_the_way: '🛵 En camino',
@@ -298,18 +296,6 @@ export default function RoutesPage() {
 
               {/* Paradas */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-                {/* Origen */}
-                {restaurantOrigin && (
-                  <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', paddingBottom: 12 }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
-                      <div style={{ width: 28, height: 28, borderRadius: '50%', background: '#1a8a3e', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 13 }}>🏠</div>
-                      <div style={{ width: 2, height: 20, background: 'var(--border)', marginTop: 4 }}/>
-                    </div>
-                    <div style={{ paddingTop: 4 }}>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>Local (origen)</div>
-                    </div>
-                  </div>
-                )}
 
                 {route.map((stop, i) => {
                   const isLast = i === route.length - 1;
