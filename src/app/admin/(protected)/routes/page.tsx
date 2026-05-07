@@ -65,24 +65,68 @@ function totalDistance(origin: { lat: number; lng: number }, route: Stop[]): num
   return dist;
 }
 
+const FAKE_NAMES = ['Empanada x2', 'AS Italiano', 'Vienesa Alemana', 'Burrito XL', 'Combo familiar'];
+let fakeCounter = 0;
+
+function makeFakeOrder(origin: { lat: number; lng: number }): Order {
+  fakeCounter++;
+  /* punto aleatorio dentro de ~5 km en línea recta */
+  const lat = origin.lat + (Math.random() - 0.5) * 0.08;
+  const lng = origin.lng + (Math.random() - 0.5) * 0.08;
+  const name = FAKE_NAMES[Math.floor(Math.random() * FAKE_NAMES.length)];
+  const qty  = Math.floor(Math.random() * 3) + 1;
+  const price = (Math.floor(Math.random() * 5) + 2) * 1000;
+  return {
+    id:          `fake-${fakeCounter}`,
+    orderId:     `TEST-${fakeCounter}`,
+    createdAt:   new Date().toISOString(),
+    total:       price * qty,
+    itemCount:   qty,
+    sessionId:   'fake',
+    locationUrl: `https://maps.google.com/?q=${lat},${lng}`,
+    status:      'confirmed',
+    items:       [{ name, qty, price, subtotal: price * qty }],
+    notes:       [],
+  };
+}
+
 /* ── componente ──────────────────────────────────── */
 
 export default function RoutesPage() {
   const { orders, loading } = useLiveOrders(null);
   const { delivery } = useSettings();
-  const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [route, setRoute] = useState<Stop[] | null>(null);
+  const [selected,    setSelected]    = useState<Set<string>>(new Set());
+  const [route,       setRoute]       = useState<Stop[] | null>(null);
+  const [fakeOrders,  setFakeOrders]  = useState<Order[]>([]);
 
   /* solo pedidos con ubicación en estados activos */
-  const deliverable = orders.filter(
-    o => o.locationUrl && ['pending', 'confirmed', 'on_the_way'].includes(o.status)
-  );
+  const deliverable = [
+    ...orders.filter(o => o.locationUrl && ['pending', 'confirmed', 'on_the_way'].includes(o.status)),
+    ...fakeOrders,
+  ];
 
   /* punto de partida: local si está configurado, sino primer pedido seleccionado */
   const restaurantOrigin =
     delivery?.restaurantLat && delivery?.restaurantLng
       ? { lat: delivery.restaurantLat, lng: delivery.restaurantLng }
       : null;
+
+  /* ── paradas de prueba ── */
+  const fakeOrigin = restaurantOrigin ?? { lat: -33.4513, lng: -70.6653 }; // Santiago si no hay config
+  function addFake() {
+    const o = makeFakeOrder(fakeOrigin);
+    setFakeOrders(prev => [...prev, o]);
+    setRoute(null);
+  }
+  function clearFakes() {
+    setFakeOrders([]);
+    setSelected(prev => {
+      const next = new Set(prev);
+      fakeOrders.forEach(o => next.delete(o.id));
+      return next;
+    });
+    setRoute(null);
+  }
 
   function toggle(id: string) {
     setSelected(prev => {
@@ -133,6 +177,26 @@ export default function RoutesPage() {
         <p style={{ fontSize: 14, color: 'var(--text-muted)', marginTop: 4 }}>
           Selecciona los pedidos con ubicación y calcula el orden óptimo de entrega.
         </p>
+      </div>
+
+      {/* Panel de prueba */}
+      <div style={{ background: 'rgba(8,145,178,0.06)', border: '1px dashed rgba(8,145,178,0.35)', borderRadius: 'var(--radius)', padding: '10px 16px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+        <span style={{ fontSize: 12, fontWeight: 700, color: '#0891b2', letterSpacing: .5, textTransform: 'uppercase' }}>🧪 Modo prueba</span>
+        <span style={{ fontSize: 12, color: 'var(--text-muted)', flex: 1 }}>
+          Genera paradas ficticias cerca del local para probar el algoritmo.
+        </span>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button onClick={addFake}
+            style={{ padding: '5px 14px', borderRadius: 999, border: '1.5px solid #0891b2', background: 'transparent', color: '#0891b2', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+            + Parada
+          </button>
+          {fakeOrders.length > 0 && (
+            <button onClick={clearFakes}
+              style={{ padding: '5px 14px', borderRadius: 999, border: '1.5px solid rgba(220,38,38,0.4)', background: 'transparent', color: '#dc2626', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+              Limpiar ({fakeOrders.length})
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Sin coordenadas del local */}
@@ -186,13 +250,14 @@ export default function RoutesPage() {
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                           {order.orderId && (
-                            <span style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 14, color: 'var(--orange)' }}>
+                            <span style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 14, color: order.id.startsWith('fake-') ? '#0891b2' : 'var(--orange)' }}>
                               {order.orderId}
                             </span>
                           )}
-                          <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>
-                            {STATUS_LABEL[order.status] ?? order.status}
-                          </span>
+                          {order.id.startsWith('fake-')
+                            ? <span style={{ fontSize: 10, fontWeight: 800, color: '#0891b2', background: 'rgba(8,145,178,0.1)', padding: '1px 6px', borderRadius: 4, letterSpacing: .5 }}>PRUEBA</span>
+                            : <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>{STATUS_LABEL[order.status] ?? order.status}</span>
+                          }
                         </div>
                         <div style={{ fontSize: 12, color: 'var(--text)', marginTop: 2, lineHeight: 1.5 }}>
                           {order.items.map(it => `${it.qty}× ${it.name}`).join(' · ')}
