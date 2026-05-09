@@ -21,6 +21,9 @@ export async function POST() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   const db = getAdminDb();
+  const existing = await db.collection('aderezos').limit(1).get();
+  if (!existing.empty) return NextResponse.json({ skipped: true, reason: 'Ya existen aderezos' });
+
   const batch = db.batch();
   for (const a of ADEREZOS) {
     batch.set(db.collection('aderezos').doc(), {
@@ -28,5 +31,5 @@ export async function POST() {
     });
   }
   await batch.commit();
-  return NextResponse.json({ ok: true, created: ADEREZOS.length });
+  return NextResponse.json({ seeded: ADEREZOS.length });
 }
