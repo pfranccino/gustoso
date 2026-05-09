@@ -12,6 +12,7 @@ export type CartItem = {
   note?: string;
   extras?: Extra[];
   removedIngredients?: string[];
+  aderezos?: Array<{ name: string; price: number }>;
   qty: number;
   alwaysNew?: boolean;
 };
@@ -45,7 +46,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         (p.size  || '') === (item.size  || '') &&
         (p.note  || '') === (item.note  || '') &&
         JSON.stringify(p.extras ?? []) === JSON.stringify(item.extras ?? []) &&
-        JSON.stringify(p.removedIngredients ?? []) === JSON.stringify(item.removedIngredients ?? [])
+        JSON.stringify(p.removedIngredients ?? []) === JSON.stringify(item.removedIngredients ?? []) &&
+        JSON.stringify(p.aderezos ?? []) === JSON.stringify(item.aderezos ?? [])
       );
       if (idx >= 0) {
         const updated = [...prev];
@@ -62,8 +64,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const clearCart  = useCallback(() => setItems([]), []);
 
   const total = items.reduce((s, i) => {
-    const extrasTotal = (i.extras ?? []).reduce((e, x) => e + x.price, 0);
-    return s + (i.price + extrasTotal) * i.qty;
+    const extrasTotal   = (i.extras   ?? []).reduce((e, x) => e + x.price, 0);
+    const aderezosTotal = (i.aderezos ?? []).reduce((e, x) => e + x.price, 0);
+    return s + (i.price + extrasTotal + aderezosTotal) * i.qty;
   }, 0);
   const count = items.reduce((s, i) => s + i.qty, 0);
 

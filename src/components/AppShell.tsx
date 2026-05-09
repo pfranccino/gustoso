@@ -36,7 +36,7 @@ export default function AppShell({ settings, menuItems, burritoConfig, promotion
         <Nav scrolled={scrolled}/>
         <Hero/>
         <div className="section-divider"></div>
-        <MenuSection items={menuItems} burritoConfig={burritoConfig} promotions={promotions}/>
+        <MenuSection items={menuItems} burritoConfig={burritoConfig} promotions={promotions} aderezos={aderezos}/>
         <div className="section-divider"></div>
         <Gallery/>
         <div className="section-divider"></div>
@@ -50,7 +50,7 @@ export default function AppShell({ settings, menuItems, burritoConfig, promotion
         <Footer/>
         <FloatingWA/>
         <CartBar/>
-        <CartDrawer aderezos={aderezos}/>
+        <CartDrawer/>
       </div>
     </CartProvider>
     </SettingsProvider>

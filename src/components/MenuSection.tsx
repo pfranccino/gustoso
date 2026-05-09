@@ -4,6 +4,7 @@ import { useRef, useState } from 'react';
 import { MenuItem } from '@/lib/firestore/menuItems';
 import { BurritoConfig } from '@/lib/firestore/burritoConfig';
 import { Promotion } from '@/lib/firestore/promotions';
+import { Aderezo } from '@/lib/firestore/aderezosTypes';
 import SimpleCard from './SimpleCard';
 import DualCard from './DualCard';
 import SectionHeader from './SectionHeader';
@@ -30,7 +31,7 @@ function SizeHint() {
   );
 }
 
-export default function MenuSection({ items, burritoConfig, promotions }: { items: MenuItem[]; burritoConfig: BurritoConfig; promotions: Promotion[] }) {
+export default function MenuSection({ items, burritoConfig, promotions, aderezos = [] }: { items: MenuItem[]; burritoConfig: BurritoConfig; promotions: Promotion[]; aderezos?: Aderezo[] }) {
   const visiblePromos = promotions.filter(p => p.visible);
 
   // Default to 'vienesas' if no visible promos, else 'promos'
@@ -63,7 +64,7 @@ export default function MenuSection({ items, burritoConfig, promotions }: { item
     if (activeTab === 'promos') {
       return (
         <div style={listStyle}>
-          {visiblePromos.map(p => <PromoCard key={p.id} promo={p}/>)}
+          {visiblePromos.map(p => <PromoCard key={p.id} promo={p} aderezos={aderezos}/>)}
         </div>
       );
     }
@@ -81,7 +82,7 @@ export default function MenuSection({ items, burritoConfig, promotions }: { item
           {Object.entries(grouped).map(([g, its]) => (
             <div key={g}>
               <SectionHeader title={g}/>
-              <div style={listStyle}>{its.map(i => isDual(i) ? <DualCard key={i.id} item={i}/> : <SimpleCard key={i.id} item={i}/>)}</div>
+              <div style={listStyle}>{its.map(i => isDual(i) ? <DualCard key={i.id} item={i} aderezos={aderezos}/> : <SimpleCard key={i.id} item={i} aderezos={aderezos}/>)}</div>
             </div>
           ))}
         </div>
@@ -93,7 +94,7 @@ export default function MenuSection({ items, burritoConfig, promotions }: { item
       <div>
         {hasDual && <SizeHint/>}
         <div style={listStyle}>
-          {catItems.map(i => isDual(i) ? <DualCard key={i.id} item={i}/> : <SimpleCard key={i.id} item={i}/>)}
+          {catItems.map(i => isDual(i) ? <DualCard key={i.id} item={i} aderezos={aderezos}/> : <SimpleCard key={i.id} item={i} aderezos={aderezos}/>)}
         </div>
       </div>
     );
@@ -154,7 +155,7 @@ export default function MenuSection({ items, burritoConfig, promotions }: { item
                 {searchResults.length} resultado{searchResults.length !== 1 ? 's' : ''} para "{search}"
               </div>
               <div style={listStyle}>
-                {searchResults.map(i => isDual(i) ? <DualCard key={i.id} item={i}/> : <SimpleCard key={i.id} item={i}/>)}
+                {searchResults.map(i => isDual(i) ? <DualCard key={i.id} item={i} aderezos={aderezos}/> : <SimpleCard key={i.id} item={i} aderezos={aderezos}/>)}
               </div>
             </div>
           )

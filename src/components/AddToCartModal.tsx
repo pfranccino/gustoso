@@ -4,8 +4,9 @@ import { useState } from 'react';
 import { useCart } from '@/contexts/CartContext';
 import { fmt } from '@/lib/menuData';
 import { MenuItem, Extra } from '@/lib/firestore/menuItems';
+import { Aderezo } from '@/lib/firestore/aderezosTypes';
 
-export default function AddToCartModal({ item, onClose }: { item: MenuItem; onClose: () => void }) {
+export default function AddToCartModal({ item, onClose, aderezos = [] }: { item: MenuItem; onClose: () => void; aderezos?: Aderezo[] }) {
   const { addItem } = useCart();
   const isDual = item.priceNormal != null;
   const [size, setSize]   = useState<'normal' | 'xl'>('normal');
@@ -13,13 +14,23 @@ export default function AddToCartModal({ item, onClose }: { item: MenuItem; onCl
   const [qty,  setQty]    = useState(1);
   const [selectedExtras, setSelectedExtras]         = useState<Extra[]>([]);
   const [removedIngredients, setRemovedIngredients] = useState<string[]>([]);
+  const [selectedAderezos, setSelectedAderezos]     = useState<Aderezo[]>([]);
+
+  const availableAderezos = aderezos.filter(a => a.available);
+
+  function toggleAderezo(a: Aderezo) {
+    setSelectedAderezos(prev =>
+      prev.some(x => x.id === a.id) ? prev.filter(x => x.id !== a.id) : [...prev, a]
+    );
+  }
 
   const basePrice = isDual
     ? (size === 'normal' ? item.priceNormal! : item.priceXL!)
     : item.price!;
 
-  const extrasTotal = selectedExtras.reduce((s, e) => s + e.price, 0);
-  const unitPrice   = basePrice + extrasTotal;
+  const extrasTotal   = selectedExtras.reduce((s, e) => s + e.price, 0);
+  const aderezosPrice = selectedAderezos.reduce((s, a) => s + a.price, 0);
+  const unitPrice     = basePrice + extrasTotal + aderezosPrice;
 
   const toggleExtra = (extra: Extra) => {
     setSelectedExtras(prev =>
@@ -36,7 +47,10 @@ export default function AddToCartModal({ item, onClose }: { item: MenuItem; onCl
   };
 
   const confirm = () => {
-    const hasCustom = selectedExtras.length > 0 || !!note.trim() || removedIngredients.length > 0;
+    const hasCustom = selectedExtras.length > 0 || !!note.trim() || removedIngredients.length > 0 || selectedAderezos.length > 0;
+    const aderezosArr = selectedAderezos.length > 0
+      ? selectedAderezos.map(a => ({ name: a.name, price: a.price }))
+      : undefined;
     addItem({
       name:               item.name,
       desc:               item.desc ?? undefined,
@@ -45,6 +59,7 @@ export default function AddToCartModal({ item, onClose }: { item: MenuItem; onCl
       note:               note.trim() || undefined,
       extras:             selectedExtras.length > 0 ? selectedExtras : undefined,
       removedIngredients: removedIngredients.length > 0 ? removedIngredients : undefined,
+      aderezos:           aderezosArr,
       alwaysNew:          hasCustom,
     });
     for (let i = 1; i < qty; i++) {
@@ -56,6 +71,7 @@ export default function AddToCartModal({ item, onClose }: { item: MenuItem; onCl
         note:               note.trim() || undefined,
         extras:             selectedExtras.length > 0 ? selectedExtras : undefined,
         removedIngredients: removedIngredients.length > 0 ? removedIngredients : undefined,
+        aderezos:           aderezosArr,
         alwaysNew:          true,
       });
     }
@@ -128,6 +144,25 @@ export default function AddToCartModal({ item, onClose }: { item: MenuItem; onCl
                     <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:15, color: extra.price > 0 ? 'var(--orange)' : '#22c55e' }}>
                       {extra.price > 0 ? `+${fmt(extra.price)}` : 'Gratis'}
                     </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Aderezos */}
+        {availableAderezos.length > 0 && (
+          <div style={{ marginBottom:16 }}>
+            <div style={{ fontSize:12, fontWeight:700, color:'var(--text-muted)', letterSpacing:1, textTransform:'uppercase', marginBottom:8 }}>🥫 Aderezos</div>
+            <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
+              {availableAderezos.map(a => {
+                const sel = selectedAderezos.some(x => x.id === a.id);
+                return (
+                  <button key={a.id} onClick={() => toggleAderezo(a)}
+                    style={{ padding:'6px 13px', borderRadius:999, border:`1.5px solid ${sel ? 'var(--orange)' : 'var(--border)'}`, background: sel ? 'rgba(242,100,25,0.09)' : 'var(--bg2)', cursor:'pointer', transition:'all .15s', display:'flex', alignItems:'center', gap:5 }}>
+                    <span style={{ fontSize:13, fontWeight:700, color: sel ? 'var(--orange)' : 'var(--text)' }}>{a.name}</span>
+                    {a.price > 0 && <span style={{ fontSize:11, color: sel ? 'var(--orange)' : 'var(--text-muted)' }}>+{fmt(a.price)}</span>}
                   </button>
                 );
               })}

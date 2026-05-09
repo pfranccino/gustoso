@@ -3,9 +3,10 @@
 import { useState } from 'react';
 import { fmt } from '@/lib/menuData';
 import { MenuItem } from '@/lib/firestore/menuItems';
+import { Aderezo } from '@/lib/firestore/aderezosTypes';
 import AddToCartModal from './AddToCartModal';
 
-export default function DualCard({ item }: { item: MenuItem }) {
+export default function DualCard({ item, aderezos = [] }: { item: MenuItem; aderezos?: Aderezo[] }) {
   const [modal, setModal] = useState(false);
   return (
     <>
@@ -30,7 +31,7 @@ export default function DualCard({ item }: { item: MenuItem }) {
         </div>
         <button onClick={() => setModal(true)} style={{ width:40, height:40, borderRadius:'50%', border:'2px solid var(--orange)', background:'var(--orange)', color:'#fff', fontSize:22, cursor:'pointer', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', fontWeight:700 }}>+</button>
       </div>
-      {modal && <AddToCartModal item={item} onClose={() => setModal(false)} />}
+      {modal && <AddToCartModal item={item} aderezos={aderezos} onClose={() => setModal(false)} />}
     </>
   );
 }
