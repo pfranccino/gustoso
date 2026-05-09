@@ -32,7 +32,7 @@ const SEEDS: SeedConfig[] = [
   },
   {
     key:         'aderezos',
-    emoji:       '🫙',
+    emoji:       '🥫',
     title:       'Aderezos',
     description: '8 aderezos estándar: Ketchup, Mostaza, Mayonesa, BBQ, Tártara, Relish, Alioli, Dijon.',
     detail:      'Solo se ejecuta si aderezos está vacío.',

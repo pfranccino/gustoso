@@ -17,7 +17,7 @@ const SECTION_LABELS: Partial<Record<keyof BurritoConfig, string>> = {
   rellenos:    '🫔 Rellenos',
   proteinas:   '🥩 Proteínas',
   toppings:    '🥬 Toppings',
-  salsas:      '🫙 Salsas',
+  salsas:      '🥫 Salsas',
   adicionales: '➕ Adicionales',
 };
 
@@ -371,7 +371,7 @@ export default function BurritoEditor({ initial }: { initial: BurritoConfig }) {
 
         {/* Salsas limits */}
         <div>
-          <div style={{ fontSize:13, fontWeight:800, color:'var(--text)', marginBottom:10 }}>🫙 Salsas</div>
+          <div style={{ fontSize:13, fontWeight:800, color:'var(--text)', marginBottom:10 }}>🥫 Salsas</div>
           <div style={{ display:'flex', gap:10, flexWrap:'wrap' }}>
             <div style={{ display:'flex', flexDirection:'column', gap:4, flex:1, minWidth:100 }}>
               <label style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', letterSpacing:.5, textTransform:'uppercase' }}>Máx seleccionables</label>

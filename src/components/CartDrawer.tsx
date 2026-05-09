@@ -195,12 +195,12 @@ export default function CartDrawer({ aderezos = [] }: { aderezos?: Aderezo[] }) 
     const chosenAderezos = availableAderezos.filter(a => selectedAderezos.has(a.id));
     if (chosenAderezos.length > 0) {
       lines.push('');
-      lines.push(`🫙 Aderezos: ${chosenAderezos.map(a => a.price > 0 ? `${a.name} (+${fmt(a.price)})` : a.name).join(', ')}`);
+      lines.push(`🥫 Aderezos: ${chosenAderezos.map(a => a.price > 0 ? `${a.name} (+${fmt(a.price)})` : a.name).join(', ')}`);
     }
     lines.push('');
     lines.push(`💰 Subtotal: ${fmt(total)}`);
     if (appliedDiscount) lines.push(`🏷 Descuento (${appliedDiscount.code}): -${fmt(discountAmount)}`);
-    if (aderezosTotal > 0) lines.push(`🫙 Aderezos: +${fmt(aderezosTotal)}`);
+    if (aderezosTotal > 0) lines.push(`🥫 Aderezos: +${fmt(aderezosTotal)}`);
     if (deliveryFee != null) lines.push(`🛵 Delivery (${deliveryInfo!.distKm.toFixed(1)} km): ${fmt(deliveryFee)}`);
     if (deliveryInfo && deliveryInfo.fee === null) lines.push(`🛵 Delivery: fuera de cobertura`);
     lines.push(`💰 TOTAL: ${fmt(finalTotal)}`);
@@ -345,7 +345,7 @@ export default function CartDrawer({ aderezos = [] }: { aderezos?: Aderezo[] }) 
             {availableAderezos.length > 0 && (
               <div style={{ marginBottom: 12 }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: .5, textTransform: 'uppercase', marginBottom: 7 }}>
-                  🫙 Aderezos
+                  🥫 Aderezos
                 </div>
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                   {availableAderezos.map(a => {

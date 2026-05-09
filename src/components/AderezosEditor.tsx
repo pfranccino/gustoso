@@ -132,7 +132,7 @@ export default function AderezosEditor({ initial }: { initial: Aderezo[] }) {
       {/* Lista */}
       {items.length === 0 ? (
         <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '40px 20px', textAlign: 'center' }}>
-          <div style={{ fontSize: 32, marginBottom: 10 }}>🫙</div>
+          <div style={{ fontSize: 32, marginBottom: 10 }}>🥫</div>
           <div style={{ fontSize: 14, color: 'var(--text-muted)' }}>No hay aderezos aún. Agrega el primero.</div>
         </div>
       ) : (
