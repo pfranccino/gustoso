@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { verifySession } from '@/lib/auth/verifySession';
 import { getAderezos, createAderezo } from '@/lib/firestore/aderezos';
 
@@ -27,6 +28,7 @@ export async function POST(request: NextRequest) {
       price:     typeof price === 'number' ? price : 0,
       available: available !== false,
     });
+    revalidatePath('/');
     return NextResponse.json({ id });
   } catch {
     return NextResponse.json({ error: 'Internal error' }, { status: 500 });

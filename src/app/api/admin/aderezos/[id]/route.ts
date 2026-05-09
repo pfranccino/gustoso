@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { verifySession } from '@/lib/auth/verifySession';
 import { updateAderezo, deleteAderezo } from '@/lib/firestore/aderezos';
 
@@ -15,6 +16,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     if (typeof body.price     === 'number')  update.price     = body.price;
     if (typeof body.available === 'boolean') update.available = body.available;
     await updateAderezo(params.id, update);
+    revalidatePath('/');
     return NextResponse.json({ ok: true });
   } catch {
     return NextResponse.json({ error: 'Internal error' }, { status: 500 });
@@ -27,6 +29,7 @@ export async function DELETE(_: NextRequest, { params }: { params: { id: string 
   }
   try {
     await deleteAderezo(params.id);
+    revalidatePath('/');
     return NextResponse.json({ ok: true });
   } catch {
     return NextResponse.json({ error: 'Internal error' }, { status: 500 });

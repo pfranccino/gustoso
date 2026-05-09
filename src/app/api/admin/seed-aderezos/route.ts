@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { verifySession } from '@/lib/auth/verifySession';
 import { getAdminDb } from '@/lib/firebase/admin';
 import { FieldValue } from 'firebase-admin/firestore';
@@ -31,5 +32,6 @@ export async function POST() {
     });
   }
   await batch.commit();
+  revalidatePath('/');
   return NextResponse.json({ seeded: ADEREZOS.length });
 }

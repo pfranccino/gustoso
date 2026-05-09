@@ -4,7 +4,7 @@ export type { Aderezo } from './aderezosTypes';
 import type { Aderezo } from './aderezosTypes';
 
 export async function getAderezos(): Promise<Aderezo[]> {
-  const snap = await getAdminDb().collection('aderezos').orderBy('name').get();
+  const snap = await getAdminDb().collection('aderezos').get();
   return snap.docs.map(doc => {
     const d = doc.data();
     return {
@@ -13,7 +13,7 @@ export async function getAderezos(): Promise<Aderezo[]> {
       price:     typeof d.price     === 'number'  ? d.price     : 0,
       available: typeof d.available === 'boolean' ? d.available : true,
     };
-  });
+  }).sort((a, b) => a.name.localeCompare(b.name, 'es'));
 }
 
 export async function createAderezo(data: Omit<Aderezo, 'id'>): Promise<string> {
