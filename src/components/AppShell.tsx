@@ -6,6 +6,7 @@ import { SettingsProvider, PublicSettings } from '@/contexts/SettingsContext';
 import { MenuItem } from '@/lib/firestore/menuItems';
 import { BurritoConfig } from '@/lib/firestore/burritoConfig';
 import { Promotion } from '@/lib/firestore/promotions';
+import { Aderezo } from '@/lib/firestore/aderezosTypes';
 import Nav from './Nav';
 import Hero from './Hero';
 import MenuSection from './MenuSection';
@@ -19,7 +20,7 @@ import FloatingWA from './FloatingWA';
 import CartBar from './CartBar';
 import CartDrawer from './CartDrawer';
 
-export default function AppShell({ settings, menuItems, burritoConfig, promotions }: { settings: PublicSettings; menuItems: MenuItem[]; burritoConfig: BurritoConfig; promotions: Promotion[] }) {
+export default function AppShell({ settings, menuItems, burritoConfig, promotions, aderezos }: { settings: PublicSettings; menuItems: MenuItem[]; burritoConfig: BurritoConfig; promotions: Promotion[]; aderezos: Aderezo[] }) {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -49,7 +50,7 @@ export default function AppShell({ settings, menuItems, burritoConfig, promotion
         <Footer/>
         <FloatingWA/>
         <CartBar/>
-        <CartDrawer/>
+        <CartDrawer aderezos={aderezos}/>
       </div>
     </CartProvider>
     </SettingsProvider>

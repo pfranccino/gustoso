@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { href: '/admin/orders',     label: 'Pedidos',      emoji: '📋' },
   { href: '/admin/routes',     label: 'Rutas',        emoji: '🗺️' },
   { href: '/admin/discounts',  label: 'Descuentos',   emoji: '🏷' },
+  { href: '/admin/aderezos',   label: 'Aderezos',     emoji: '🫙' },
   { href: '/admin/settings',   label: 'Configuración',emoji: '⚙️' },
 ];
 

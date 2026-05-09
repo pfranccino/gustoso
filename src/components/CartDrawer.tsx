@@ -8,6 +8,7 @@ import { TrashIcon, WAIcon } from './icons';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { PaymentMethod } from '@/lib/firestore/orders';
 import { DeliveryConfig } from '@/lib/firestore/settingsTypes';
+import { Aderezo } from '@/lib/firestore/aderezosTypes';
 
 function getSessionId(): string {
   const key = 'gustosos_sid';
@@ -95,10 +96,11 @@ const PAYMENT_LABEL: Record<PaymentMethod, string> = {
   debito:        'Débito / Crédito',
 };
 
-export default function CartDrawer() {
+export default function CartDrawer({ aderezos = [] }: { aderezos?: Aderezo[] }) {
   const { items, updateQty, removeItem, clearCart, total, count, isOpen, setIsOpen } = useCart();
   const { waNumber, waGreeting, waFooter, delivery } = useSettings();
   const { state: geo, request: requestGeo, clear: clearGeo } = useGeolocation();
+  const [selectedAderezos, setSelectedAderezos] = useState<Set<string>>(new Set());
   const [paymentMethod, setPaymentMethod]   = useState<PaymentMethod | null>(null);
   const [discountInput, setDiscountInput]   = useState('');
   const [discountStatus, setDiscountStatus] = useState<'idle' | 'loading' | 'applied' | 'error'>('idle');
@@ -127,8 +129,20 @@ export default function CartDrawer() {
       : dis.value;
   }
 
-  const discountAmount = appliedDiscount ? calcDiscount(appliedDiscount, total) : 0;
-  const finalTotal     = Math.max(0, total - discountAmount) + (deliveryFee ?? 0);
+  const discountAmount  = appliedDiscount ? calcDiscount(appliedDiscount, total) : 0;
+  const availableAderezos = aderezos.filter(a => a.available);
+  const aderezosTotal   = availableAderezos
+    .filter(a => selectedAderezos.has(a.id))
+    .reduce((s, a) => s + a.price, 0);
+  const finalTotal      = Math.max(0, total - discountAmount) + (deliveryFee ?? 0) + aderezosTotal;
+
+  function toggleAderezo(id: string) {
+    setSelectedAderezos(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
 
   async function applyDiscount() {
     const code = discountInput.trim().toUpperCase();
@@ -178,9 +192,15 @@ export default function CartDrawer() {
       if (item.extras?.length)               lines.push(`   ➕ ${item.extras.map(e => e.price > 0 ? `${e.name} (+${fmt(e.price)})` : e.name).join(', ')}`);
       if (item.note)                         lines.push(`   📝 Nota: ${item.note}`);
     });
+    const chosenAderezos = availableAderezos.filter(a => selectedAderezos.has(a.id));
+    if (chosenAderezos.length > 0) {
+      lines.push('');
+      lines.push(`🫙 Aderezos: ${chosenAderezos.map(a => a.price > 0 ? `${a.name} (+${fmt(a.price)})` : a.name).join(', ')}`);
+    }
     lines.push('');
     lines.push(`💰 Subtotal: ${fmt(total)}`);
     if (appliedDiscount) lines.push(`🏷 Descuento (${appliedDiscount.code}): -${fmt(discountAmount)}`);
+    if (aderezosTotal > 0) lines.push(`🫙 Aderezos: +${fmt(aderezosTotal)}`);
     if (deliveryFee != null) lines.push(`🛵 Delivery (${deliveryInfo!.distKm.toFixed(1)} km): ${fmt(deliveryFee)}`);
     if (deliveryInfo && deliveryInfo.fee === null) lines.push(`🛵 Delivery: fuera de cobertura`);
     lines.push(`💰 TOTAL: ${fmt(finalTotal)}`);
@@ -320,6 +340,27 @@ export default function CartDrawer() {
                 </div>
               )}
             </div>
+
+            {/* Aderezos */}
+            {availableAderezos.length > 0 && (
+              <div style={{ marginBottom: 12 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: .5, textTransform: 'uppercase', marginBottom: 7 }}>
+                  🫙 Aderezos
+                </div>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  {availableAderezos.map(a => {
+                    const sel = selectedAderezos.has(a.id);
+                    return (
+                      <button key={a.id} onClick={() => toggleAderezo(a.id)}
+                        style={{ padding: '6px 12px', borderRadius: 999, border: `1.5px solid ${sel ? 'var(--orange)' : 'var(--border)'}`, background: sel ? 'rgba(242,100,25,0.08)' : 'var(--bg2)', cursor: 'pointer', transition: 'all .15s', display: 'flex', alignItems: 'center', gap: 5 }}>
+                        <span style={{ fontSize: 12, fontWeight: 700, color: sel ? 'var(--orange)' : 'var(--text-muted)' }}>{a.name}</span>
+                        {a.price > 0 && <span style={{ fontSize: 11, color: sel ? 'var(--orange)' : 'var(--text-muted)', opacity: .8 }}>+{fmt(a.price)}</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* Método de pago */}
             <div style={{ marginBottom:12 }}>

@@ -3,6 +3,8 @@ import { getSettings, Settings } from '@/lib/firestore/settings';
 import { getMenuItems, MenuItem } from '@/lib/firestore/menuItems';
 import { getBurritoConfig, BurritoConfig, DEFAULT_BURRITO } from '@/lib/firestore/burritoConfig';
 import { getPromotions, Promotion } from '@/lib/firestore/promotions';
+import { getAderezos } from '@/lib/firestore/aderezos';
+import { Aderezo } from '@/lib/firestore/aderezosTypes';
 
 export const revalidate = 60;
 
@@ -23,10 +25,11 @@ export default async function Home() {
   let menuItems: MenuItem[]        = [];
   let burritoConfig: BurritoConfig = DEFAULT_BURRITO;
   let promotions: Promotion[]      = [];
+  let aderezos: Aderezo[]          = [];
   try {
-    [settings, menuItems, burritoConfig, promotions] = await Promise.all([
-      getSettings(), getMenuItems(), getBurritoConfig(), getPromotions(),
+    [settings, menuItems, burritoConfig, promotions, aderezos] = await Promise.all([
+      getSettings(), getMenuItems(), getBurritoConfig(), getPromotions(), getAderezos(),
     ]);
   } catch {}
-  return <AppShell settings={settings} menuItems={menuItems} burritoConfig={burritoConfig} promotions={promotions} />;
+  return <AppShell settings={settings} menuItems={menuItems} burritoConfig={burritoConfig} promotions={promotions} aderezos={aderezos} />;
 }
