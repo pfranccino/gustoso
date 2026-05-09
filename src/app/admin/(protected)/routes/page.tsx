@@ -71,7 +71,7 @@ function totalDistance(origin: { lat: number; lng: number }, route: Stop[]): num
 const FAKE_NAMES = ['Empanada x2', 'AS Italiano', 'Vienesa Alemana', 'Burrito XL', 'Combo familiar'];
 
 /* Coordenadas reales del local */
-const RESTAURANT = { lat: -32.8534408, lng: -70.594049 };
+const RESTAURANT = { lat: -32.853987, lng: -70.594028 };
 
 /* Límites aproximados de Los Andes, Chile */
 const LOS_ANDES = { latMin: -32.870, latMax: -32.820, lngMin: -70.620, lngMax: -70.575 };
