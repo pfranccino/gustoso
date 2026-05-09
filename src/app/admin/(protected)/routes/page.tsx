@@ -48,9 +48,14 @@ function nearestNeighbor(origin: { lat: number; lng: number }, stops: Stop[]): S
 }
 
 function buildMapsUrl(origin: { lat: number; lng: number }, route: Stop[]): string {
-  /* El local como origen fijo → Maps no pide punto de partida */
-  const points = [`${origin.lat},${origin.lng}`, ...route.map(s => `${s.lat},${s.lng}`)];
-  return `https://www.google.com/maps/dir/${points.join('/')}`;
+  /* Formato explícito: origin + waypoints + destination
+     Evita que Maps reordene o ponga el local al final */
+  const coords   = route.map(s => `${s.lat},${s.lng}`);
+  const originS  = `${origin.lat},${origin.lng}`;
+  const dest     = coords[coords.length - 1];
+  const wps      = coords.slice(0, -1).join('|');
+  const base     = `https://www.google.com/maps/dir/?api=1&origin=${originS}&destination=${dest}&travelmode=driving`;
+  return wps ? `${base}&waypoints=${wps}` : base;
 }
 
 function totalDistance(origin: { lat: number; lng: number }, route: Stop[]): number {
