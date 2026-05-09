@@ -238,7 +238,7 @@ export default function CartDrawer() {
                       {item.desc && <div style={{ fontSize:12, color:'var(--text-muted)', marginTop:2, lineHeight:1.4 }}>{item.desc}</div>}
                       {item.removedIngredients?.length ? <div style={{ fontSize:12, color:'#ef4444', marginTop:2, lineHeight:1.5 }}>❌ Sin: {item.removedIngredients.join(', ')}</div> : null}
                       {item.extras?.length ? <div style={{ fontSize:12, color:'var(--orange)', marginTop:2, lineHeight:1.5 }}>➕ {item.extras.map(e => e.name).join(', ')}</div> : null}
-                      {item.aderezos?.length ? <div style={{ fontSize:12, color:'var(--text-muted)', marginTop:2, lineHeight:1.5 }}>🥫 {item.aderezos.map(a => a.name).join(', ')}</div> : null}
+                      {item.aderezos?.length ? <div style={{ fontSize:12, color:'var(--text-muted)', marginTop:2, lineHeight:1.5 }}>🥫 {item.aderezos.map(a => a.price > 0 ? `${a.name} (+${fmt(a.price)})` : a.name).join(', ')}</div> : null}
                       {item.note && <div style={{ fontSize:12, color:'var(--orange)', marginTop:3, fontStyle:'italic' }}>📝 {item.note}</div>}
                     </div>
                     <button onClick={() => removeItem(item.id)} style={{ color:'var(--text-muted)', background:'transparent', border:'none', cursor:'pointer', padding:4, flexShrink:0, opacity:.6 }}><TrashIcon size={14}/></button>
@@ -249,7 +249,7 @@ export default function CartDrawer() {
                       <span style={{ padding:'0 10px', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:16, color:'var(--text)' }}>{item.qty}</span>
                       <button onClick={() => updateQty(item.id, 1)} style={{ width:32, height:32, border:'none', background:'transparent', cursor:'pointer', fontSize:16, color:'var(--orange)', display:'flex', alignItems:'center', justifyContent:'center' }}>+</button>
                     </div>
-                    <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:18, color:'var(--yellow)' }}>{fmt((item.price + (item.extras ?? []).reduce((s, e) => s + e.price, 0)) * item.qty)}</div>
+                    <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:18, color:'var(--yellow)' }}>{fmt((item.price + (item.extras ?? []).reduce((s, e) => s + e.price, 0) + (item.aderezos ?? []).reduce((s, a) => s + a.price, 0)) * item.qty)}</div>
                   </div>
                 </div>
               ))}
