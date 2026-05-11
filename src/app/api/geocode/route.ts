@@ -2,11 +2,30 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
-const HEADERS = { 'User-Agent': 'GustososDelivery/1.0 (pfranccino@gmail.com)' };
+type Coords = { lat: number; lng: number; display: string };
 
-async function nominatim(q: string): Promise<{ lat: number; lng: number; display: string } | null> {
+/* ── Photon (Komoot) — mejor cobertura Latinoamérica ── */
+async function photon(q: string): Promise<Coords | null> {
+  const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=1&lang=es`;
+  const res  = await fetch(url, { cache: 'no-store' });
+  if (!res.ok) return null;
+  const data = await res.json();
+  const feat = data?.features?.[0];
+  if (!feat) return null;
+  const [lng, lat] = feat.geometry.coordinates as [number, number];
+  const p = feat.properties;
+  const display = [p.name, p.street, p.city, p.country].filter(Boolean).join(', ');
+  return { lat, lng, display };
+}
+
+/* ── Nominatim (fallback) ── */
+async function nominatim(q: string): Promise<Coords | null> {
   const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1&countrycodes=cl`;
-  const res  = await fetch(url, { headers: HEADERS, cache: 'no-store' });
+  const res  = await fetch(url, {
+    headers: { 'User-Agent': 'GustososDelivery/1.0 (pfranccino@gmail.com)' },
+    cache: 'no-store',
+  });
+  if (!res.ok) return null;
   const data = await res.json();
   if (!Array.isArray(data) || data.length === 0) return null;
   const { lat, lon, display_name } = data[0];
@@ -17,17 +36,21 @@ export async function GET(request: NextRequest) {
   const raw = request.nextUrl.searchParams.get('q')?.trim();
   if (!raw) return NextResponse.json({ error: 'q requerido' }, { status: 400 });
 
-  // Normalizar: quitar '#' (formato chileno) y dobles espacios
+  // Quitar '#' (formato chileno) y normalizar espacios
   const q = raw.replace(/#/g, '').replace(/\s+/g, ' ').trim();
 
   try {
-    // Intento 1: query tal como viene + Los Andes, Chile
-    let result = await nominatim(`${q}, Los Andes, Chile`);
+    // 1. Photon con ciudad explícita
+    let result = await photon(`${q}, Los Andes, Chile`);
 
-    // Intento 2: sin número de calle (solo nombre de calle + ciudad)
+    // 2. Nominatim con ciudad
+    if (!result) result = await nominatim(`${q}, Los Andes, Chile`);
+
+    // 3. Solo nombre de calle (sin número)
     if (!result) {
       const streetOnly = q.replace(/\d+/g, '').trim();
-      result = await nominatim(`${streetOnly}, Los Andes, Chile`);
+      result = await photon(`${streetOnly}, Los Andes, Chile`)
+            ?? await nominatim(`${streetOnly}, Los Andes, Chile`);
     }
 
     if (!result) return NextResponse.json({ error: 'Dirección no encontrada' }, { status: 404 });
