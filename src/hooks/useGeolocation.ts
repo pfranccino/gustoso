@@ -4,15 +4,15 @@ export type GeoStatus =
   | 'idle'
   | 'loading'
   | 'success'
-  | 'denied'        // bloqueado a nivel de sitio en el browser
-  | 'unavailable'   // GPS no disponible en el dispositivo
+  | 'denied'
+  | 'unavailable'
   | 'timeout'
   | 'error';
 
 type GeoState =
   | { status: 'idle' }
   | { status: 'loading' }
-  | { status: 'success'; locationUrl: string }
+  | { status: 'success'; locationUrl: string; lat: number; lng: number }
   | { status: 'denied' }
   | { status: 'unavailable' }
   | { status: 'timeout' }
@@ -22,29 +22,20 @@ export function useGeolocation() {
   const [state, setState] = useState<GeoState>({ status: 'idle' });
   const permRef = useRef<PermissionStatus | null>(null);
 
-  // Escuchar cambios de permiso en tiempo real (el usuario va a config y lo habilita)
+  // Escuchar cambios de permiso en tiempo real
   useEffect(() => {
     if (typeof navigator === 'undefined' || !navigator.permissions) return;
-
     let cancelled = false;
     navigator.permissions.query({ name: 'geolocation' }).then(perm => {
       if (cancelled) return;
       permRef.current = perm;
-
       perm.onchange = () => {
         if (cancelled) return;
-        if (perm.state === 'granted') {
-          // El usuario acaba de habilitar el permiso — lanzar geolocalización automáticamente
-          doGetPosition();
-        } else if (perm.state === 'denied') {
-          setState({ status: 'denied' });
-        } else {
-          // 'prompt' — volver a idle para que el usuario pueda intentar de nuevo
-          setState({ status: 'idle' });
-        }
+        if (perm.state === 'granted') doGetPosition();
+        else if (perm.state === 'denied') setState({ status: 'denied' });
+        else setState({ status: 'idle' });
       };
-    }).catch(() => { /* browser no soporta Permissions API */ });
-
+    }).catch(() => {});
     return () => {
       cancelled = true;
       if (permRef.current) permRef.current.onchange = null;
@@ -54,25 +45,43 @@ export function useGeolocation() {
 
   const doGetPosition = useCallback(() => {
     setState({ status: 'loading' });
-    navigator.geolocation.getCurrentPosition(
-      ({ coords }) => {
-        const locationUrl = `https://maps.google.com/?q=${coords.latitude},${coords.longitude}`;
-        setState({ status: 'success', locationUrl });
-      },
-      (err) => {
-        switch (err.code) {
-          case GeolocationPositionError.PERMISSION_DENIED:
-            setState({ status: 'denied' }); break;
-          case GeolocationPositionError.POSITION_UNAVAILABLE:
-            setState({ status: 'unavailable' }); break;
-          case GeolocationPositionError.TIMEOUT:
-            setState({ status: 'timeout' }); break;
-          default:
-            setState({ status: 'error' });
-        }
-      },
-      { enableHighAccuracy: false, timeout: 10000, maximumAge: 120000 }
-    );
+
+    const onSuccess = ({ coords }: GeolocationPosition) => {
+      const { latitude: lat, longitude: lng } = coords;
+      setState({
+        status: 'success',
+        locationUrl: `https://maps.google.com/?q=${lat},${lng}`,
+        lat,
+        lng,
+      });
+    };
+
+    const onError = (err: GeolocationPositionError) => {
+      switch (err.code) {
+        case GeolocationPositionError.PERMISSION_DENIED:
+          setState({ status: 'denied' }); break;
+        case GeolocationPositionError.POSITION_UNAVAILABLE:
+          setState({ status: 'unavailable' }); break;
+        case GeolocationPositionError.TIMEOUT:
+          setState({ status: 'timeout' }); break;
+        default:
+          setState({ status: 'error' });
+      }
+    };
+
+    // Intento 1: red/WiFi (rápido, ~1-2s)
+    navigator.geolocation.getCurrentPosition(onSuccess, (err) => {
+      if (err.code === GeolocationPositionError.PERMISSION_DENIED) {
+        setState({ status: 'denied' });
+        return;
+      }
+      // Intento 2: GPS (más lento pero más preciso)
+      navigator.geolocation.getCurrentPosition(onSuccess, onError, {
+        enableHighAccuracy: true,
+        timeout: 20000,
+        maximumAge: 0,
+      });
+    }, { enableHighAccuracy: false, timeout: 7000, maximumAge: 120000 });
   }, []);
 
   const request = useCallback(async () => {
@@ -80,21 +89,12 @@ export function useGeolocation() {
       setState({ status: 'unavailable' });
       return;
     }
-
-    // Consultar el estado real del permiso antes de llamar a getCurrentPosition
     if (navigator.permissions) {
       try {
         const perm = await navigator.permissions.query({ name: 'geolocation' });
-        if (perm.state === 'denied') {
-          setState({ status: 'denied' });
-          return;
-        }
-        // Si está en 'prompt' o 'granted', continuar normalmente
-      } catch {
-        // Permissions API no disponible — continuar de todas formas
-      }
+        if (perm.state === 'denied') { setState({ status: 'denied' }); return; }
+      } catch {}
     }
-
     doGetPosition();
   }, [doGetPosition]);
 

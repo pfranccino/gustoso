@@ -50,10 +50,20 @@ function calcDeliveryFee(distKm: number, cfg: DeliveryConfig): number | null {
   return null; // fuera de zona de cobertura
 }
 
-function parseLatLng(locationUrl: string): { lat: number; lng: number } | null {
-  const m = locationUrl.match(/q=([-\d.]+),([-\d.]+)/);
-  if (!m) return null;
-  return { lat: parseFloat(m[1]), lng: parseFloat(m[2]) };
+function parseLatLng(input: string): { lat: number; lng: number } | null {
+  // ?q=lat,lng  o  &q=lat,lng
+  let m = input.match(/[?&]q=([-\d.]+),([-\d.]+)/);
+  if (m) return { lat: parseFloat(m[1]), lng: parseFloat(m[2]) };
+  // /@lat,lng,zoom  (URLs de lugar en Google Maps)
+  m = input.match(/\/@([-\d.]+),([-\d.]+)/);
+  if (m) return { lat: parseFloat(m[1]), lng: parseFloat(m[2]) };
+  // ?ll=lat,lng  (formato antiguo)
+  m = input.match(/[?&]ll=([-\d.]+),([-\d.]+)/);
+  if (m) return { lat: parseFloat(m[1]), lng: parseFloat(m[2]) };
+  // Coordenadas crudas: "-32.85,-70.59"
+  m = input.trim().match(/^([-\d.]+)\s*,\s*([-\d.]+)$/);
+  if (m) return { lat: parseFloat(m[1]), lng: parseFloat(m[2]) };
+  return null;
 }
 
 async function logOrder(
@@ -107,6 +117,10 @@ export default function CartDrawer() {
 
   // 'retiro' = pickup free, number = index in sortedZones, null = not chosen yet
   const [selectedZone, setSelectedZone] = useState<'retiro' | number | null>(null);
+  // Fallback: link de Google Maps pegado manualmente
+  const [pastedLink, setPastedLink]     = useState('');
+  const [pastedCoords, setPastedCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [pasteError, setPasteError]     = useState(false);
 
   const locationUrl = geo.status === 'success' ? geo.locationUrl : undefined;
 
@@ -115,19 +129,22 @@ export default function CartDrawer() {
     ? [...(delivery.zones ?? [])].sort((a, b) => a.maxKm - b.maxKm)
     : [];
 
-  /* ── auto-selección desde geo ────────────── */
-  // When geo succeeds, auto-pick the matching zone
-  const geoDistKm = (() => {
-    if (!delivery?.enabled || !locationUrl) return null;
-    if (!delivery.restaurantLat || !delivery.restaurantLng) return null;
-    const coords = parseLatLng(locationUrl);
-    if (!coords) return null;
-    return haversineKm(delivery.restaurantLat, delivery.restaurantLng, coords.lat, coords.lng);
+  /* ── coordenadas activas (geo o pegadas) ─── */
+  const activeCoords: { lat: number; lng: number } | null = (() => {
+    if (geo.status === 'success') return { lat: geo.lat, lng: geo.lng };
+    return pastedCoords;
   })();
 
-  // Auto-select zone when distance is computed (only if user hasn't picked manually yet)
-  if (geoDistKm !== null && selectedZone === null) {
-    const idx = sortedZones.findIndex(z => geoDistKm <= z.maxKm);
+  /* ── distancia al local ──────────────────── */
+  const distKm = (() => {
+    if (!delivery?.enabled || !activeCoords) return null;
+    if (!delivery.restaurantLat || !delivery.restaurantLng) return null;
+    return haversineKm(delivery.restaurantLat, delivery.restaurantLng, activeCoords.lat, activeCoords.lng);
+  })();
+
+  /* ── auto-selección de zona cuando tenemos distancia ── */
+  if (distKm !== null && selectedZone === null) {
+    const idx = sortedZones.findIndex(z => distKm <= z.maxKm);
     if (idx >= 0) setSelectedZone(idx);
   }
 
@@ -139,6 +156,18 @@ export default function CartDrawer() {
       return sortedZones[selectedZone].price;
     return null;
   })();
+
+  function handlePasteLink(val: string) {
+    setPastedLink(val);
+    setPasteError(false);
+    const coords = parseLatLng(val);
+    if (coords) {
+      setPastedCoords(coords);
+      setSelectedZone(null); // reset para que se auto-seleccione
+    } else if (val.trim().length > 10) {
+      setPasteError(true);
+    }
+  }
 
   /* ── descuento ───────────────────────────── */
   function calcDiscount(dis: AppliedDiscount, rawTotal: number): number {
@@ -206,7 +235,7 @@ export default function CartDrawer() {
     if (selectedZone === 'retiro') lines.push(`🏠 Retiro en local`);
     else if (typeof selectedZone === 'number') {
       const zone = sortedZones[selectedZone];
-      const distStr = geoDistKm != null ? ` · ${geoDistKm.toFixed(1)} km` : '';
+      const distStr = distKm != null ? ` · ${distKm.toFixed(1)} km` : '';
       lines.push(`🛵 Delivery hasta ${zone.maxKm} km${distStr}: ${fmt(zone.price)}`);
     }
     lines.push(`💰 TOTAL: ${fmt(finalTotal)}`);
@@ -346,32 +375,80 @@ export default function CartDrawer() {
               )}
             </div>
 
-            {/* Delivery — selector de zona */}
+            {/* Delivery */}
             {delivery?.enabled && sortedZones.length > 0 && (
-              <div style={{ marginBottom:12 }}>
-                <div style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', letterSpacing:.5, textTransform:'uppercase', marginBottom:7 }}>
-                  🛵 ¿Cómo recibes tu pedido?
-                  {geoDistKm !== null && <span style={{ fontWeight:400, textTransform:'none', marginLeft:6, fontSize:10 }}>({geoDistKm.toFixed(1)} km desde el local)</span>}
-                </div>
+              <div style={{ marginBottom:12, background:'var(--bg2)', borderRadius:'var(--radius-sm)', border:'1px solid var(--border)', padding:'12px 14px' }}>
+                <div style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', letterSpacing:.5, textTransform:'uppercase', marginBottom:10 }}>🛵 Delivery</div>
+
+                {/* Estado de ubicación */}
+                {!activeCoords && (
+                  <div style={{ marginBottom:10 }}>
+                    {(geo.status === 'idle' || geo.status === 'denied' || geo.status === 'unavailable' || geo.status === 'timeout' || geo.status === 'error') && (
+                      <button onClick={requestGeo}
+                        style={{ width:'100%', padding:'10px', borderRadius:'var(--radius-sm)', border:'2px solid var(--orange)', background:'rgba(242,100,25,0.07)', color:'var(--orange)', fontSize:13, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:6, marginBottom:8 }}>
+                        📍 Detectar mi ubicación automáticamente
+                      </button>
+                    )}
+                    {geo.status === 'loading' && (
+                      <div style={{ textAlign:'center', fontSize:13, color:'var(--text-muted)', padding:'10px', marginBottom:8 }}>📍 Detectando ubicación…</div>
+                    )}
+                    {(geo.status === 'denied' || geo.status === 'unavailable' || geo.status === 'timeout' || geo.status === 'error') && (
+                      <div style={{ fontSize:11, color:'var(--text-muted)', marginBottom:6, textAlign:'center' }}>
+                        ¿No funciona? Pega el link de tu ubicación desde Google Maps
+                      </div>
+                    )}
+                    {geo.status === 'idle' && (
+                      <div style={{ fontSize:11, color:'var(--text-muted)', marginBottom:6, textAlign:'center' }}>
+                        o pega el link de Google Maps con tu ubicación
+                      </div>
+                    )}
+                    <div style={{ display:'flex', gap:6 }}>
+                      <input
+                        value={pastedLink}
+                        onChange={e => handlePasteLink(e.target.value)}
+                        placeholder="https://maps.google.com/?q=..."
+                        style={{ flex:1, padding:'8px 10px', borderRadius:8, border:`1.5px solid ${pasteError ? '#dc2626' : 'var(--border)'}`, background:'var(--card)', color:'var(--text)', fontSize:12, fontFamily:"'Barlow',sans-serif", outline:'none' }}
+                      />
+                    </div>
+                    {pasteError && <div style={{ fontSize:11, color:'#dc2626', marginTop:4, fontWeight:600 }}>Link no reconocido. Prueba con otro formato.</div>}
+                  </div>
+                )}
+
+                {/* Ubicación detectada */}
+                {activeCoords && (
+                  <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', background:'rgba(37,211,102,0.08)', border:'1px solid rgba(37,211,102,0.25)', borderRadius:8, padding:'7px 10px', marginBottom:10 }}>
+                    <span style={{ fontSize:12, color:'#1a8a3e', fontWeight:700 }}>
+                      📍 {distKm != null ? `${distKm.toFixed(1)} km desde el local` : 'Ubicación obtenida'}
+                    </span>
+                    <button onClick={() => { clearGeo(); setPastedCoords(null); setPastedLink(''); setSelectedZone(null); }}
+                      style={{ fontSize:11, color:'var(--text-muted)', background:'transparent', border:'none', cursor:'pointer', fontWeight:600 }}>Cambiar</button>
+                  </div>
+                )}
+
+                {/* Chips de zona */}
                 <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
                   <button onClick={() => setSelectedZone('retiro')}
-                    style={{ padding:'8px 14px', borderRadius:999, border:`2px solid ${selectedZone === 'retiro' ? '#16a34a' : 'var(--border)'}`, background: selectedZone === 'retiro' ? 'rgba(22,163,74,0.08)' : 'var(--bg2)', cursor:'pointer', transition:'all .15s' }}>
-                    <span style={{ fontSize:13, fontWeight:700, color: selectedZone === 'retiro' ? '#16a34a' : 'var(--text)' }}>🏠 Retiro · Gratis</span>
+                    style={{ padding:'7px 13px', borderRadius:999, border:`2px solid ${selectedZone === 'retiro' ? '#16a34a' : 'var(--border)'}`, background: selectedZone === 'retiro' ? 'rgba(22,163,74,0.08)' : 'var(--card)', cursor:'pointer', transition:'all .15s' }}>
+                    <span style={{ fontSize:12, fontWeight:700, color: selectedZone === 'retiro' ? '#16a34a' : 'var(--text)' }}>🏠 Retiro · Gratis</span>
                   </button>
                   {sortedZones.map((z, i) => {
                     const sel = selectedZone === i;
+                    const autoSel = distKm != null && distKm <= z.maxKm && (i === 0 || distKm > sortedZones[i - 1].maxKm);
                     return (
                       <button key={i} onClick={() => setSelectedZone(i)}
-                        style={{ padding:'8px 14px', borderRadius:999, border:`2px solid ${sel ? 'var(--orange)' : 'var(--border)'}`, background: sel ? 'rgba(242,100,25,0.08)' : 'var(--bg2)', cursor:'pointer', transition:'all .15s' }}>
-                        <span style={{ fontSize:13, fontWeight:700, color: sel ? 'var(--orange)' : 'var(--text)' }}>
+                        style={{ padding:'7px 13px', borderRadius:999, border:`2px solid ${sel ? 'var(--orange)' : 'var(--border)'}`, background: sel ? 'rgba(242,100,25,0.08)' : 'var(--card)', cursor:'pointer', transition:'all .15s', position:'relative' }}>
+                        <span style={{ fontSize:12, fontWeight:700, color: sel ? 'var(--orange)' : 'var(--text)' }}>
                           Hasta {z.maxKm} km · {fmt(z.price)}
+                          {autoSel && !sel && <span style={{ fontSize:10, color:'var(--orange)', marginLeft:4 }}>← tu zona</span>}
                         </span>
                       </button>
                     );
                   })}
                 </div>
-                {selectedZone === null && (
-                  <div style={{ fontSize:11, color:'var(--text-muted)', marginTop:6 }}>Selecciona una opción para calcular el total</div>
+                {selectedZone === null && activeCoords && distKm != null && distKm > sortedZones[sortedZones.length - 1]?.maxKm && (
+                  <div style={{ fontSize:11, color:'#dc2626', fontWeight:600, marginTop:6 }}>
+                    Estás a {distKm.toFixed(1)} km — fuera de nuestra zona de cobertura
+                  </div>
                 )}
               </div>
             )}
@@ -393,29 +470,6 @@ export default function CartDrawer() {
                   );
                 })}
               </div>
-            </div>
-
-            {/* Ubicación exacta — opcional, solo para el link WA */}
-            <div style={{ marginBottom:12 }}>
-              {geo.status === 'idle' && (
-                <button onClick={requestGeo} style={{ width:'100%', padding:'9px', borderRadius:'var(--radius-sm)', border:'1px dashed var(--border)', background:'transparent', color:'var(--text-muted)', fontSize:12, fontWeight:600, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
-                  📍 Incluir ubicación exacta en el pedido (opcional)
-                </button>
-              )}
-              {geo.status === 'loading' && (
-                <div style={{ textAlign:'center', fontSize:12, color:'var(--text-muted)', padding:'9px' }}>Obteniendo ubicación…</div>
-              )}
-              {geo.status === 'success' && (
-                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', background:'rgba(37,211,102,0.08)', border:'1px solid rgba(37,211,102,0.25)', borderRadius:'var(--radius-sm)', padding:'8px 12px' }}>
-                  <span style={{ fontSize:12, color:'#1a8a3e', fontWeight:600 }}>📍 Ubicación exacta incluida</span>
-                  <button onClick={clearGeo} style={{ fontSize:12, color:'var(--text-muted)', background:'transparent', border:'none', cursor:'pointer', fontWeight:600 }}>Quitar</button>
-                </div>
-              )}
-              {(geo.status === 'denied' || geo.status === 'unavailable' || geo.status === 'timeout' || geo.status === 'error') && (
-                <button onClick={requestGeo} style={{ width:'100%', padding:'9px', borderRadius:'var(--radius-sm)', border:'1px dashed var(--border)', background:'transparent', color:'var(--text-muted)', fontSize:12, fontWeight:600, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
-                  📍 Incluir ubicación exacta en el pedido (opcional)
-                </button>
-              )}
             </div>
 
             <button onClick={handleSend} style={{ width:'100%', display:'flex', alignItems:'center', justifyContent:'center', gap:10, background:'#25D366', color:'#fff', padding:'15px 24px', borderRadius:999, border:'none', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:20, letterSpacing:.5, cursor:'pointer', boxShadow:'0 4px 16px rgba(37,211,102,0.3)' }}>
