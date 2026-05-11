@@ -71,7 +71,7 @@ export function useGeolocation() {
             setState({ status: 'error' });
         }
       },
-      { enableHighAccuracy: true, timeout: 30000, maximumAge: 60000 }
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 120000 }
     );
   }, []);
 
