@@ -2,26 +2,40 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
+const HEADERS = { 'User-Agent': 'GustososDelivery/1.0 (pfranccino@gmail.com)' };
+
+async function nominatim(q: string): Promise<{ lat: number; lng: number; display: string } | null> {
+  const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1&countrycodes=cl`;
+  const res  = await fetch(url, { headers: HEADERS, cache: 'no-store' });
+  const data = await res.json();
+  if (!Array.isArray(data) || data.length === 0) return null;
+  const { lat, lon, display_name } = data[0];
+  return { lat: parseFloat(lat), lng: parseFloat(lon), display: display_name };
+}
+
 export async function GET(request: NextRequest) {
-  const q = request.nextUrl.searchParams.get('q')?.trim();
-  if (!q) return NextResponse.json({ error: 'q requerido' }, { status: 400 });
+  const raw = request.nextUrl.searchParams.get('q')?.trim();
+  if (!raw) return NextResponse.json({ error: 'q requerido' }, { status: 400 });
+
+  // Normalizar: quitar '#' (formato chileno) y dobles espacios
+  const q = raw.replace(/#/g, '').replace(/\s+/g, ' ').trim();
 
   try {
-    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1&countrycodes=cl`;
-    const res  = await fetch(url, {
-      headers: { 'User-Agent': 'GustososDelivery/1.0 (pfranccino@gmail.com)' },
-      next: { revalidate: 0 },
-    });
-    const data = await res.json();
-    if (!Array.isArray(data) || data.length === 0)
-      return NextResponse.json({ error: 'Dirección no encontrada' }, { status: 404 });
+    // Intento 1: query tal como viene + Los Andes, Chile
+    let result = await nominatim(`${q}, Los Andes, Chile`);
 
-    const { lat, lon, display_name } = data[0];
-    return NextResponse.json({
-      lat:     parseFloat(lat),
-      lng:     parseFloat(lon),
-      display: display_name,
-    });
+    // Intento 2: sin número de calle (solo nombre de calle + ciudad)
+    if (!result) {
+      const streetOnly = q.replace(/\d+/g, '').trim();
+      result = await nominatim(`${streetOnly}, Los Andes, Chile`);
+    }
+
+    // Intento 3: solo "Los Andes, Chile" como fallback geográfico
+    if (!result) result = await nominatim('Los Andes, Región de Valparaíso, Chile');
+
+    if (!result) return NextResponse.json({ error: 'Dirección no encontrada' }, { status: 404 });
+
+    return NextResponse.json(result);
   } catch {
     return NextResponse.json({ error: 'Error de geocodificación' }, { status: 500 });
   }
