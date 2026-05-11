@@ -30,9 +30,6 @@ export async function GET(request: NextRequest) {
       result = await nominatim(`${streetOnly}, Los Andes, Chile`);
     }
 
-    // Intento 3: solo "Los Andes, Chile" como fallback geográfico
-    if (!result) result = await nominatim('Los Andes, Región de Valparaíso, Chile');
-
     if (!result) return NextResponse.json({ error: 'Dirección no encontrada' }, { status: 404 });
 
     return NextResponse.json(result);
