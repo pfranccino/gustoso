@@ -168,7 +168,7 @@ export default function CartDrawer() {
     setAddrCoords(null);
     setSelectedZone(null);
     try {
-      const res  = await fetch(`/api/geocode?q=${encodeURIComponent(q + ', Los Andes, Chile')}`);
+      const res  = await fetch(`/api/geocode?q=${encodeURIComponent(q)}`);
       const data = await res.json();
       if (!res.ok) { setAddrStatus('error'); return; }
       setAddrCoords({ lat: data.lat, lng: data.lng, display: data.display });
