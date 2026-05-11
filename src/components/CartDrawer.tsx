@@ -105,22 +105,42 @@ export default function CartDrawer() {
   const [discountError,  setDiscountError]  = useState('');
   const [appliedDiscount, setAppliedDiscount] = useState<AppliedDiscount | null>(null);
 
+  // 'retiro' = pickup free, number = index in sortedZones, null = not chosen yet
+  const [selectedZone, setSelectedZone] = useState<'retiro' | number | null>(null);
+
   const locationUrl = geo.status === 'success' ? geo.locationUrl : undefined;
 
-  /* ── delivery fee ────────────────────────── */
-  const deliveryInfo = (() => {
+  /* ── zonas ordenadas ─────────────────────── */
+  const sortedZones = delivery?.enabled
+    ? [...(delivery.zones ?? [])].sort((a, b) => a.maxKm - b.maxKm)
+    : [];
+
+  /* ── auto-selección desde geo ────────────── */
+  // When geo succeeds, auto-pick the matching zone
+  const geoDistKm = (() => {
     if (!delivery?.enabled || !locationUrl) return null;
     if (!delivery.restaurantLat || !delivery.restaurantLng) return null;
     const coords = parseLatLng(locationUrl);
     if (!coords) return null;
-    const distKm = haversineKm(delivery.restaurantLat, delivery.restaurantLng, coords.lat, coords.lng);
-    const fee    = calcDeliveryFee(distKm, delivery);
-    return { distKm, fee };
+    return haversineKm(delivery.restaurantLat, delivery.restaurantLng, coords.lat, coords.lng);
   })();
-  const deliveryFee = deliveryInfo?.fee ?? null;
+
+  // Auto-select zone when distance is computed (only if user hasn't picked manually yet)
+  if (geoDistKm !== null && selectedZone === null) {
+    const idx = sortedZones.findIndex(z => geoDistKm <= z.maxKm);
+    if (idx >= 0) setSelectedZone(idx);
+  }
+
+  /* ── delivery fee ────────────────────────── */
+  const deliveryFee = (() => {
+    if (!delivery?.enabled) return null;
+    if (selectedZone === 'retiro') return 0;
+    if (typeof selectedZone === 'number' && selectedZone < sortedZones.length)
+      return sortedZones[selectedZone].price;
+    return null;
+  })();
 
   /* ── descuento ───────────────────────────── */
-
   function calcDiscount(dis: AppliedDiscount, rawTotal: number): number {
     return dis.type === 'percent'
       ? Math.round(rawTotal * dis.value / 100)
@@ -183,8 +203,12 @@ export default function CartDrawer() {
     lines.push('');
     lines.push(`💰 Subtotal: ${fmt(total)}`);
     if (appliedDiscount) lines.push(`🏷 Descuento (${appliedDiscount.code}): -${fmt(discountAmount)}`);
-    if (deliveryFee != null) lines.push(`🛵 Delivery (${deliveryInfo!.distKm.toFixed(1)} km): ${fmt(deliveryFee)}`);
-    if (deliveryInfo && deliveryInfo.fee === null) lines.push(`🛵 Delivery: fuera de cobertura`);
+    if (selectedZone === 'retiro') lines.push(`🏠 Retiro en local`);
+    else if (typeof selectedZone === 'number') {
+      const zone = sortedZones[selectedZone];
+      const distStr = geoDistKm != null ? ` · ${geoDistKm.toFixed(1)} km` : '';
+      lines.push(`🛵 Delivery hasta ${zone.maxKm} km${distStr}: ${fmt(zone.price)}`);
+    }
     lines.push(`💰 TOTAL: ${fmt(finalTotal)}`);
     if (paymentMethod) lines.push(`💳 Pago: ${PAYMENT_LABEL[paymentMethod]}`);
     if (locationUrl)   lines.push(`📍 Mi ubicación: ${locationUrl}`);
@@ -275,16 +299,14 @@ export default function CartDrawer() {
                   <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:16, color:'#16a34a' }}>-{fmt(discountAmount)}</span>
                 </div>
               )}
-              {deliveryFee != null && (
+              {deliveryFee !== null && deliveryFee > 0 && (
                 <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:4 }}>
-                  <span style={{ fontSize:13, color:'var(--text-muted)', fontWeight:600 }}>🛵 Delivery · {deliveryInfo!.distKm.toFixed(1)} km</span>
+                  <span style={{ fontSize:13, color:'var(--text-muted)', fontWeight:600 }}>🛵 Delivery</span>
                   <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:16, color:'var(--text)' }}>{fmt(deliveryFee)}</span>
                 </div>
               )}
-              {deliveryInfo && deliveryInfo.fee === null && (
-                <div style={{ fontSize:12, color:'#dc2626', fontWeight:600, marginBottom:4 }}>
-                  🛵 {deliveryInfo.distKm.toFixed(1)} km — fuera de nuestra zona de cobertura
-                </div>
+              {deliveryFee === 0 && selectedZone === 'retiro' && (
+                <div style={{ fontSize:12, color:'#16a34a', fontWeight:600, marginBottom:4 }}>🏠 Retiro en local</div>
               )}
               <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
                 <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:16, color:'var(--text-muted)' }}>TOTAL</span>
@@ -324,6 +346,36 @@ export default function CartDrawer() {
               )}
             </div>
 
+            {/* Delivery — selector de zona */}
+            {delivery?.enabled && sortedZones.length > 0 && (
+              <div style={{ marginBottom:12 }}>
+                <div style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', letterSpacing:.5, textTransform:'uppercase', marginBottom:7 }}>
+                  🛵 ¿Cómo recibes tu pedido?
+                  {geoDistKm !== null && <span style={{ fontWeight:400, textTransform:'none', marginLeft:6, fontSize:10 }}>({geoDistKm.toFixed(1)} km desde el local)</span>}
+                </div>
+                <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
+                  <button onClick={() => setSelectedZone('retiro')}
+                    style={{ padding:'8px 14px', borderRadius:999, border:`2px solid ${selectedZone === 'retiro' ? '#16a34a' : 'var(--border)'}`, background: selectedZone === 'retiro' ? 'rgba(22,163,74,0.08)' : 'var(--bg2)', cursor:'pointer', transition:'all .15s' }}>
+                    <span style={{ fontSize:13, fontWeight:700, color: selectedZone === 'retiro' ? '#16a34a' : 'var(--text)' }}>🏠 Retiro · Gratis</span>
+                  </button>
+                  {sortedZones.map((z, i) => {
+                    const sel = selectedZone === i;
+                    return (
+                      <button key={i} onClick={() => setSelectedZone(i)}
+                        style={{ padding:'8px 14px', borderRadius:999, border:`2px solid ${sel ? 'var(--orange)' : 'var(--border)'}`, background: sel ? 'rgba(242,100,25,0.08)' : 'var(--bg2)', cursor:'pointer', transition:'all .15s' }}>
+                        <span style={{ fontSize:13, fontWeight:700, color: sel ? 'var(--orange)' : 'var(--text)' }}>
+                          Hasta {z.maxKm} km · {fmt(z.price)}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+                {selectedZone === null && (
+                  <div style={{ fontSize:11, color:'var(--text-muted)', marginTop:6 }}>Selecciona una opción para calcular el total</div>
+                )}
+              </div>
+            )}
+
             {/* Método de pago */}
             <div style={{ marginBottom:12 }}>
               <div style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', letterSpacing:.5, textTransform:'uppercase', marginBottom:7 }}>
@@ -343,38 +395,26 @@ export default function CartDrawer() {
               </div>
             </div>
 
-            {/* Ubicación */}
+            {/* Ubicación exacta — opcional, solo para el link WA */}
             <div style={{ marginBottom:12 }}>
               {geo.status === 'idle' && (
-                <button onClick={requestGeo} style={{ width:'100%', padding:'9px', borderRadius:'var(--radius-sm)', border:'1px dashed var(--border)', background:'transparent', color:'var(--text-muted)', fontSize:13, fontWeight:600, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
-                  📍 Incluir mi ubicación (opcional)
+                <button onClick={requestGeo} style={{ width:'100%', padding:'9px', borderRadius:'var(--radius-sm)', border:'1px dashed var(--border)', background:'transparent', color:'var(--text-muted)', fontSize:12, fontWeight:600, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
+                  📍 Incluir ubicación exacta en el pedido (opcional)
                 </button>
               )}
               {geo.status === 'loading' && (
-                <div style={{ textAlign:'center', fontSize:13, color:'var(--text-muted)', padding:'9px' }}>Obteniendo ubicación…</div>
+                <div style={{ textAlign:'center', fontSize:12, color:'var(--text-muted)', padding:'9px' }}>Obteniendo ubicación…</div>
               )}
               {geo.status === 'success' && (
                 <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', background:'rgba(37,211,102,0.08)', border:'1px solid rgba(37,211,102,0.25)', borderRadius:'var(--radius-sm)', padding:'8px 12px' }}>
-                  <span style={{ fontSize:13, color:'#1a8a3e', fontWeight:600 }}>📍 Ubicación incluida</span>
+                  <span style={{ fontSize:12, color:'#1a8a3e', fontWeight:600 }}>📍 Ubicación exacta incluida</span>
                   <button onClick={clearGeo} style={{ fontSize:12, color:'var(--text-muted)', background:'transparent', border:'none', cursor:'pointer', fontWeight:600 }}>Quitar</button>
                 </div>
               )}
-              {geo.status === 'denied' && (
-                <div style={{ fontSize:12, color:'#dc2626', padding:'8px 10px', background:'rgba(220,38,38,0.05)', borderRadius:8, lineHeight:1.5 }}>
-                  🔒 <strong>Ubicación bloqueada para este sitio.</strong>{' '}
-                  Toca el candado en la barra del navegador → <em>Permisos → Ubicación → Permitir</em>, y se activará automáticamente.
-                </div>
-              )}
-              {geo.status === 'unavailable' && (
-                <div style={{ fontSize:12, color:'var(--text-muted)', textAlign:'center', padding:'6px' }}>
-                  Ubicación no disponible en este dispositivo
-                </div>
-              )}
-              {(geo.status === 'timeout' || geo.status === 'error') && (
-                <div style={{ fontSize:12, color:'var(--text-muted)', textAlign:'center', padding:'6px', display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
-                  <span>No se pudo obtener la ubicación</span>
-                  <button onClick={requestGeo} style={{ fontSize:11, fontWeight:700, color:'var(--orange)', background:'transparent', border:'none', cursor:'pointer', textDecoration:'underline' }}>Reintentar</button>
-                </div>
+              {(geo.status === 'denied' || geo.status === 'unavailable' || geo.status === 'timeout' || geo.status === 'error') && (
+                <button onClick={requestGeo} style={{ width:'100%', padding:'9px', borderRadius:'var(--radius-sm)', border:'1px dashed var(--border)', background:'transparent', color:'var(--text-muted)', fontSize:12, fontWeight:600, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
+                  📍 Incluir ubicación exacta en el pedido (opcional)
+                </button>
               )}
             </div>
 
