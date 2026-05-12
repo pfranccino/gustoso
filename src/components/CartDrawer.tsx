@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useCart } from '@/contexts/CartContext';
 import { fmt } from '@/lib/menuData';
 import { useSettings } from '@/contexts/SettingsContext';
@@ -153,10 +153,13 @@ export default function CartDrawer() {
   })();
 
   /* ── auto-selección de zona cuando tenemos distancia ── */
-  if (distKm !== null && selectedZone === null) {
-    const idx = sortedZones.findIndex(z => distKm <= z.maxKm);
-    setSelectedZone(idx >= 0 ? idx : sortedZones.length); // length = fuera de rango
-  }
+  useEffect(() => {
+    if (distKm !== null && selectedZone === null) {
+      const idx = sortedZones.findIndex(z => distKm <= z.maxKm);
+      setSelectedZone(idx >= 0 ? idx : sortedZones.length);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [distKm]);
 
   /* ── delivery fee ────────────────────────── */
   const deliveryFee = (() => {
