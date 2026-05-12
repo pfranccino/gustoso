@@ -52,23 +52,27 @@ export default function SeedPage() {
     setStates(prev => ({ ...prev, [key]: { status, message } }));
   }
 
-  async function runSeed(seed: SeedConfig) {
+  async function runSeed(seed: SeedConfig, force = false) {
     setStatus(seed.key, 'loading');
     try {
-      const res  = await fetch(seed.endpoint, { method: 'POST' });
+      const res  = await fetch(seed.endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ force }),
+      });
       const data = await res.json();
-      if (!res.ok)       setStatus(seed.key, 'error',   data.error ?? 'Error desconocido');
-      else if (data.skipped) setStatus(seed.key, 'skipped', data.reason ?? 'Ya existe data');
-      else               setStatus(seed.key, 'success', `${data.seeded ?? data.count ?? '✓'} registros creados`);
+      if (!res.ok)            setStatus(seed.key, 'error',   data.error ?? 'Error desconocido');
+      else if (data.skipped)  setStatus(seed.key, 'skipped', data.reason ?? 'Ya existe data');
+      else                    setStatus(seed.key, 'success', `${data.count ?? data.seeded ?? '✓'} registros creados`);
     } catch {
       setStatus(seed.key, 'error', 'Error de conexión');
     }
   }
 
-  async function runAll() {
+  async function runAll(force = false) {
     setRunningAll(true);
     for (const seed of SEEDS) {
-      await runSeed(seed);
+      await runSeed(seed, force);
     }
     setRunningAll(false);
   }
@@ -126,24 +130,44 @@ export default function SeedPage() {
                 </div>
               )}
 
-              <button
-                onClick={() => runSeed(seed)}
-                disabled={anyLoading}
-                style={{ padding: '9px 22px', borderRadius: 999, border: 'none', background: anyLoading ? '#d1bfb8' : '#F26419', color: '#fff', fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 15, cursor: anyLoading ? 'not-allowed' : 'pointer', flexShrink: 0, opacity: isLoading ? 0.7 : 1 }}>
-                {isLoading ? 'Ejecutando…' : 'Ejecutar'}
-              </button>
+              <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+                <button
+                  onClick={() => runSeed(seed)}
+                  disabled={anyLoading}
+                  style={{ padding: '9px 18px', borderRadius: 999, border: 'none', background: anyLoading ? '#d1bfb8' : '#F26419', color: '#fff', fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 15, cursor: anyLoading ? 'not-allowed' : 'pointer', opacity: isLoading ? 0.7 : 1 }}>
+                  {isLoading ? 'Ejecutando…' : 'Ejecutar'}
+                </button>
+                {seed.key === 'menu' && (
+                  <button
+                    onClick={() => { if (confirm('¿Borrar todos los items del menú y reinsertarlos desde el seed? Los precios editados se perderán.')) runSeed(seed, true); }}
+                    disabled={anyLoading}
+                    title="Borra y reinsertas todos los items desde cero"
+                    style={{ padding: '9px 14px', borderRadius: 999, border: '2px solid #dc2626', background: 'transparent', color: anyLoading ? '#d1bfb8' : '#dc2626', fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 13, cursor: anyLoading ? 'not-allowed' : 'pointer' }}>
+                    ♻️ Force
+                  </button>
+                )}
+              </div>
             </div>
           );
         })}
       </div>
 
       {/* Ejecutar todos */}
-      <button
-        onClick={runAll}
-        disabled={anyLoading}
-        style={{ width: '100%', padding: '13px', borderRadius: 999, border: `2px solid ${anyLoading ? '#d1bfb8' : '#F26419'}`, background: 'transparent', color: anyLoading ? '#d1bfb8' : '#F26419', fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 18, cursor: anyLoading ? 'not-allowed' : 'pointer' }}>
-        {runningAll ? 'Ejecutando todos…' : '🌱 Ejecutar todos los seeds'}
-      </button>
+      <div style={{ display: 'flex', gap: 10 }}>
+        <button
+          onClick={() => runAll()}
+          disabled={anyLoading}
+          style={{ flex: 1, padding: '13px', borderRadius: 999, border: `2px solid ${anyLoading ? '#d1bfb8' : '#F26419'}`, background: 'transparent', color: anyLoading ? '#d1bfb8' : '#F26419', fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 18, cursor: anyLoading ? 'not-allowed' : 'pointer' }}>
+          {runningAll ? 'Ejecutando todos…' : '🌱 Ejecutar todos los seeds'}
+        </button>
+        <button
+          onClick={() => { if (confirm('¿Borrar el menú completo y re-seedar todo desde cero?')) runAll(true); }}
+          disabled={anyLoading}
+          title="Borra y reinsertas el menú desde cero"
+          style={{ padding: '13px 20px', borderRadius: 999, border: `2px solid ${anyLoading ? '#d1bfb8' : '#dc2626'}`, background: 'transparent', color: anyLoading ? '#d1bfb8' : '#dc2626', fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 15, cursor: anyLoading ? 'not-allowed' : 'pointer' }}>
+          ♻️ Force todo
+        </button>
+      </div>
     </div>
   );
 }

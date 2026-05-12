@@ -2,14 +2,23 @@ import { getAdminDb } from '@/lib/firebase/admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { MENU_DATA, BURRITO_DATA } from '@/lib/menuData';
 
-/** Convierte "Tomate, Chucrut, Mayonesa" → ['Tomate', 'Chucrut', 'Mayonesa'] */
-const parseIngredients = (desc?: string): string[] =>
-  desc ? desc.split(',').map(s => s.trim()).filter(Boolean) : [];
+/** Convierte "Tomate, Chucrut, Mayonesa" → [{name:'Tomate',enabled:true}, ...] */
+const parseIngredients = (desc?: string) =>
+  desc ? desc.split(',').map(s => ({ name: s.trim(), enabled: true })).filter(i => i.name) : [];
 
-export async function seedMenuIfEmpty(): Promise<{ seeded: boolean; count: number }> {
+export async function seedMenuIfEmpty(force = false): Promise<{ seeded: boolean; count: number }> {
   const db = getAdminDb();
-  const existing = await db.collection('menu_items').limit(1).get();
-  if (!existing.empty) return { seeded: false, count: 0 };
+
+  if (!force) {
+    const existing = await db.collection('menu_items').limit(1).get();
+    if (!existing.empty) return { seeded: false, count: 0 };
+  } else {
+    // Borrar todos los docs existentes primero
+    const snap = await db.collection('menu_items').get();
+    const delBatch = db.batch();
+    snap.docs.forEach(doc => delBatch.delete(doc.ref));
+    if (!snap.empty) await delBatch.commit();
+  }
 
   const batch = db.batch();
   let count = 0;
