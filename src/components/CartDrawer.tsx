@@ -398,7 +398,7 @@ export default function CartDrawer() {
             </div>
 
             {/* Delivery */}
-            {delivery?.enabled && sortedZones.length > 0 && (
+            {delivery?.enabled && (delivery.zones?.length ?? 0) > 0 && (
               <div style={{ marginBottom:12, background:'var(--bg2)', borderRadius:'var(--radius-sm)', border:'1px solid var(--border)', padding:'12px 14px' }}>
                 <div style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', letterSpacing:.5, textTransform:'uppercase', marginBottom:10 }}>🛵 Delivery</div>
 
