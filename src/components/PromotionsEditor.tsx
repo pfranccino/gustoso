@@ -1,16 +1,8 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { Promotion } from '@/lib/firestore/promotions';
+import { Promotion, PromoChoice } from '@/lib/firestore/promotions';
 import { MenuItem } from '@/lib/firestore/menuItems';
-
-const INPUT: React.CSSProperties = {
-  padding: '8px 11px', borderRadius: 8,
-  border: '1.5px solid rgba(242,100,25,0.25)',
-  background: '#FFF9F5', color: '#1A0800',
-  fontSize: 13, fontFamily: "'Barlow',sans-serif",
-  outline: 'none', width: '100%', boxSizing: 'border-box',
-};
 
 const BADGES = ['', 'PROMO', 'OFERTA', 'NUEVO', 'COMBO', 'ESPECIAL'];
 
@@ -27,14 +19,15 @@ type FormState = {
   description: string;
   price: string;
   badge: string;
-  selectedItems: string[];   // names of selected menu items
-  customItems: string;       // extra items typed manually (one per line)
+  selectedItems: string[];
+  customItems: string;
+  choices: PromoChoice[];
   visible: boolean;
 };
 
 const EMPTY_FORM: FormState = {
   name: '', description: '', price: '', badge: 'PROMO',
-  selectedItems: [], customItems: '', visible: true,
+  selectedItems: [], customItems: '', choices: [], visible: true,
 };
 
 function toForm(p: Promotion, menuItems: MenuItem[]): FormState {
@@ -48,6 +41,7 @@ function toForm(p: Promotion, menuItems: MenuItem[]): FormState {
     badge:         p.badge,
     selectedItems: selected,
     customItems:   custom,
+    choices:       p.choices ?? [],
     visible:       p.visible,
   };
 }
@@ -56,6 +50,82 @@ function buildItemsList(f: FormState): string[] {
   const custom = f.customItems.split('\n').map(s => s.trim()).filter(Boolean);
   return [...f.selectedItems, ...custom];
 }
+
+/* ── ChoicesEditor ──────────────────────────────────────── */
+
+function ChoicesEditor({ choices, onChange }: { choices: PromoChoice[]; onChange: (v: PromoChoice[]) => void }) {
+  const [newLabel,   setNewLabel]   = useState('');
+  const [newOptions, setNewOptions] = useState('');
+  const [newRequired, setNewRequired] = useState(true);
+
+  function addChoice() {
+    const label   = newLabel.trim();
+    const options = newOptions.split(',').map(s => s.trim()).filter(Boolean);
+    if (!label || options.length === 0) return;
+    onChange([...choices, { label, options, required: newRequired }]);
+    setNewLabel(''); setNewOptions(''); setNewRequired(true);
+  }
+
+  function remove(idx: number) {
+    onChange(choices.filter((_, i) => i !== idx));
+  }
+
+  return (
+    <div>
+      <label style={{ fontSize:12, fontWeight:700, color:'var(--text-muted)', letterSpacing:.5, textTransform:'uppercase', display:'block', marginBottom:8 }}>
+        🔀 Opciones del cliente <span style={{ fontWeight:400, textTransform:'none', fontSize:11 }}>(ej: tipo de pan, proteína)</span>
+      </label>
+
+      {/* Existing choices */}
+      {choices.map((c, i) => (
+        <div key={i} style={{ background:'rgba(242,100,25,0.05)', border:'1.5px solid rgba(242,100,25,0.2)', borderRadius:8, padding:'10px 12px', marginBottom:8 }}>
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:4 }}>
+            <span style={{ fontWeight:700, fontSize:13, color:'var(--text)' }}>
+              {c.label}
+              {c.required && <span style={{ fontSize:10, color:'#dc2626', marginLeft:4, fontWeight:700 }}>REQUERIDO</span>}
+            </span>
+            <button onClick={() => remove(i)} style={{ background:'transparent', border:'none', cursor:'pointer', color:'#dc2626', fontSize:16, fontWeight:700, lineHeight:1 }}>×</button>
+          </div>
+          <div style={{ display:'flex', flexWrap:'wrap', gap:5 }}>
+            {c.options.map(opt => (
+              <span key={opt} style={{ fontSize:11, background:'rgba(242,100,25,0.1)', color:'#A0541A', padding:'2px 8px', borderRadius:4, fontWeight:600 }}>{opt}</span>
+            ))}
+          </div>
+        </div>
+      ))}
+
+      {/* Add new choice */}
+      <div style={{ border:'1.5px dashed rgba(242,100,25,0.3)', borderRadius:8, padding:'12px', display:'flex', flexDirection:'column', gap:8 }}>
+        <div style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', letterSpacing:.5 }}>NUEVA OPCIÓN</div>
+        <input value={newLabel} onChange={e => setNewLabel(e.target.value)}
+          placeholder='Etiqueta — ej: "Tipo de Churrasco"'
+          style={{ ...INPUT }} />
+        <input value={newOptions} onChange={e => setNewOptions(e.target.value)}
+          placeholder="Opciones separadas por coma — ej: Alemano, Italiano, Completo"
+          style={{ ...INPUT }} />
+        <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+          <label style={{ display:'flex', alignItems:'center', gap:6, cursor:'pointer', fontSize:13, fontWeight:600, color:'var(--text)' }}>
+            <input type="checkbox" checked={newRequired} onChange={e => setNewRequired(e.target.checked)}
+              style={{ accentColor:'#F26419', width:14, height:14 }} />
+            Requerido
+          </label>
+          <button onClick={addChoice}
+            style={{ padding:'6px 16px', borderRadius:999, border:'none', background:'#F26419', color:'#fff', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:13, cursor:'pointer' }}>
+            + Agregar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const INPUT: React.CSSProperties = {
+  padding: '8px 11px', borderRadius: 8,
+  border: '1.5px solid rgba(242,100,25,0.25)',
+  background: '#FFF9F5', color: '#1A0800',
+  fontSize: 13, fontFamily: "'Barlow',sans-serif",
+  outline: 'none', width: '100%', boxSizing: 'border-box' as const,
+};
 
 /* ── ItemPicker ─────────────────────────────────────────── */
 
@@ -215,6 +285,12 @@ function PromoModal({
               style={{ ...INPUT, resize:'vertical', lineHeight:1.5 }} />
           </div>
 
+          {/* Choices editor */}
+          <ChoicesEditor
+            choices={form.choices}
+            onChange={choices => setForm(f => ({ ...f, choices }))}
+          />
+
           {/* Visible toggle */}
           <div style={{ display:'flex', alignItems:'center', gap:10 }}>
             <button onClick={() => setForm(f => ({ ...f, visible: !f.visible }))}
@@ -265,6 +341,7 @@ export default function PromotionsEditor({ initial, menuItems }: { initial: Prom
       price:       parseInt(f.price, 10) || 0,
       badge:       f.badge,
       items:       buildItemsList(f),
+      choices:     f.choices,
       visible:     f.visible,
       imageUrl:    null as null,
       sortOrder:   0,

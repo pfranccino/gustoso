@@ -13,6 +13,7 @@ export type CartItem = {
   extras?: Extra[];
   removedIngredients?: string[];
   aderezos?: Array<{ name: string; price: number }>;
+  choices?: Array<{ label: string; selected: string }>;
   qty: number;
   alwaysNew?: boolean;
 };
@@ -47,7 +48,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         (p.note  || '') === (item.note  || '') &&
         JSON.stringify(p.extras ?? []) === JSON.stringify(item.extras ?? []) &&
         JSON.stringify(p.removedIngredients ?? []) === JSON.stringify(item.removedIngredients ?? []) &&
-        JSON.stringify(p.aderezos ?? []) === JSON.stringify(item.aderezos ?? [])
+        JSON.stringify(p.aderezos ?? []) === JSON.stringify(item.aderezos ?? []) &&
+        JSON.stringify(p.choices ?? []) === JSON.stringify(item.choices ?? [])
       );
       if (idx >= 0) {
         const updated = [...prev];

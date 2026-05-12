@@ -18,8 +18,12 @@ export default function PromoCard({ promo, aderezos = [] }: { promo: Promotion; 
   const { addItem } = useCart();
   const [modal, setModal] = useState(false);
   const [selectedAderezos, setSelectedAderezos] = useState<Aderezo[]>([]);
+  // choices: { [label]: selected option }
+  const [selectedChoices, setSelectedChoices] = useState<Record<string, string>>({});
+  const [choiceError, setChoiceError] = useState('');
 
   const availableAderezos = aderezos.filter(a => a.available);
+  const hasChoices = promo.choices.length > 0;
   const badge = promo.badge ? BADGE_COLOR[promo.badge] : null;
 
   function toggleAderezo(a: Aderezo) {
@@ -28,9 +32,16 @@ export default function PromoCard({ promo, aderezos = [] }: { promo: Promotion; 
     );
   }
 
+  function selectChoice(label: string, option: string) {
+    setSelectedChoices(prev => ({ ...prev, [label]: option }));
+    setChoiceError('');
+  }
+
   function handleAdd() {
-    if (availableAderezos.length > 0) {
+    if (hasChoices || availableAderezos.length > 0) {
       setSelectedAderezos([]);
+      setSelectedChoices({});
+      setChoiceError('');
       setModal(true);
     } else {
       addItem({ name: promo.name, desc: promo.description, price: promo.price });
@@ -38,11 +49,21 @@ export default function PromoCard({ promo, aderezos = [] }: { promo: Promotion; 
   }
 
   function confirm() {
+    // Validate required choices
+    const missing = promo.choices.filter(c => c.required && !selectedChoices[c.label]);
+    if (missing.length > 0) {
+      setChoiceError(`Elige: ${missing.map(c => c.label).join(', ')}`);
+      return;
+    }
     const aderezosPrice = selectedAderezos.reduce((s, a) => s + a.price, 0);
     const aderezosArr = selectedAderezos.length > 0
       ? selectedAderezos.map(a => ({ name: a.name, price: a.price }))
       : undefined;
-    addItem({ name: promo.name, desc: promo.description, price: promo.price + aderezosPrice, aderezos: aderezosArr, alwaysNew: selectedAderezos.length > 0 });
+    const choicesArr = Object.keys(selectedChoices).length > 0
+      ? Object.entries(selectedChoices).map(([label, selected]) => ({ label, selected }))
+      : undefined;
+    const hasCustom = !!aderezosArr || !!choicesArr;
+    addItem({ name: promo.name, desc: promo.description, price: promo.price + aderezosPrice, aderezos: aderezosArr, choices: choicesArr, alwaysNew: hasCustom });
     setModal(false);
   }
 
@@ -112,36 +133,68 @@ export default function PromoCard({ promo, aderezos = [] }: { promo: Promotion; 
         </div>
       </div>
 
-      {/* Mini-modal aderezos */}
+      {/* Modal opciones + aderezos */}
       {modal && (
         <div style={{ position:'fixed', inset:0, zIndex:500, display:'flex', alignItems:'flex-end', justifyContent:'center' }}
              onClick={e => { if (e.target === e.currentTarget) setModal(false); }}>
           <div style={{ position:'absolute', inset:0, background:'rgba(0,0,0,0.5)', backdropFilter:'blur(4px)' }} onClick={() => setModal(false)}/>
-          <div style={{ position:'relative', zIndex:1, width:'100%', maxWidth:'var(--max)', background:'var(--card)', borderRadius:'var(--radius) var(--radius) 0 0', padding:'24px 20px 36px', animation:'slideUp .3s ease', boxShadow:'0 -8px 40px rgba(0,0,0,0.3)' }}>
-            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16 }}>
+          <div style={{ position:'relative', zIndex:1, width:'100%', maxWidth:'var(--max)', background:'var(--card)', borderRadius:'var(--radius) var(--radius) 0 0', padding:'24px 20px 36px', animation:'slideUp .3s ease', boxShadow:'0 -8px 40px rgba(0,0,0,0.3)', maxHeight:'90dvh', overflowY:'auto' }}>
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:18 }}>
               <div>
                 <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:20, color:'var(--text)' }}>{promo.name}</div>
-                <div style={{ fontSize:12, color:'var(--text-muted)', marginTop:2 }}>Elige tus aderezos (opcional)</div>
+                <div style={{ fontSize:12, color:'var(--text-muted)', marginTop:2 }}>{fmt(promo.price)}</div>
               </div>
               <button onClick={() => setModal(false)} style={{ width:32, height:32, borderRadius:'50%', border:'none', background:'var(--bg2)', cursor:'pointer', fontSize:18, color:'var(--text-muted)', display:'flex', alignItems:'center', justifyContent:'center' }}>×</button>
             </div>
 
-            <div style={{ display:'flex', flexWrap:'wrap', gap:6, marginBottom:20 }}>
-              {availableAderezos.map(a => {
-                const sel = selectedAderezos.some(x => x.id === a.id);
-                return (
-                  <button key={a.id} onClick={() => toggleAderezo(a)}
-                    style={{ padding:'8px 14px', borderRadius:999, border:`1.5px solid ${sel ? 'var(--orange)' : 'var(--border)'}`, background: sel ? 'rgba(242,100,25,0.09)' : 'var(--bg2)', cursor:'pointer', transition:'all .15s', display:'flex', alignItems:'center', gap:5 }}>
-                    <span style={{ fontSize:14, fontWeight:700, color: sel ? 'var(--orange)' : 'var(--text)' }}>{a.name}</span>
-                    {a.price > 0 && <span style={{ fontSize:12, color: sel ? 'var(--orange)' : 'var(--text-muted)' }}>+{fmt(a.price)}</span>}
-                  </button>
-                );
-              })}
-            </div>
+            {/* Choices */}
+            {promo.choices.map(choice => (
+              <div key={choice.label} style={{ marginBottom:18 }}>
+                <div style={{ fontSize:12, fontWeight:700, color:'var(--text-muted)', letterSpacing:1, textTransform:'uppercase', marginBottom:6 }}>
+                  {choice.label}{choice.required && <span style={{ color:'#dc2626', marginLeft:4 }}>*</span>}
+                </div>
+                <div style={{ display:'flex', flexWrap:'wrap', gap:7 }}>
+                  {choice.options.map(opt => {
+                    const sel = selectedChoices[choice.label] === opt;
+                    return (
+                      <button key={opt} onClick={() => selectChoice(choice.label, opt)}
+                        style={{ padding:'8px 16px', borderRadius:999, border:`2px solid ${sel ? 'var(--orange)' : 'var(--border)'}`, background: sel ? 'rgba(242,100,25,0.1)' : 'var(--bg2)', cursor:'pointer', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:15, color: sel ? 'var(--orange)' : 'var(--text)', transition:'all .15s' }}>
+                        {opt}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+
+            {/* Aderezos */}
+            {availableAderezos.length > 0 && (
+              <div style={{ marginBottom:18 }}>
+                <div style={{ fontSize:12, fontWeight:700, color:'var(--text-muted)', letterSpacing:1, textTransform:'uppercase', marginBottom:6 }}>🥫 Aderezos</div>
+                <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
+                  {availableAderezos.map(a => {
+                    const sel = selectedAderezos.some(x => x.id === a.id);
+                    return (
+                      <button key={a.id} onClick={() => toggleAderezo(a)}
+                        style={{ padding:'8px 14px', borderRadius:999, border:`1.5px solid ${sel ? 'var(--orange)' : 'var(--border)'}`, background: sel ? 'rgba(242,100,25,0.09)' : 'var(--bg2)', cursor:'pointer', transition:'all .15s', display:'flex', alignItems:'center', gap:5 }}>
+                        <span style={{ fontSize:14, fontWeight:700, color: sel ? 'var(--orange)' : 'var(--text)' }}>{a.name}</span>
+                        {a.price > 0 && <span style={{ fontSize:12, color: sel ? 'var(--orange)' : 'var(--text-muted)' }}>+{fmt(a.price)}</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {choiceError && (
+              <div style={{ fontSize:13, color:'#dc2626', fontWeight:700, marginBottom:12, padding:'8px 12px', background:'rgba(220,38,38,0.06)', borderRadius:8 }}>
+                ⚠️ {choiceError}
+              </div>
+            )}
 
             <button onClick={confirm}
               style={{ width:'100%', padding:'14px', borderRadius:999, border:'none', background:'var(--orange)', color:'#fff', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:18, cursor:'pointer' }}>
-              Agregar al carrito {selectedAderezos.length > 0 ? `· ${selectedAderezos.length} aderezo${selectedAderezos.length > 1 ? 's' : ''}` : ''}
+              Agregar al carrito
             </button>
           </div>
         </div>

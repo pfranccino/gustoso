@@ -1,6 +1,12 @@
 import { getAdminDb } from '@/lib/firebase/admin';
 import { FieldValue } from 'firebase-admin/firestore';
 
+export type PromoChoice = {
+  label:    string;    // "Tipo de Churrasco"
+  options:  string[];  // ["Alemano", "Italiano", "Completo", ...]
+  required: boolean;
+};
+
 export type Promotion = {
   id: string;
   name: string;
@@ -11,6 +17,7 @@ export type Promotion = {
   visible: boolean;
   sortOrder: number;
   items: string[];      // list of what's included: ["Completo italiano", "Bebida 500ml"]
+  choices: PromoChoice[];
 };
 
 export type NewPromotion = Omit<Promotion, 'id'>;
@@ -27,6 +34,13 @@ function parsePromotion(id: string, d: FirebaseFirestore.DocumentData): Promotio
     visible:     d.visible !== false,
     sortOrder:   Number(d.sortOrder   ?? 0),
     items:       Array.isArray(d.items) ? d.items.map(String) : [],
+    choices:     Array.isArray(d.choices)
+      ? d.choices.map((c: Record<string, unknown>) => ({
+          label:    String(c.label    ?? ''),
+          options:  Array.isArray(c.options) ? c.options.map(String) : [],
+          required: c.required !== false,
+        }))
+      : [],
   };
 }
 

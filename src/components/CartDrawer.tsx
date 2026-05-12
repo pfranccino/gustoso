@@ -253,6 +253,7 @@ export default function CartDrawer() {
       // item.price ya incluye precio de aderezos
       lines.push(`${i + 1}. ${item.qty}x ${item.name}${item.size ? ` (${item.size.toUpperCase()})` : ''} — ${fmt((item.price + extrasTotal) * item.qty)}`);
       if (item.desc)                         lines.push(`   📋 ${item.desc}`);
+      if (item.choices?.length)              item.choices.forEach(c => lines.push(`   🔀 ${c.label}: ${c.selected}`));
       if (item.removedIngredients?.length)   lines.push(`   ❌ Sin: ${item.removedIngredients.join(', ')}`);
       if (item.extras?.length)               lines.push(`   ➕ ${item.extras.map(e => e.price > 0 ? `${e.name} (+${fmt(e.price)})` : e.name).join(', ')}`);
       if (item.aderezos?.length)             lines.push(`   🥫 ${item.aderezos.map(a => a.price > 0 ? `${a.name} (+${fmt(a.price)})` : a.name).join(', ')}`);
@@ -318,6 +319,7 @@ export default function CartDrawer() {
                         {item.size && <span style={{ fontSize:12, color:'var(--orange)', fontWeight:900, marginLeft:6, background:'rgba(242,100,25,0.1)', padding:'1px 5px', borderRadius:4 }}>{item.size.toUpperCase()}</span>}
                       </div>
                       {item.desc && <div style={{ fontSize:12, color:'var(--text-muted)', marginTop:2, lineHeight:1.4 }}>{item.desc}</div>}
+                      {item.choices?.map(c => <div key={c.label} style={{ fontSize:12, color:'var(--text)', marginTop:2, lineHeight:1.5, fontWeight:600 }}>🔀 {c.label}: <span style={{ color:'var(--orange)' }}>{c.selected}</span></div>)}
                       {item.removedIngredients?.length ? <div style={{ fontSize:12, color:'#ef4444', marginTop:2, lineHeight:1.5 }}>❌ Sin: {item.removedIngredients.join(', ')}</div> : null}
                       {item.extras?.length ? <div style={{ fontSize:12, color:'var(--orange)', marginTop:2, lineHeight:1.5 }}>➕ {item.extras.map(e => e.name).join(', ')}</div> : null}
                       {item.aderezos?.length ? <div style={{ fontSize:12, color:'var(--text-muted)', marginTop:2, lineHeight:1.5 }}>🥫 {item.aderezos.map(a => a.price > 0 ? `${a.name} (+${fmt(a.price)})` : a.name).join(', ')}</div> : null}
