@@ -2,9 +2,10 @@ import { getAdminDb } from '@/lib/firebase/admin';
 import { FieldValue } from 'firebase-admin/firestore';
 
 export type PromoChoice = {
-  label:    string;    // "Tipo de Churrasco"
-  options:  string[];  // ["Alemano", "Italiano", "Completo", ...]
-  required: boolean;
+  label:     string;
+  category?: string | null;  // si está, las opciones vienen del menú en tiempo real
+  options:   string[];       // opciones manuales (usadas cuando no hay category)
+  required:  boolean;
 };
 
 export type Promotion = {
@@ -37,6 +38,7 @@ function parsePromotion(id: string, d: FirebaseFirestore.DocumentData): Promotio
     choices:     Array.isArray(d.choices)
       ? d.choices.map((c: Record<string, unknown>) => ({
           label:    String(c.label    ?? ''),
+          category: typeof c.category === 'string' ? c.category : null,
           options:  Array.isArray(c.options) ? c.options.map(String) : [],
           required: c.required !== false,
         }))

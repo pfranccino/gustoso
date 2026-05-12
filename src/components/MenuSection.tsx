@@ -80,7 +80,7 @@ export default function MenuSection({ items, burritoConfig, promotions, aderezos
     if (activeTab === 'promos') {
       return (
         <div style={listStyle}>
-          {visiblePromos.map(p => <PromoCard key={p.id} promo={p} aderezos={aderezos}/>)}
+          {visiblePromos.map(p => <PromoCard key={p.id} promo={p} aderezos={aderezos} menuItems={items}/>)}
         </div>
       );
     }

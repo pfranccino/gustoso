@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 import { useCart } from '@/contexts/CartContext';
-import { Promotion } from '@/lib/firestore/promotions';
+import { Promotion, PromoChoice } from '@/lib/firestore/promotions';
 import { Aderezo } from '@/lib/firestore/aderezosTypes';
+import { MenuItem } from '@/lib/firestore/menuItems';
 import { fmt } from '@/lib/menuData';
 
 const BADGE_COLOR: Record<string, { bg: string; color: string }> = {
@@ -14,7 +15,17 @@ const BADGE_COLOR: Record<string, { bg: string; color: string }> = {
   ESPECIAL: { bg: '#d97706', color: '#fff' },
 };
 
-export default function PromoCard({ promo, aderezos = [] }: { promo: Promotion; aderezos?: Aderezo[] }) {
+/** Resuelve las opciones de una choice: desde el menú si tiene category, sino manual */
+function resolveOptions(choice: PromoChoice, menuItems: MenuItem[]): string[] {
+  if (choice.category) {
+    return menuItems
+      .filter(m => m.category === choice.category && m.visible)
+      .map(m => m.volume ? `${m.name} ${m.volume}` : m.name);
+  }
+  return choice.options;
+}
+
+export default function PromoCard({ promo, aderezos = [], menuItems = [] }: { promo: Promotion; aderezos?: Aderezo[]; menuItems?: MenuItem[] }) {
   const { addItem } = useCart();
   const [modal, setModal] = useState(false);
   const [selectedAderezos, setSelectedAderezos] = useState<Aderezo[]>([]);
@@ -148,24 +159,28 @@ export default function PromoCard({ promo, aderezos = [] }: { promo: Promotion; 
             </div>
 
             {/* Choices */}
-            {promo.choices.map(choice => (
-              <div key={choice.label} style={{ marginBottom:18 }}>
-                <div style={{ fontSize:12, fontWeight:700, color:'var(--text-muted)', letterSpacing:1, textTransform:'uppercase', marginBottom:6 }}>
-                  {choice.label}{choice.required && <span style={{ color:'#dc2626', marginLeft:4 }}>*</span>}
+            {promo.choices.map(choice => {
+              const opts = resolveOptions(choice, menuItems);
+              return (
+                <div key={choice.label} style={{ marginBottom:18 }}>
+                  <div style={{ fontSize:12, fontWeight:700, color:'var(--text-muted)', letterSpacing:1, textTransform:'uppercase', marginBottom:6 }}>
+                    {choice.label}{choice.required && <span style={{ color:'#dc2626', marginLeft:4 }}>*</span>}
+                  </div>
+                  <div style={{ display:'flex', flexWrap:'wrap', gap:7 }}>
+                    {opts.map(opt => {
+                      const sel = selectedChoices[choice.label] === opt;
+                      return (
+                        <button key={opt} onClick={() => selectChoice(choice.label, opt)}
+                          style={{ padding:'8px 16px', borderRadius:999, border:`2px solid ${sel ? 'var(--orange)' : 'var(--border)'}`, background: sel ? 'rgba(242,100,25,0.1)' : 'var(--bg2)', cursor:'pointer', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:15, color: sel ? 'var(--orange)' : 'var(--text)', transition:'all .15s' }}>
+                          {opt}
+                        </button>
+                      );
+                    })}
+                    {opts.length === 0 && <span style={{ fontSize:12, color:'var(--text-muted)', fontStyle:'italic' }}>Sin opciones disponibles</span>}
+                  </div>
                 </div>
-                <div style={{ display:'flex', flexWrap:'wrap', gap:7 }}>
-                  {choice.options.map(opt => {
-                    const sel = selectedChoices[choice.label] === opt;
-                    return (
-                      <button key={opt} onClick={() => selectChoice(choice.label, opt)}
-                        style={{ padding:'8px 16px', borderRadius:999, border:`2px solid ${sel ? 'var(--orange)' : 'var(--border)'}`, background: sel ? 'rgba(242,100,25,0.1)' : 'var(--bg2)', cursor:'pointer', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:15, color: sel ? 'var(--orange)' : 'var(--text)', transition:'all .15s' }}>
-                        {opt}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
+              );
+            })}
 
             {/* Aderezos */}
             {availableAderezos.length > 0 && (

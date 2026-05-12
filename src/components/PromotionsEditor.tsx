@@ -12,7 +12,10 @@ const CATEGORY_LABEL: Record<string, string> = {
   churrasco: '🥩 Churrasco',
   mechada:   '🥖 Mechada',
   papas:     '🍟 Papas & Más',
+  bebidas:   '🥤 Bebidas',
 };
+
+const CHOICE_CATEGORIES = Object.entries(CATEGORY_LABEL).map(([id, label]) => ({ id, label }));
 
 type FormState = {
   name: string;
@@ -53,17 +56,29 @@ function buildItemsList(f: FormState): string[] {
 
 /* ── ChoicesEditor ──────────────────────────────────────── */
 
-function ChoicesEditor({ choices, onChange }: { choices: PromoChoice[]; onChange: (v: PromoChoice[]) => void }) {
-  const [newLabel,   setNewLabel]   = useState('');
-  const [newOptions, setNewOptions] = useState('');
+function ChoicesEditor({ choices, onChange, menuItems }: { choices: PromoChoice[]; onChange: (v: PromoChoice[]) => void; menuItems: MenuItem[] }) {
+  const [newLabel,    setNewLabel]    = useState('');
+  const [newCategory, setNewCategory] = useState('');   // '' = manual
+  const [newOptions,  setNewOptions]  = useState('');   // para modo manual
   const [newRequired, setNewRequired] = useState(true);
 
+  // Preview de opciones según categoría seleccionada
+  const categoryPreview = newCategory
+    ? menuItems.filter(m => m.category === newCategory && m.visible).map(m => m.volume ? `${m.name} ${m.volume}` : m.name)
+    : [];
+
   function addChoice() {
-    const label   = newLabel.trim();
-    const options = newOptions.split(',').map(s => s.trim()).filter(Boolean);
-    if (!label || options.length === 0) return;
-    onChange([...choices, { label, options, required: newRequired }]);
-    setNewLabel(''); setNewOptions(''); setNewRequired(true);
+    const label = newLabel.trim() || (newCategory ? (CATEGORY_LABEL[newCategory] ?? newCategory) : '');
+    if (!label) return;
+    if (newCategory) {
+      // Opción basada en categoría — opciones se resuelven en tiempo real
+      onChange([...choices, { label, category: newCategory, options: [], required: newRequired }]);
+    } else {
+      const options = newOptions.split(',').map(s => s.trim()).filter(Boolean);
+      if (options.length === 0) return;
+      onChange([...choices, { label, category: null, options, required: newRequired }]);
+    }
+    setNewLabel(''); setNewCategory(''); setNewOptions(''); setNewRequired(true);
   }
 
   function remove(idx: number) {
@@ -73,36 +88,79 @@ function ChoicesEditor({ choices, onChange }: { choices: PromoChoice[]; onChange
   return (
     <div>
       <label style={{ fontSize:12, fontWeight:700, color:'var(--text-muted)', letterSpacing:.5, textTransform:'uppercase', display:'block', marginBottom:8 }}>
-        🔀 Opciones del cliente <span style={{ fontWeight:400, textTransform:'none', fontSize:11 }}>(ej: tipo de pan, proteína)</span>
+        🔀 Opciones del cliente <span style={{ fontWeight:400, textTransform:'none', fontSize:11 }}>(ej: tipo de sándwich, bebida)</span>
       </label>
 
-      {/* Existing choices */}
-      {choices.map((c, i) => (
-        <div key={i} style={{ background:'rgba(242,100,25,0.05)', border:'1.5px solid rgba(242,100,25,0.2)', borderRadius:8, padding:'10px 12px', marginBottom:8 }}>
-          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:4 }}>
-            <span style={{ fontWeight:700, fontSize:13, color:'var(--text)' }}>
-              {c.label}
-              {c.required && <span style={{ fontSize:10, color:'#dc2626', marginLeft:4, fontWeight:700 }}>REQUERIDO</span>}
-            </span>
-            <button onClick={() => remove(i)} style={{ background:'transparent', border:'none', cursor:'pointer', color:'#dc2626', fontSize:16, fontWeight:700, lineHeight:1 }}>×</button>
+      {/* Choices existentes */}
+      {choices.map((c, i) => {
+        const preview = c.category
+          ? menuItems.filter(m => m.category === c.category && m.visible).map(m => m.volume ? `${m.name} ${m.volume}` : m.name)
+          : c.options;
+        return (
+          <div key={i} style={{ background:'rgba(242,100,25,0.05)', border:'1.5px solid rgba(242,100,25,0.2)', borderRadius:8, padding:'10px 12px', marginBottom:8 }}>
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:6 }}>
+              <div>
+                <span style={{ fontWeight:700, fontSize:13, color:'var(--text)' }}>{c.label}</span>
+                {c.category && <span style={{ fontSize:10, color:'#0891b2', marginLeft:6, fontWeight:700, background:'rgba(8,145,178,0.1)', padding:'1px 6px', borderRadius:4 }}>📋 {CATEGORY_LABEL[c.category] ?? c.category}</span>}
+                {c.required && <span style={{ fontSize:10, color:'#dc2626', marginLeft:4, fontWeight:700 }}>REQUERIDO</span>}
+              </div>
+              <button onClick={() => remove(i)} style={{ background:'transparent', border:'none', cursor:'pointer', color:'#dc2626', fontSize:16, fontWeight:700, lineHeight:1 }}>×</button>
+            </div>
+            <div style={{ display:'flex', flexWrap:'wrap', gap:5 }}>
+              {preview.map(opt => (
+                <span key={opt} style={{ fontSize:11, background:'rgba(242,100,25,0.1)', color:'#A0541A', padding:'2px 8px', borderRadius:4, fontWeight:600 }}>{opt}</span>
+              ))}
+              {preview.length === 0 && <span style={{ fontSize:11, color:'#999', fontStyle:'italic' }}>Sin items visibles en esta categoría</span>}
+            </div>
           </div>
-          <div style={{ display:'flex', flexWrap:'wrap', gap:5 }}>
-            {c.options.map(opt => (
-              <span key={opt} style={{ fontSize:11, background:'rgba(242,100,25,0.1)', color:'#A0541A', padding:'2px 8px', borderRadius:4, fontWeight:600 }}>{opt}</span>
+        );
+      })}
+
+      {/* Agregar nueva opción */}
+      <div style={{ border:'1.5px dashed rgba(242,100,25,0.3)', borderRadius:8, padding:'12px', display:'flex', flexDirection:'column', gap:10 }}>
+        <div style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', letterSpacing:.5 }}>NUEVA OPCIÓN</div>
+
+        {/* Fuente: Categoría del menú o manual */}
+        <div>
+          <div style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', marginBottom:6 }}>Fuente de opciones</div>
+          <div style={{ display:'flex', flexWrap:'wrap', gap:6, marginBottom: newCategory ? 8 : 0 }}>
+            <button onClick={() => setNewCategory('')}
+              style={{ padding:'5px 12px', borderRadius:999, border:`2px solid ${!newCategory ? '#F26419' : 'rgba(242,100,25,0.25)'}`, background: !newCategory ? '#F26419' : 'transparent', color: !newCategory ? '#fff' : '#A0541A', fontSize:12, fontWeight:700, cursor:'pointer' }}>
+              ✏️ Manual
+            </button>
+            {CHOICE_CATEGORIES.map(cat => (
+              <button key={cat.id} onClick={() => { setNewCategory(cat.id); setNewLabel(l => l || cat.label.replace(/^[^ ]+ /, '')); }}
+                style={{ padding:'5px 12px', borderRadius:999, border:`2px solid ${newCategory === cat.id ? '#0891b2' : 'rgba(8,145,178,0.2)'}`, background: newCategory === cat.id ? '#0891b2' : 'transparent', color: newCategory === cat.id ? '#fff' : '#0891b2', fontSize:12, fontWeight:700, cursor:'pointer' }}>
+                {cat.label}
+              </button>
             ))}
           </div>
-        </div>
-      ))}
 
-      {/* Add new choice */}
-      <div style={{ border:'1.5px dashed rgba(242,100,25,0.3)', borderRadius:8, padding:'12px', display:'flex', flexDirection:'column', gap:8 }}>
-        <div style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', letterSpacing:.5 }}>NUEVA OPCIÓN</div>
+          {/* Preview de items de la categoría seleccionada */}
+          {newCategory && categoryPreview.length > 0 && (
+            <div style={{ display:'flex', flexWrap:'wrap', gap:5, padding:'8px 10px', background:'rgba(8,145,178,0.05)', borderRadius:6, border:'1px solid rgba(8,145,178,0.15)' }}>
+              {categoryPreview.map(opt => (
+                <span key={opt} style={{ fontSize:11, color:'#0891b2', fontWeight:600 }}>{opt}</span>
+              ))}
+            </div>
+          )}
+          {newCategory && categoryPreview.length === 0 && (
+            <div style={{ fontSize:11, color:'#999', fontStyle:'italic', padding:'4px 0' }}>No hay items visibles en esta categoría aún</div>
+          )}
+        </div>
+
+        {/* Etiqueta */}
         <input value={newLabel} onChange={e => setNewLabel(e.target.value)}
-          placeholder='Etiqueta — ej: "Tipo de Churrasco"'
+          placeholder={newCategory ? `Etiqueta (ej: ${CATEGORY_LABEL[newCategory]?.replace(/^[^ ]+ /, '') ?? 'Elige'})` : 'Etiqueta — ej: "Tipo de Churrasco"'}
           style={{ ...INPUT }} />
-        <input value={newOptions} onChange={e => setNewOptions(e.target.value)}
-          placeholder="Opciones separadas por coma — ej: Alemano, Italiano, Completo"
-          style={{ ...INPUT }} />
+
+        {/* Opciones manuales */}
+        {!newCategory && (
+          <input value={newOptions} onChange={e => setNewOptions(e.target.value)}
+            placeholder="Opciones separadas por coma — ej: Alemano, Italiano, Completo"
+            style={{ ...INPUT }} />
+        )}
+
         <div style={{ display:'flex', alignItems:'center', gap:12 }}>
           <label style={{ display:'flex', alignItems:'center', gap:6, cursor:'pointer', fontSize:13, fontWeight:600, color:'var(--text)' }}>
             <input type="checkbox" checked={newRequired} onChange={e => setNewRequired(e.target.checked)}
@@ -289,6 +347,7 @@ function PromoModal({
           <ChoicesEditor
             choices={form.choices}
             onChange={choices => setForm(f => ({ ...f, choices }))}
+            menuItems={menuItems}
           />
 
           {/* Visible toggle */}
