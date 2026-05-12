@@ -63,7 +63,7 @@ export default function CostsEditor({ initial }: { initial: CostEntry[] }) {
 
     startTransition(async () => {
       try {
-        const body = { name, quantity, unit: form.unit, totalPrice, unitPrice, date: form.date, notes: form.notes.trim() };
+        const body = { name, quantity, unit: form.unit as CostEntry['unit'], totalPrice, unitPrice, date: form.date, notes: form.notes.trim() };
         if (editId) {
           await fetch(`/api/admin/costs/${editId}`, {
             method: 'PATCH', headers: { 'Content-Type': 'application/json' },
