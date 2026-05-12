@@ -2,9 +2,18 @@ import { getAdminDb } from '@/lib/firebase/admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { MENU_DATA, BURRITO_DATA } from '@/lib/menuData';
 
-/** Convierte "Tomate, Chucrut, Mayonesa" → [{name:'Tomate',enabled:true}, ...] */
-const parseIngredients = (desc?: string) =>
-  desc ? desc.split(',').map(s => ({ name: s.trim(), enabled: true })).filter(i => i.name) : [];
+/**
+ * Si el desc tiene comas → lista de ingredientes.
+ * Si no tiene comas (ej: "5 Empanadas de queso") → es una descripción, no ingredientes.
+ */
+function splitDesc(desc?: string): { desc: string | null; ingredients: { name: string; enabled: boolean }[] } {
+  if (!desc) return { desc: null, ingredients: [] };
+  if (desc.includes(',')) {
+    const ingredients = desc.split(',').map(s => ({ name: s.trim(), enabled: true })).filter(i => i.name);
+    return { desc: null, ingredients };
+  }
+  return { desc, ingredients: [] };
+}
 
 export async function seedMenuIfEmpty(force = false): Promise<{ seeded: boolean; count: number }> {
   const db = getAdminDb();
@@ -32,8 +41,7 @@ export async function seedMenuIfEmpty(force = false): Promise<{ seeded: boolean;
       batch.set(db.collection('menu_items').doc(slug), {
         category,
         name:        item.name,
-        desc:        null,
-        ingredients: parseIngredients(item.desc),
+        ...splitDesc(item.desc),
         extras:      [],
         price:       item.price,
         priceNormal: null,
@@ -56,8 +64,7 @@ export async function seedMenuIfEmpty(force = false): Promise<{ seeded: boolean;
       batch.set(db.collection('menu_items').doc(slug), {
         category,
         name:        item.name,
-        desc:        null,
-        ingredients: parseIngredients(item.desc),
+        ...splitDesc(item.desc),
         extras:      [],
         price:       null,
         priceNormal: item.priceNormal,
@@ -78,8 +85,7 @@ export async function seedMenuIfEmpty(force = false): Promise<{ seeded: boolean;
         category:    'papas',
         group:       group.name,
         name:        item.name,
-        desc:        null,
-        ingredients: parseIngredients(item.desc),
+        ...splitDesc(item.desc),
         extras:      [],
         price:       item.price,
         priceNormal: null,
