@@ -3,8 +3,9 @@ export const ADDRESS   = 'Marino José Manuel Ramírez #1641';
 
 export const fmt = (n: number) => `$${n.toLocaleString('es-CL')}`;
 
-export type SimpleItem = { name: string; desc?: string; price: number };
-export type DualItem   = { name: string; desc?: string; priceNormal: number; priceXL: number };
+export type SimpleItem  = { name: string; desc?: string; price: number };
+export type DualItem    = { name: string; desc?: string; priceNormal: number; priceXL: number };
+export type BebidaItem  = { name: string; volume: string; price: number };
 
 export const MENU_DATA = {
   vienesas: { id:'vienesas', label:'Vienesas', emoji:'🌭', items:[
@@ -49,6 +50,18 @@ export const MENU_DATA = {
     { name:'Rodeo',          desc:'Queso, Tocino, BBQ, Mayonesa',                      priceNormal:9500,  priceXL:18000 },
     { name:'A lo Pobre',     desc:'Cebolla Caramelizada, Huevo, Mayonesa',             priceNormal:9500,  priceXL:18000 },
   ] as DualItem[] },
+  bebidas: { id:'bebidas', label:'Bebidas', emoji:'🥤', items:[
+    { name:'Coca-Cola',       volume:'350ml', price:0 },
+    { name:'Coca-Cola',       volume:'500ml', price:0 },
+    { name:'Coca-Cola',       volume:'1.5L',  price:0 },
+    { name:'Coca-Cola',       volume:'2L',    price:0 },
+    { name:'Sprite',          volume:'350ml', price:0 },
+    { name:'Sprite',          volume:'1.5L',  price:0 },
+    { name:'Fanta Naranja',   volume:'350ml', price:0 },
+    { name:'Fanta Naranja',   volume:'1.5L',  price:0 },
+    { name:'Powerade',        volume:'500ml', price:0 },
+    { name:'Fuze Tea',        volume:'500ml', price:0 },
+  ] as BebidaItem[] },
   papas: { id:'papas', label:'Papas & Más', emoji:'🍟', groups:[
     { name:'Empanadas', items:[
       { name:'Empanadas de Queso', desc:'5 Empanadas de queso', price:3000 },

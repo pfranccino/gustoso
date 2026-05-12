@@ -88,7 +88,10 @@ export default function AddToCartModal({ item, onClose, aderezos = [], disabledI
           <button onClick={onClose} style={{ width:32, height:32, borderRadius:'50%', border:'none', background:'var(--bg2)', cursor:'pointer', fontSize:18, color:'var(--text-muted)', display:'flex', alignItems:'center', justifyContent:'center' }}>×</button>
         </div>
 
-        <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:24, color:'var(--text)', marginBottom:4 }}>{item.name}</div>
+        <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:4 }}>
+          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:24, color:'var(--text)' }}>{item.name}</div>
+          {item.volume && <span style={{ fontSize:12, fontWeight:700, color:'#0891b2', background:'rgba(8,145,178,0.1)', padding:'2px 8px', borderRadius:4 }}>🥤 {item.volume}</span>}
+        </div>
         {item.desc && <div style={{ fontSize:13, color:'var(--text-muted)', marginBottom:16 }}>{item.desc}</div>}
 
         {/* Tamaño */}

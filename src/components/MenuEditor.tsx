@@ -9,7 +9,10 @@ const CATEGORIES = [
   { id:'churrasco', label:'🥩 Churrasco' },
   { id:'mechada',   label:'🥖 Mechada' },
   { id:'papas',     label:'🍟 Papas & Más' },
+  { id:'bebidas',   label:'🥤 Bebidas' },
 ];
+
+const VOLUMES = ['237ml', '330ml', '350ml', '400ml', '500ml', '600ml', '1L', '1.5L', '2L', '3L'];
 
 const fmt = (n: number) => `$${n.toLocaleString('es-CL')}`;
 
@@ -19,6 +22,7 @@ type EditState = {
   item: MenuItem;
   name: string;
   desc: string;
+  volume: string;
   price: string;
   priceNormal: string;
   priceXL: string;
@@ -30,6 +34,7 @@ type CreateState = {
   category: string;
   name: string;
   desc: string;
+  volume: string;
   dual: boolean;
   price: string;
   priceNormal: string;
@@ -40,7 +45,7 @@ type CreateState = {
 };
 
 const emptyCreate = (): CreateState => ({
-  category: 'vienesas', name: '', desc: '', dual: false,
+  category: 'vienesas', name: '', desc: '', volume: '', dual: false,
   price: '', priceNormal: '', priceXL: '', extras: [], ingredients: [], visible: true,
 });
 
@@ -91,6 +96,7 @@ export default function MenuEditor({ initialItems }: { initialItems: MenuItem[] 
       item,
       name:        item.name,
       desc:        item.desc ?? '',
+      volume:      item.volume ?? '',
       price:       item.price != null ? String(item.price) : '',
       priceNormal: item.priceNormal != null ? String(item.priceNormal) : '',
       priceXL:     item.priceXL != null ? String(item.priceXL) : '',
@@ -110,6 +116,7 @@ export default function MenuEditor({ initialItems }: { initialItems: MenuItem[] 
     const update: Partial<MenuItem> = {
       name:        editing.name.trim() || item.name,
       desc:        editing.desc.trim() || null,
+      volume:      editing.volume.trim() || null,
       extras:      editing.extras,
       ingredients: editing.ingredients,
     };
@@ -151,12 +158,12 @@ export default function MenuEditor({ initialItems }: { initialItems: MenuItem[] 
     if (!creating) return;
     createExtrasRef.current?.flush();
     createIngredientsRef.current?.flush();
-    const { category, name, desc, dual, price, priceNormal, priceXL, extras, ingredients, visible } = creating;
+    const { category, name, desc, volume, dual, price, priceNormal, priceXL, extras, ingredients, visible } = creating;
     if (!name.trim()) { setSaveError('El nombre es obligatorio.'); return; }
 
     startTransition(async () => {
       try {
-        const body: Record<string, unknown> = { category, name: name.trim(), desc: desc.trim() || null, extras, ingredients, visible };
+        const body: Record<string, unknown> = { category, name: name.trim(), desc: desc.trim() || null, volume: volume.trim() || null, extras, ingredients, visible };
         if (dual) {
           body.priceNormal = parseInt(priceNormal, 10) || 0;
           body.priceXL     = parseInt(priceXL,     10) || 0;
@@ -175,6 +182,7 @@ export default function MenuEditor({ initialItems }: { initialItems: MenuItem[] 
           category,
           name: name.trim(),
           desc: desc.trim() || null,
+          volume: volume.trim() || null,
           price: dual ? null : (parseInt(price, 10) || 0),
           priceNormal: dual ? (parseInt(priceNormal, 10) || 0) : null,
           priceXL:     dual ? (parseInt(priceXL,     10) || 0) : null,
@@ -271,7 +279,10 @@ export default function MenuEditor({ initialItems }: { initialItems: MenuItem[] 
                     <span style={{ position:'absolute', top:2, left: item.visible?18:2, width:16, height:16, borderRadius:'50%', background:'#fff', transition:'left .2s' }}/>
                   </button>
                   <div style={{ flex:1, minWidth:0 }}>
-                    <div style={{ fontWeight:700, fontSize:14, color:'var(--text)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{item.name}</div>
+                    <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                      <div style={{ fontWeight:700, fontSize:14, color:'var(--text)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{item.name}</div>
+                      {item.volume && <span style={{ fontSize:10, fontWeight:700, color:'#0891b2', background:'rgba(8,145,178,0.1)', padding:'1px 6px', borderRadius:4, flexShrink:0 }}>🥤 {item.volume}</span>}
+                    </div>
                     {item.desc && <div style={{ fontSize:12, color:'var(--text-muted)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{item.desc}</div>}
                     <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
                       {item.ingredients.length > 0 && (() => { const en = item.ingredients.filter(i => i.enabled).length; const tot = item.ingredients.length; return <div style={{ fontSize:11, color: en < tot ? '#d97706' : 'var(--text-muted)', fontWeight:600 }}>🥬 {en < tot ? `${en}/${tot}` : tot} ingrediente{tot > 1 ? 's' : ''}</div>; })()}
@@ -295,6 +306,7 @@ export default function MenuEditor({ initialItems }: { initialItems: MenuItem[] 
         <Modal title="Editar producto" onClose={() => { setEditing(null); setSaveError(''); }}>
           <Field label="Nombre" value={editing.name} onChange={e => setEditing(p => p && ({ ...p, name: e.target.value }))} />
           <Field label="Descripción" value={editing.desc} placeholder="(opcional)" onChange={e => setEditing(p => p && ({ ...p, desc: e.target.value }))} />
+          <VolumeField value={editing.volume} onChange={v => setEditing(p => p && ({ ...p, volume: v }))} />
           {isDual(editing.item) ? (
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
               <Field label="Precio Normal" type="number" value={editing.priceNormal} onChange={e => setEditing(p => p && ({ ...p, priceNormal: e.target.value }))} />
@@ -322,6 +334,7 @@ export default function MenuEditor({ initialItems }: { initialItems: MenuItem[] 
           </div>
           <Field label="Nombre" value={creating.name} onChange={e => setCreating(p => p && ({ ...p, name: e.target.value }))} />
           <Field label="Descripción" value={creating.desc} placeholder="(opcional)" onChange={e => setCreating(p => p && ({ ...p, desc: e.target.value }))} />
+          <VolumeField value={creating.volume} onChange={v => setCreating(p => p && ({ ...p, volume: v }))} />
 
           <div style={{ marginBottom:14 }}>
             <label style={{ display:'flex', alignItems:'center', gap:8, cursor:'pointer', fontSize:13, fontWeight:600, color:'#1A0800' }}>
@@ -358,6 +371,30 @@ export default function MenuEditor({ initialItems }: { initialItems: MenuItem[] 
 }
 
 /* ── sub-componentes ──────────────────────────── */
+
+function VolumeField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  return (
+    <div style={{ marginBottom:14 }}>
+      <label style={{ display:'block', fontSize:11, fontWeight:700, color:'#A0541A', letterSpacing:1, textTransform:'uppercase', marginBottom:6 }}>
+        Volumen <span style={{ fontWeight:400, textTransform:'none', letterSpacing:0, fontSize:10, color:'#999' }}>(opcional — ej: 350ml, 1.5L)</span>
+      </label>
+      <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginBottom:8 }}>
+        {VOLUMES.map(v => (
+          <button key={v} type="button" onClick={() => onChange(value === v ? '' : v)}
+            style={{ padding:'4px 10px', borderRadius:999, border:`1.5px solid ${value === v ? '#0891b2' : 'rgba(0,0,0,0.15)'}`, background: value === v ? 'rgba(8,145,178,0.1)' : 'transparent', color: value === v ? '#0891b2' : '#666', fontSize:12, fontWeight:700, cursor:'pointer', transition:'all .15s' }}>
+            {v}
+          </button>
+        ))}
+      </div>
+      <input
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        placeholder="O escribe otro valor…"
+        style={{ width:'100%', padding:'8px 12px', borderRadius:8, border:'1.5px solid rgba(242,100,25,0.25)', background:'#FFF9F5', color:'#1A0800', fontSize:13, fontFamily:"'Barlow',sans-serif", outline:'none', boxSizing:'border-box' }}
+      />
+    </div>
+  );
+}
 
 function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
   return (

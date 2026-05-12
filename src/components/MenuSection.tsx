@@ -19,6 +19,7 @@ const TABS = [
   { id:'mechada',   label:'Mechada',     emoji:'🥖' },
   { id:'burrito',   label:'Burrito',     emoji:'🌯' },
   { id:'papas',     label:'Papas & Más', emoji:'🍟' },
+  { id:'bebidas',   label:'Bebidas',     emoji:'🥤' },
 ] as const;
 
 type TabId = typeof TABS[number]['id'];
@@ -51,8 +52,13 @@ export default function MenuSection({ items, burritoConfig, promotions, aderezos
   const [search,    setSearch]    = useState('');
   const tabBarRef = useRef<HTMLDivElement>(null);
 
-  // Hide promos tab if no visible promos
-  const visibleTabs = TABS.filter(t => t.id !== 'promos' || visiblePromos.length > 0);
+  const hasBebidas = items.some(i => i.category === 'bebidas' && i.visible);
+  // Hide promos tab if no visible promos; hide bebidas if no bebidas items
+  const visibleTabs = TABS.filter(t => {
+    if (t.id === 'promos')  return visiblePromos.length > 0;
+    if (t.id === 'bebidas') return hasBebidas;
+    return true;
+  });
 
   const switchTab = (id: TabId) => {
     setActiveTab(id);
@@ -63,7 +69,7 @@ export default function MenuSection({ items, burritoConfig, promotions, aderezos
   };
 
   const activeTabData = visibleTabs.find(t => t.id === activeTab);
-  const tabLabel = activeTab==='churrasco'?'Sándwich Churrasco':activeTab==='mechada'?'Sándwich Mechada':activeTab==='burrito'?'Burrito Gustoso':activeTab==='papas'?'Papas & Más':activeTab==='promos'?'Promociones':activeTabData?.label;
+  const tabLabel = activeTab==='churrasco'?'Sándwich Churrasco':activeTab==='mechada'?'Sándwich Mechada':activeTab==='burrito'?'Burrito Gustoso':activeTab==='papas'?'Papas & Más':activeTab==='promos'?'Promociones':activeTab==='bebidas'?'Bebidas':activeTabData?.label;
 
   const listStyle: React.CSSProperties = { display:'flex', flexDirection:'column', gap:10 };
 

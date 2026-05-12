@@ -16,6 +16,7 @@ export type MenuItem = {
   group?: string;
   name: string;
   desc: string | null;
+  volume: string | null;
   price: number | null;
   priceNormal: number | null;
   priceXL: number | null;
@@ -30,6 +31,7 @@ export type NewMenuItem = {
   category: string;
   name: string;
   desc?: string | null;
+  volume?: string | null;
   price?: number | null;
   priceNormal?: number | null;
   priceXL?: number | null;
@@ -38,7 +40,7 @@ export type NewMenuItem = {
   visible?: boolean;
 };
 
-export type MenuItemUpdate = Partial<Pick<MenuItem, 'name' | 'desc' | 'price' | 'priceNormal' | 'priceXL' | 'visible' | 'imageUrl' | 'extras' | 'ingredients'>>;
+export type MenuItemUpdate = Partial<Pick<MenuItem, 'name' | 'desc' | 'volume' | 'price' | 'priceNormal' | 'priceXL' | 'visible' | 'imageUrl' | 'extras' | 'ingredients'>>;
 
 export async function getMenuItems(): Promise<MenuItem[]> {
   const snap = await getAdminDb().collection('menu_items').get();
@@ -56,6 +58,7 @@ export async function getMenuItems(): Promise<MenuItem[]> {
       imageUrl:    d.imageUrl    ?? null,
       visible:     d.visible     ?? true,
       sortOrder:   d.sortOrder   ?? 0,
+      volume:      typeof d.volume === 'string'  ? d.volume      : null,
       extras:      Array.isArray(d.extras)      ? d.extras      : [],
       ingredients: Array.isArray(d.ingredients) ? d.ingredients.map(parseIngredient) : [],
     };
@@ -74,6 +77,7 @@ export async function createMenuItem(data: NewMenuItem): Promise<string> {
     category:    data.category,
     name:        data.name,
     desc:        data.desc ?? null,
+    volume:      data.volume ?? null,
     price:       data.price ?? null,
     priceNormal: data.priceNormal ?? null,
     priceXL:     data.priceXL ?? null,

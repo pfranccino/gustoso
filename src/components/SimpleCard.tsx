@@ -28,6 +28,7 @@ export default function SimpleCard({ item, aderezos = [], disabledIngredients = 
           })()}
           <div style={{ display:'flex', alignItems:'center', gap:8, marginTop:4 }}>
             <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:18, color:'var(--yellow)' }}>{fmt(item.price!)}</span>
+            {item.volume && <span style={{ fontSize:11, fontWeight:700, color:'#0891b2', background:'rgba(8,145,178,0.1)', padding:'1px 7px', borderRadius:4 }}>🥤 {item.volume}</span>}
             {item.extras.length > 0 && <span style={{ fontSize:11, color:'var(--orange)', fontWeight:700, background:'rgba(242,100,25,0.1)', padding:'1px 6px', borderRadius:4 }}>+ opcionales</span>}
           </div>
         </div>

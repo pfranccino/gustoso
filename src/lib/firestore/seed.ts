@@ -78,6 +78,26 @@ export async function seedMenuIfEmpty(force = false): Promise<{ seeded: boolean;
     });
   }
 
+  MENU_DATA.bebidas.items.forEach((item, i) => {
+    const slug = `bebidas-${item.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${item.volume.replace(/[^a-z0-9]+/g, '-')}`;
+    batch.set(db.collection('menu_items').doc(slug), {
+      category:    'bebidas',
+      name:        item.name,
+      volume:      item.volume,
+      desc:        null,
+      ingredients: [],
+      extras:      [],
+      price:       item.price,
+      priceNormal: null,
+      priceXL:     null,
+      imageUrl:    null,
+      visible:     true,
+      sortOrder:   i,
+      updatedAt:   FieldValue.serverTimestamp(),
+    });
+    count++;
+  });
+
   MENU_DATA.papas.groups.forEach(group => {
     group.items.forEach((item, i) => {
       const slug = `papas-${group.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${item.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;

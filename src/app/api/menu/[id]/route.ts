@@ -24,7 +24,7 @@ export async function PATCH(
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
-  const allowed: (keyof MenuItemUpdate)[] = ['name', 'desc', 'price', 'priceNormal', 'priceXL', 'visible', 'imageUrl', 'extras'];
+  const allowed: (keyof MenuItemUpdate)[] = ['name', 'desc', 'volume', 'price', 'priceNormal', 'priceXL', 'visible', 'imageUrl', 'extras', 'ingredients'];
   const update: MenuItemUpdate = {};
   for (const key of allowed) {
     if (key in body) (update as Record<string, unknown>)[key] = body[key];
