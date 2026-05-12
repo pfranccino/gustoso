@@ -19,11 +19,18 @@ function getSessionId(): string {
   return sid;
 }
 
-function generateOrderId(): string {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let code = 'GST-';
-  for (let i = 0; i < 4; i++) code += chars[Math.floor(Math.random() * chars.length)];
-  return code;
+async function generateOrderId(): Promise<string> {
+  try {
+    const res = await fetch('/api/orders/next-id');
+    const data = await res.json();
+    return data.orderId;
+  } catch {
+    // Fallback si la API falla
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let code = 'GST-';
+    for (let i = 0; i < 4; i++) code += chars[Math.floor(Math.random() * chars.length)];
+    return code;
+  }
 }
 
 type AppliedDiscount = { code: string; type: 'fixed' | 'percent'; value: number; display: string; amount: number };
@@ -267,8 +274,8 @@ export default function CartDrawer() {
     return `https://wa.me/${waNumber}?text=${encodeURIComponent(lines.join('\n'))}`;
   };
 
-  const handleSend = () => {
-    const orderId = generateOrderId();
+  const handleSend = async () => {
+    const orderId = await generateOrderId();
     logOrder(items, finalTotal, orderId, finalLocationUrl, paymentMethod ?? undefined, appliedDiscount?.code, deliveryFee ?? undefined);
     window.open(buildWAMsg(orderId), '_blank');
   };
