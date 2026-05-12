@@ -115,8 +115,8 @@ export default function CartDrawer() {
   const [discountError,  setDiscountError]  = useState('');
   const [appliedDiscount, setAppliedDiscount] = useState<AppliedDiscount | null>(null);
 
-  // 'retiro' = retiro gratis, number = índice en sortedZones, null = no elegido
-  const [selectedZone,  setSelectedZone]  = useState<'retiro' | number | null>(null);
+  // 'retiro' = retiro gratis, 'delivery' = delivery auto-calculado por distancia, null = no elegido
+  const [selectedZone,  setSelectedZone]  = useState<'retiro' | 'delivery' | null>(null);
   // Dirección manual → geocoding
   const [addrInput,     setAddrInput]     = useState('');
   const [addrStatus,    setAddrStatus]    = useState<'idle' | 'loading' | 'error'>('idle');
@@ -133,11 +133,6 @@ export default function CartDrawer() {
     return undefined;
   })();
 
-  /* ── zonas ordenadas ─────────────────────── */
-  const sortedZones = delivery?.enabled
-    ? [...(delivery.zones ?? [])].sort((a, b) => a.maxKm - b.maxKm)
-    : [];
-
   /* ── coordenadas activas (geo o dirección geocodificada) ─── */
   const activeCoords: { lat: number; lng: number } | null = (() => {
     if (geo.status === 'success') return { lat: geo.lat, lng: geo.lng };
@@ -152,20 +147,20 @@ export default function CartDrawer() {
     return haversineKm(delivery.restaurantLat, delivery.restaurantLng, activeCoords.lat, activeCoords.lng);
   })();
 
-  /* ── auto-selección de zona cuando tenemos distancia ── */
+  /* ── auto-aplicar delivery cuando obtenemos ubicación ── */
   useEffect(() => {
-    if (distKm === null || selectedZone !== null) return;
-    const zones = delivery?.zones ? [...delivery.zones].sort((a, b) => a.maxKm - b.maxKm) : [];
-    const idx = zones.findIndex(z => distKm <= z.maxKm);
-    setSelectedZone(idx >= 0 ? idx : zones.length);
-  }, [distKm, selectedZone, delivery?.zones]);
+    if (activeCoords && selectedZone === null) {
+      setSelectedZone('delivery');
+    }
+  }, [activeCoords]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  /* ── delivery fee ────────────────────────── */
+  /* ── delivery fee calculado automáticamente desde distKm ── */
   const deliveryFee = (() => {
     if (!delivery?.enabled) return null;
     if (selectedZone === 'retiro') return 0;
-    if (typeof selectedZone === 'number' && selectedZone < sortedZones.length)
-      return sortedZones[selectedZone].price;
+    if (selectedZone === 'delivery' && distKm !== null && delivery.zones?.length) {
+      return calcDeliveryFee(distKm, delivery);
+    }
     return null;
   })();
 
@@ -188,7 +183,7 @@ export default function CartDrawer() {
   }
 
   function resetLocation() {
-    geo.status !== 'idle' && clear();
+    if (geo.status !== 'idle') clear();
     setAddrCoords(null);
     setAddrInput('');
     setAddrStatus('idle');
@@ -261,9 +256,8 @@ export default function CartDrawer() {
     if (appliedDiscount) lines.push(`🏷 Descuento (${appliedDiscount.code}): -${fmt(discountAmount)}`);
     if (selectedZone === 'retiro') {
       lines.push(`🏠 Retiro en local`);
-    } else if (typeof selectedZone === 'number' && selectedZone < sortedZones.length) {
-      const zone = sortedZones[selectedZone];
-      lines.push(`🛵 Delivery${distKm != null ? ` · ${distKm.toFixed(1)} km` : ''}: ${fmt(zone.price)}`);
+    } else if (selectedZone === 'delivery' && deliveryFee !== null) {
+      lines.push(`🛵 Delivery${distKm != null ? ` · ${distKm.toFixed(1)} km` : ''}: ${fmt(deliveryFee)}`);
     }
     if (addrCoords) lines.push(`📍 Dirección: ${addrInput}`);
     if (finalLocationUrl) lines.push(`🗺️ Ver en mapa: ${finalLocationUrl}`);
@@ -362,8 +356,8 @@ export default function CartDrawer() {
                   <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:16, color:'var(--text)' }}>{fmt(deliveryFee)}</span>
                 </div>
               )}
-              {deliveryFee === 0 && selectedZone === 'retiro' && (
-                <div style={{ fontSize:12, color:'#16a34a', fontWeight:600, marginBottom:4 }}>🏠 Retiro en local</div>
+              {selectedZone === 'retiro' && (
+                <div style={{ fontSize:12, color:'#16a34a', fontWeight:600, marginBottom:4 }}>🏠 Retiro en local · Gratis</div>
               )}
               <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
                 <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:16, color:'var(--text-muted)' }}>TOTAL</span>
@@ -468,9 +462,10 @@ export default function CartDrawer() {
                   </>
                 )}
 
-                {/* PASO 2: ubicación obtenida → mostrar distancia y zona */}
+                {/* PASO 2: ubicación obtenida → delivery automático */}
                 {activeCoords && (
                   <>
+                    {/* Info ubicación */}
                     <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', background:'rgba(37,211,102,0.08)', border:'1px solid rgba(37,211,102,0.25)', borderRadius:8, padding:'8px 12px', marginBottom:10 }}>
                       <div>
                         <div style={{ fontSize:12, color:'#1a8a3e', fontWeight:700 }}>
@@ -482,35 +477,34 @@ export default function CartDrawer() {
                         style={{ fontSize:11, color:'var(--text-muted)', background:'transparent', border:'none', cursor:'pointer', fontWeight:600, flexShrink:0 }}>Cambiar</button>
                     </div>
 
-                    {/* Chips zona */}
-                    <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
+                    {/* Precio delivery calculado automáticamente */}
+                    <div style={{ display:'flex', gap:8 }}>
+                      <button onClick={() => setSelectedZone('delivery')}
+                        style={{ flex:1, padding:'9px 13px', borderRadius:999, border:`2px solid ${selectedZone === 'delivery' ? 'var(--orange)' : 'var(--border)'}`, background: selectedZone === 'delivery' ? 'rgba(242,100,25,0.08)' : 'var(--card)', cursor:'pointer', transition:'all .15s', textAlign:'left' }}>
+                        {deliveryFee !== null && selectedZone === 'delivery' ? (
+                          <span style={{ fontSize:12, fontWeight:700, color:'var(--orange)' }}>🛵 Delivery: {fmt(deliveryFee)}</span>
+                        ) : deliveryFee === null && distKm !== null ? (
+                          <span style={{ fontSize:12, fontWeight:700, color:'#dc2626' }}>🛵 Fuera de cobertura</span>
+                        ) : (
+                          <span style={{ fontSize:12, fontWeight:700, color:'var(--text)' }}>🛵 Delivery</span>
+                        )}
+                      </button>
                       <button onClick={() => setSelectedZone('retiro')}
-                        style={{ padding:'7px 13px', borderRadius:999, border:`2px solid ${selectedZone === 'retiro' ? '#16a34a' : 'var(--border)'}`, background: selectedZone === 'retiro' ? 'rgba(22,163,74,0.08)' : 'var(--card)', cursor:'pointer', transition:'all .15s' }}>
+                        style={{ flex:1, padding:'9px 13px', borderRadius:999, border:`2px solid ${selectedZone === 'retiro' ? '#16a34a' : 'var(--border)'}`, background: selectedZone === 'retiro' ? 'rgba(22,163,74,0.08)' : 'var(--card)', cursor:'pointer', transition:'all .15s', textAlign:'left' }}>
                         <span style={{ fontSize:12, fontWeight:700, color: selectedZone === 'retiro' ? '#16a34a' : 'var(--text)' }}>🏠 Retiro · Gratis</span>
                       </button>
-                      {sortedZones.map((z, i) => {
-                        const sel = selectedZone === i;
-                        return (
-                          <button key={i} onClick={() => setSelectedZone(i)}
-                            style={{ padding:'7px 13px', borderRadius:999, border:`2px solid ${sel ? 'var(--orange)' : 'var(--border)'}`, background: sel ? 'rgba(242,100,25,0.08)' : 'var(--card)', cursor:'pointer', transition:'all .15s' }}>
-                            <span style={{ fontSize:12, fontWeight:700, color: sel ? 'var(--orange)' : 'var(--text)' }}>
-                              Hasta {z.maxKm} km · {fmt(z.price)}
-                            </span>
-                          </button>
-                        );
-                      })}
                     </div>
 
                     {/* Fuera de zona */}
-                    {distKm != null && distKm > sortedZones[sortedZones.length - 1]?.maxKm && (
-                      <div style={{ fontSize:11, color:'#dc2626', fontWeight:600, marginTop:7 }}>
-                        Estás a {distKm.toFixed(1)} km — fuera de nuestra zona de cobertura
+                    {distKm != null && deliveryFee === null && selectedZone !== 'retiro' && (
+                      <div style={{ fontSize:11, color:'#dc2626', fontWeight:600, marginTop:6 }}>
+                        Estás a {distKm.toFixed(1)} km — fuera de nuestra zona de delivery
                       </div>
                     )}
                   </>
                 )}
 
-                {/* Retiro siempre disponible sin ubicación */}
+                {/* Sin ubicación: solo opción retiro */}
                 {!activeCoords && (
                   <div style={{ marginTop:8, paddingTop:8, borderTop:'1px solid var(--border)' }}>
                     <button onClick={() => setSelectedZone('retiro')}
