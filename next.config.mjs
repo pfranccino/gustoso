@@ -1,6 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  serverExternalPackages: ['firebase-admin', 'cloudinary'],
+  experimental: {
+    serverComponentsExternalPackages: ['firebase-admin', 'cloudinary'],
+  },
 };
 
 export default nextConfig;
