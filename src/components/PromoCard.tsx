@@ -15,12 +15,20 @@ const BADGE_COLOR: Record<string, { bg: string; color: string }> = {
   ESPECIAL: { bg: '#d97706', color: '#fff' },
 };
 
-/** Resuelve las opciones de una choice: desde el menú si tiene category, sino manual */
+/** Resuelve las opciones de una choice.
+ *  - category + options vacío  → todos los items visibles de esa categoría
+ *  - category + options con items → solo esos items (lista blanca)
+ *  - sin category               → opciones manuales */
 function resolveOptions(choice: PromoChoice, menuItems: MenuItem[]): string[] {
   if (choice.category) {
-    return menuItems
+    const all = menuItems
       .filter(m => m.category === choice.category && m.visible)
       .map(m => m.volume ? `${m.name} ${m.volume}` : m.name);
+    if (choice.options.length > 0) {
+      const whitelist = new Set(choice.options);
+      return all.filter(name => whitelist.has(name));
+    }
+    return all;
   }
   return choice.options;
 }

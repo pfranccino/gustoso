@@ -44,29 +44,48 @@ function toForm(p: Promotion): FormState {
 
 /* ── ChoicesEditor ──────────────────────────────────────── */
 
+/** Resuelve preview de opciones igual que en PromoCard */
+function resolvePreview(choice: PromoChoice, menuItems: MenuItem[]): string[] {
+  if (choice.category) {
+    const all = menuItems
+      .filter(m => m.category === choice.category && m.visible)
+      .map(m => m.volume ? `${m.name} ${m.volume}` : m.name);
+    if (choice.options.length > 0) {
+      const wl = new Set(choice.options);
+      return all.filter(n => wl.has(n));
+    }
+    return all;
+  }
+  return choice.options;
+}
+
 function ChoicesEditor({ choices, onChange, menuItems }: { choices: PromoChoice[]; onChange: (v: PromoChoice[]) => void; menuItems: MenuItem[] }) {
   const [newLabel,    setNewLabel]    = useState('');
   const [newCategory, setNewCategory] = useState('');   // '' = manual
-  const [newOptions,  setNewOptions]  = useState('');   // para modo manual
+  const [newOptions,  setNewOptions]  = useState('');   // modo manual: texto libre
+  const [newFilter,   setNewFilter]   = useState<string[]>([]); // modo categoría: whitelist
   const [newRequired, setNewRequired] = useState(true);
 
-  // Preview de opciones según categoría seleccionada
-  const categoryPreview = newCategory
+  // Todos los items de la categoría seleccionada
+  const categoryItems = newCategory
     ? menuItems.filter(m => m.category === newCategory && m.visible).map(m => m.volume ? `${m.name} ${m.volume}` : m.name)
     : [];
+
+  function toggleFilter(name: string) {
+    setNewFilter(prev => prev.includes(name) ? prev.filter(n => n !== name) : [...prev, name]);
+  }
 
   function addChoice() {
     const label = newLabel.trim() || (newCategory ? (CATEGORY_LABEL[newCategory] ?? newCategory) : '');
     if (!label) return;
     if (newCategory) {
-      // Opción basada en categoría — opciones se resuelven en tiempo real
-      onChange([...choices, { label, category: newCategory, options: [], required: newRequired }]);
+      onChange([...choices, { label, category: newCategory, options: newFilter, required: newRequired }]);
     } else {
       const options = newOptions.split(',').map(s => s.trim()).filter(Boolean);
       if (options.length === 0) return;
       onChange([...choices, { label, category: null, options, required: newRequired }]);
     }
-    setNewLabel(''); setNewCategory(''); setNewOptions(''); setNewRequired(true);
+    setNewLabel(''); setNewCategory(''); setNewOptions(''); setNewFilter([]); setNewRequired(true);
   }
 
   function remove(idx: number) {
@@ -81,16 +100,20 @@ function ChoicesEditor({ choices, onChange, menuItems }: { choices: PromoChoice[
 
       {/* Choices existentes */}
       {choices.map((c, i) => {
-        const preview = c.category
-          ? menuItems.filter(m => m.category === c.category && m.visible).map(m => m.volume ? `${m.name} ${m.volume}` : m.name)
-          : c.options;
+        const preview = resolvePreview(c, menuItems);
+        const isFiltered = c.category && c.options.length > 0;
         return (
           <div key={i} style={{ background:'rgba(242,100,25,0.05)', border:'1.5px solid rgba(242,100,25,0.2)', borderRadius:8, padding:'10px 12px', marginBottom:8 }}>
             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:6 }}>
-              <div>
+              <div style={{ display:'flex', alignItems:'center', gap:6, flexWrap:'wrap' }}>
                 <span style={{ fontWeight:700, fontSize:13, color:'var(--text)' }}>{c.label}</span>
-                {c.category && <span style={{ fontSize:10, color:'#0891b2', marginLeft:6, fontWeight:700, background:'rgba(8,145,178,0.1)', padding:'1px 6px', borderRadius:4 }}>📋 {CATEGORY_LABEL[c.category] ?? c.category}</span>}
-                {c.required && <span style={{ fontSize:10, color:'#dc2626', marginLeft:4, fontWeight:700 }}>REQUERIDO</span>}
+                {c.category && (
+                  <span style={{ fontSize:10, color:'#0891b2', fontWeight:700, background:'rgba(8,145,178,0.1)', padding:'1px 6px', borderRadius:4 }}>
+                    📋 {CATEGORY_LABEL[c.category] ?? c.category}
+                    {isFiltered && <span style={{ marginLeft:4, color:'#d97706' }}>• {c.options.length} filtradas</span>}
+                  </span>
+                )}
+                {c.required && <span style={{ fontSize:10, color:'#dc2626', fontWeight:700 }}>REQUERIDO</span>}
               </div>
               <button onClick={() => remove(i)} style={{ background:'transparent', border:'none', cursor:'pointer', color:'#dc2626', fontSize:16, fontWeight:700, lineHeight:1 }}>×</button>
             </div>
@@ -108,34 +131,50 @@ function ChoicesEditor({ choices, onChange, menuItems }: { choices: PromoChoice[
       <div style={{ border:'1.5px dashed rgba(242,100,25,0.3)', borderRadius:8, padding:'12px', display:'flex', flexDirection:'column', gap:10 }}>
         <div style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', letterSpacing:.5 }}>NUEVA OPCIÓN</div>
 
-        {/* Fuente: Categoría del menú o manual */}
+        {/* Fuente */}
         <div>
           <div style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', marginBottom:6 }}>Fuente de opciones</div>
-          <div style={{ display:'flex', flexWrap:'wrap', gap:6, marginBottom: newCategory ? 8 : 0 }}>
-            <button onClick={() => setNewCategory('')}
+          <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
+            <button onClick={() => { setNewCategory(''); setNewFilter([]); }}
               style={{ padding:'5px 12px', borderRadius:999, border:`2px solid ${!newCategory ? '#F26419' : 'rgba(242,100,25,0.25)'}`, background: !newCategory ? '#F26419' : 'transparent', color: !newCategory ? '#fff' : '#A0541A', fontSize:12, fontWeight:700, cursor:'pointer' }}>
               ✏️ Manual
             </button>
             {CHOICE_CATEGORIES.map(cat => (
-              <button key={cat.id} onClick={() => { setNewCategory(cat.id); setNewLabel(l => l || cat.label.replace(/^[^ ]+ /, '')); }}
+              <button key={cat.id} onClick={() => { setNewCategory(cat.id); setNewFilter([]); setNewLabel(l => l || cat.label.replace(/^[^ ]+ /, '')); }}
                 style={{ padding:'5px 12px', borderRadius:999, border:`2px solid ${newCategory === cat.id ? '#0891b2' : 'rgba(8,145,178,0.2)'}`, background: newCategory === cat.id ? '#0891b2' : 'transparent', color: newCategory === cat.id ? '#fff' : '#0891b2', fontSize:12, fontWeight:700, cursor:'pointer' }}>
                 {cat.label}
               </button>
             ))}
           </div>
-
-          {/* Preview de items de la categoría seleccionada */}
-          {newCategory && categoryPreview.length > 0 && (
-            <div style={{ display:'flex', flexWrap:'wrap', gap:5, padding:'8px 10px', background:'rgba(8,145,178,0.05)', borderRadius:6, border:'1px solid rgba(8,145,178,0.15)' }}>
-              {categoryPreview.map(opt => (
-                <span key={opt} style={{ fontSize:11, color:'#0891b2', fontWeight:600 }}>{opt}</span>
-              ))}
-            </div>
-          )}
-          {newCategory && categoryPreview.length === 0 && (
-            <div style={{ fontSize:11, color:'#999', fontStyle:'italic', padding:'4px 0' }}>No hay items visibles en esta categoría aún</div>
-          )}
         </div>
+
+        {/* Checkboxes de items de la categoría */}
+        {newCategory && (
+          <div>
+            <div style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', marginBottom:6 }}>
+              Incluir en la opción{' '}
+              <span style={{ fontWeight:400, color:'#999' }}>
+                {newFilter.length === 0 ? '(todos — deja sin marcar para mostrar todos)' : `${newFilter.length} seleccionados`}
+              </span>
+            </div>
+            {categoryItems.length > 0 ? (
+              <div style={{ display:'flex', flexDirection:'column', gap:5, maxHeight:180, overflowY:'auto', border:'1px solid rgba(8,145,178,0.15)', borderRadius:8, padding:'8px 10px', background:'rgba(8,145,178,0.03)' }}>
+                {categoryItems.map(name => {
+                  const checked = newFilter.includes(name);
+                  return (
+                    <label key={name} style={{ display:'flex', alignItems:'center', gap:8, cursor:'pointer', padding:'3px 0' }}>
+                      <input type="checkbox" checked={checked} onChange={() => toggleFilter(name)}
+                        style={{ accentColor:'#0891b2', width:14, height:14, flexShrink:0 }} />
+                      <span style={{ fontSize:13, fontWeight: checked ? 700 : 500, color: checked ? '#0891b2' : 'var(--text)' }}>{name}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            ) : (
+              <div style={{ fontSize:11, color:'#999', fontStyle:'italic' }}>No hay items visibles en esta categoría aún</div>
+            )}
+          </div>
+        )}
 
         {/* Etiqueta */}
         <input value={newLabel} onChange={e => setNewLabel(e.target.value)}
