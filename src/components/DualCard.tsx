@@ -15,11 +15,16 @@ export default function DualCard({ item, aderezos = [], disabledIngredients = []
           <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:17, color:'var(--text)', lineHeight:1.2 }}>{item.name}</div>
           {(() => {
             const enabled = item.ingredients.filter(i => i.enabled);
-            return item.desc
-              ? <div style={{ fontSize:13, color:'var(--text-muted)', marginTop:3, fontWeight:500 }}>{item.desc}</div>
-              : enabled.length > 0
-                ? <div style={{ fontSize:12, color:'var(--text-muted)', marginTop:3, fontWeight:500, lineHeight:1.4 }}>{enabled.map(i => i.name).join(' · ')}</div>
-                : null;
+            if (item.desc) return <div style={{ fontSize:13, color:'var(--text-muted)', marginTop:3, fontWeight:500 }}>{item.desc}</div>;
+            if (enabled.length === 0) return null;
+            return (
+              <div style={{ fontSize:12, color:'var(--text-muted)', marginTop:3, fontWeight:500, lineHeight:1.6 }}>
+                {enabled.map(i => {
+                  const off = disabledIngredients.includes(i.name);
+                  return <span key={i.name} style={{ textDecoration: off ? 'line-through' : 'none', opacity: off ? 0.45 : 1, marginRight:4 }}>{i.name}{!off && ' ·'}</span>;
+                })}
+              </div>
+            );
           })()}
           <div style={{ display:'flex', gap:10, marginTop:4, alignItems:'center', flexWrap:'wrap' }}>
             <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:16, color:'var(--yellow)' }}>{fmt(item.priceNormal!)}</span>

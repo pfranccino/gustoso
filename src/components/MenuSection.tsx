@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { MenuItem } from '@/lib/firestore/menuItems';
 import { BurritoConfig } from '@/lib/firestore/burritoConfig';
 import { Promotion } from '@/lib/firestore/promotions';
@@ -31,7 +31,17 @@ function SizeHint() {
   );
 }
 
-export default function MenuSection({ items, burritoConfig, promotions, aderezos = [], disabledIngredients = [] }: { items: MenuItem[]; burritoConfig: BurritoConfig; promotions: Promotion[]; aderezos?: Aderezo[]; disabledIngredients?: string[] }) {
+export default function MenuSection({ items, burritoConfig, promotions, aderezos = [], disabledIngredients: initialDisabled = [] }: { items: MenuItem[]; burritoConfig: BurritoConfig; promotions: Promotion[]; aderezos?: Aderezo[]; disabledIngredients?: string[] }) {
+  const [disabledIngredients, setDisabledIngredients] = useState<string[]>(initialDisabled);
+
+  // Fetch fresco al montar — sobreescribe el valor ISR con datos en tiempo real
+  useEffect(() => {
+    fetch('/api/disabled-ingredients')
+      .then(r => r.ok ? r.json() : null)
+      .then((data: string[] | null) => { if (Array.isArray(data)) setDisabledIngredients(data); })
+      .catch(() => {/* usa el valor inicial del SSR */});
+  }, []);
+
   const visiblePromos = promotions.filter(p => p.visible);
 
   // Default to 'vienesas' if no visible promos, else 'promos'
