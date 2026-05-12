@@ -11,6 +11,7 @@ type SeedConfig = {
   description: string;
   detail:      string;
   endpoint:    string;
+  forceWarning: string;
 };
 
 const SEEDS: SeedConfig[] = [
@@ -18,17 +19,19 @@ const SEEDS: SeedConfig[] = [
     key:         'menu',
     emoji:       '🍔',
     title:       'Menú + Burrito',
-    description: 'Productos iniciales del menú (vienesas, sándwiches AS) y configuración del burrito builder.',
+    description: 'Productos iniciales del menú (vienesas, sándwiches AS, bebidas, etc.) y configuración del burrito builder.',
     detail:      'Solo se ejecuta si menu_items está vacío.',
     endpoint:    '/api/admin/seed',
+    forceWarning: '¿Borrar todos los items del menú y reinsertarlos desde el seed? Los precios editados se perderán.',
   },
   {
     key:         'promotions',
     emoji:       '🎁',
     title:       'Promociones',
-    description: '6 combos de ejemplo (Completo + Bebida, AS + Papas, etc.).',
+    description: '5 combos de ejemplo con opciones por categoría (AS+Bebida, Churrasco+Bebida, etc.).',
     detail:      'Solo se ejecuta si promotions está vacío.',
     endpoint:    '/api/admin/seed-promotions',
+    forceWarning: '¿Borrar todas las promociones y reinsertarlas desde el seed? Las promos personalizadas se perderán.',
   },
   {
     key:         'aderezos',
@@ -37,6 +40,7 @@ const SEEDS: SeedConfig[] = [
     description: '8 aderezos estándar: Ketchup, Mostaza, Mayonesa, BBQ, Tártara, Relish, Alioli, Dijon.',
     detail:      'Solo se ejecuta si aderezos está vacío.',
     endpoint:    '/api/admin/seed-aderezos',
+    forceWarning: '¿Borrar todos los aderezos y reinsertarlos desde el seed?',
   },
 ];
 
@@ -137,15 +141,13 @@ export default function SeedPage() {
                   style={{ padding: '9px 18px', borderRadius: 999, border: 'none', background: anyLoading ? '#d1bfb8' : '#F26419', color: '#fff', fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 15, cursor: anyLoading ? 'not-allowed' : 'pointer', opacity: isLoading ? 0.7 : 1 }}>
                   {isLoading ? 'Ejecutando…' : 'Ejecutar'}
                 </button>
-                {seed.key === 'menu' && (
-                  <button
-                    onClick={() => { if (confirm('¿Borrar todos los items del menú y reinsertarlos desde el seed? Los precios editados se perderán.')) runSeed(seed, true); }}
-                    disabled={anyLoading}
-                    title="Borra y reinsertas todos los items desde cero"
-                    style={{ padding: '9px 14px', borderRadius: 999, border: '2px solid #dc2626', background: 'transparent', color: anyLoading ? '#d1bfb8' : '#dc2626', fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 13, cursor: anyLoading ? 'not-allowed' : 'pointer' }}>
-                    ♻️ Force
-                  </button>
-                )}
+                <button
+                  onClick={() => { if (confirm(seed.forceWarning)) runSeed(seed, true); }}
+                  disabled={anyLoading}
+                  title="Borra y reinsertas desde cero"
+                  style={{ padding: '9px 14px', borderRadius: 999, border: `2px solid ${anyLoading ? '#d1bfb8' : '#dc2626'}`, background: 'transparent', color: anyLoading ? '#d1bfb8' : '#dc2626', fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 13, cursor: anyLoading ? 'not-allowed' : 'pointer' }}>
+                  ♻️ Force
+                </button>
               </div>
             </div>
           );
