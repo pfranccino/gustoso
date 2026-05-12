@@ -126,6 +126,13 @@ export default function CartDrawer() {
 
   const locationUrl = geo.status === 'success' ? geo.locationUrl : undefined;
 
+  /* ── URL de Google Maps para mandar en WA (geo o dirección geocodificada) ── */
+  const finalLocationUrl = (() => {
+    if (geo.status === 'success') return geo.locationUrl;
+    if (addrCoords) return `https://maps.google.com/?q=${addrCoords.lat},${addrCoords.lng}`;
+    return undefined;
+  })();
+
   /* ── zonas ordenadas ─────────────────────── */
   const sortedZones = delivery?.enabled
     ? [...(delivery.zones ?? [])].sort((a, b) => a.maxKm - b.maxKm)
@@ -256,18 +263,17 @@ export default function CartDrawer() {
       const zone = sortedZones[selectedZone];
       lines.push(`🛵 Delivery${distKm != null ? ` · ${distKm.toFixed(1)} km` : ''}: ${fmt(zone.price)}`);
     }
-    if (locationUrl) lines.push(`📍 Ubicación: ${locationUrl}`);
-    else if (addrCoords) lines.push(`📍 Dirección: ${addrInput}`);
+    if (addrCoords) lines.push(`📍 Dirección: ${addrInput}`);
+    if (finalLocationUrl) lines.push(`🗺️ Ver en mapa: ${finalLocationUrl}`);
     lines.push(`💰 TOTAL: ${fmt(finalTotal)}`);
     if (paymentMethod) lines.push(`💳 Pago: ${PAYMENT_LABEL[paymentMethod]}`);
-    if (locationUrl)   lines.push(`📍 Mi ubicación: ${locationUrl}`);
     if (waFooter)      lines.push('', waFooter);
     return `https://wa.me/${waNumber}?text=${encodeURIComponent(lines.join('\n'))}`;
   };
 
   const handleSend = () => {
     const orderId = generateOrderId();
-    logOrder(items, finalTotal, orderId, locationUrl, paymentMethod ?? undefined, appliedDiscount?.code, deliveryFee ?? undefined);
+    logOrder(items, finalTotal, orderId, finalLocationUrl, paymentMethod ?? undefined, appliedDiscount?.code, deliveryFee ?? undefined);
     window.open(buildWAMsg(orderId), '_blank');
   };
 
