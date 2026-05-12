@@ -6,7 +6,7 @@ import { MenuItem } from '@/lib/firestore/menuItems';
 import { Aderezo } from '@/lib/firestore/aderezosTypes';
 import AddToCartModal from './AddToCartModal';
 
-export default function SimpleCard({ item, aderezos = [] }: { item: MenuItem; aderezos?: Aderezo[] }) {
+export default function SimpleCard({ item, aderezos = [], disabledIngredients = [] }: { item: MenuItem; aderezos?: Aderezo[]; disabledIngredients?: string[] }) {
   const [modal, setModal] = useState(false);
   return (
     <>
@@ -28,7 +28,7 @@ export default function SimpleCard({ item, aderezos = [] }: { item: MenuItem; ad
         </div>
         <button onClick={() => setModal(true)} style={{ width:40, height:40, borderRadius:'50%', border:'2px solid var(--orange)', background:'var(--orange)', color:'#fff', fontSize:22, cursor:'pointer', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', fontWeight:700 }}>+</button>
       </div>
-      {modal && <AddToCartModal item={item} aderezos={aderezos} onClose={() => setModal(false)} />}
+      {modal && <AddToCartModal item={item} aderezos={aderezos} disabledIngredients={disabledIngredients} onClose={() => setModal(false)} />}
     </>
   );
 }

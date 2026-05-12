@@ -5,6 +5,7 @@ import { getBurritoConfig, BurritoConfig, DEFAULT_BURRITO } from '@/lib/firestor
 import { getPromotions, Promotion } from '@/lib/firestore/promotions';
 import { getAderezos } from '@/lib/firestore/aderezos';
 import { Aderezo } from '@/lib/firestore/aderezosTypes';
+import { getDisabledIngredients } from '@/lib/firestore/ingredientStatus';
 
 export const revalidate = 60;
 
@@ -26,10 +27,11 @@ export default async function Home() {
   let burritoConfig: BurritoConfig = DEFAULT_BURRITO;
   let promotions: Promotion[]      = [];
   let aderezos: Aderezo[]          = [];
+  let disabledIngredients: string[] = [];
   try {
-    [settings, menuItems, burritoConfig, promotions, aderezos] = await Promise.all([
-      getSettings(), getMenuItems(), getBurritoConfig(), getPromotions(), getAderezos(),
+    [settings, menuItems, burritoConfig, promotions, aderezos, disabledIngredients] = await Promise.all([
+      getSettings(), getMenuItems(), getBurritoConfig(), getPromotions(), getAderezos(), getDisabledIngredients(),
     ]);
   } catch {}
-  return <AppShell settings={settings} menuItems={menuItems} burritoConfig={burritoConfig} promotions={promotions} aderezos={aderezos} />;
+  return <AppShell settings={settings} menuItems={menuItems} burritoConfig={burritoConfig} promotions={promotions} aderezos={aderezos} disabledIngredients={disabledIngredients} />;
 }

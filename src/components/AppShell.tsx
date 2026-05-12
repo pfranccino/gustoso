@@ -20,7 +20,7 @@ import FloatingWA from './FloatingWA';
 import CartBar from './CartBar';
 import CartDrawer from './CartDrawer';
 
-export default function AppShell({ settings, menuItems, burritoConfig, promotions, aderezos }: { settings: PublicSettings; menuItems: MenuItem[]; burritoConfig: BurritoConfig; promotions: Promotion[]; aderezos: Aderezo[] }) {
+export default function AppShell({ settings, menuItems, burritoConfig, promotions, aderezos, disabledIngredients = [] }: { settings: PublicSettings; menuItems: MenuItem[]; burritoConfig: BurritoConfig; promotions: Promotion[]; aderezos: Aderezo[]; disabledIngredients?: string[] }) {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -36,7 +36,7 @@ export default function AppShell({ settings, menuItems, burritoConfig, promotion
         <Nav scrolled={scrolled}/>
         <Hero/>
         <div className="section-divider"></div>
-        <MenuSection items={menuItems} burritoConfig={burritoConfig} promotions={promotions} aderezos={aderezos}/>
+        <MenuSection items={menuItems} burritoConfig={burritoConfig} promotions={promotions} aderezos={aderezos} disabledIngredients={disabledIngredients}/>
         <div className="section-divider"></div>
         <Gallery/>
         <div className="section-divider"></div>

@@ -6,14 +6,14 @@ import { fmt } from '@/lib/menuData';
 import { MenuItem, Extra } from '@/lib/firestore/menuItems';
 import { Aderezo } from '@/lib/firestore/aderezosTypes';
 
-export default function AddToCartModal({ item, onClose, aderezos = [] }: { item: MenuItem; onClose: () => void; aderezos?: Aderezo[] }) {
+export default function AddToCartModal({ item, onClose, aderezos = [], disabledIngredients = [] }: { item: MenuItem; onClose: () => void; aderezos?: Aderezo[]; disabledIngredients?: string[] }) {
   const { addItem } = useCart();
   const isDual = item.priceNormal != null;
   const [size, setSize]   = useState<'normal' | 'xl'>('normal');
   const [note, setNote]   = useState('');
   const [qty,  setQty]    = useState(1);
   const [selectedExtras, setSelectedExtras]         = useState<Extra[]>([]);
-  const [removedIngredients, setRemovedIngredients] = useState<string[]>([]);
+  const [removedIngredients, setRemovedIngredients] = useState<string[]>(disabledIngredients);
   const [selectedAderezos, setSelectedAderezos]     = useState<Aderezo[]>([]);
 
   const availableAderezos = aderezos.filter(a => a.available);
@@ -113,7 +113,16 @@ export default function AddToCartModal({ item, onClose, aderezos = [] }: { item:
             <div style={{ fontSize:11, color:'var(--text-muted)', marginBottom:8 }}>Toca para quitar</div>
             <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
               {item.ingredients.filter(i => i.enabled).map(ing => {
+                const globallyDisabled = disabledIngredients.includes(ing.name);
                 const removed = removedIngredients.includes(ing.name);
+                if (globallyDisabled) {
+                  return (
+                    <span key={ing.name}
+                      style={{ padding:'5px 12px', borderRadius:999, border:'1.5px solid rgba(220,38,38,0.4)', background:'rgba(220,38,38,0.06)', fontFamily:"'Barlow',sans-serif", fontWeight:600, fontSize:13, color:'#dc2626', textDecoration:'line-through', opacity:0.7, display:'inline-flex', alignItems:'center', gap:4 }}>
+                      🚫 {ing.name}
+                    </span>
+                  );
+                }
                 return (
                   <button key={ing.name} onClick={() => toggleIngredient(ing.name)}
                     style={{ padding:'5px 12px', borderRadius:999, border:`1.5px solid ${removed ? 'rgba(220,38,38,0.5)' : 'var(--border)'}`, background: removed ? 'rgba(220,38,38,0.07)' : 'var(--bg2)', cursor:'pointer', fontFamily:"'Barlow',sans-serif", fontWeight:600, fontSize:13, color: removed ? '#dc2626' : 'var(--text)', textDecoration: removed ? 'line-through' : 'none', transition:'all .15s' }}>

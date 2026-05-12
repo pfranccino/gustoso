@@ -31,7 +31,7 @@ function SizeHint() {
   );
 }
 
-export default function MenuSection({ items, burritoConfig, promotions, aderezos = [] }: { items: MenuItem[]; burritoConfig: BurritoConfig; promotions: Promotion[]; aderezos?: Aderezo[] }) {
+export default function MenuSection({ items, burritoConfig, promotions, aderezos = [], disabledIngredients = [] }: { items: MenuItem[]; burritoConfig: BurritoConfig; promotions: Promotion[]; aderezos?: Aderezo[]; disabledIngredients?: string[] }) {
   const visiblePromos = promotions.filter(p => p.visible);
 
   // Default to 'vienesas' if no visible promos, else 'promos'
@@ -82,7 +82,7 @@ export default function MenuSection({ items, burritoConfig, promotions, aderezos
           {Object.entries(grouped).map(([g, its]) => (
             <div key={g}>
               <SectionHeader title={g}/>
-              <div style={listStyle}>{its.map(i => isDual(i) ? <DualCard key={i.id} item={i} aderezos={aderezos}/> : <SimpleCard key={i.id} item={i} aderezos={aderezos}/>)}</div>
+              <div style={listStyle}>{its.map(i => isDual(i) ? <DualCard key={i.id} item={i} aderezos={aderezos} disabledIngredients={disabledIngredients}/> : <SimpleCard key={i.id} item={i} aderezos={aderezos} disabledIngredients={disabledIngredients}/>)}</div>
             </div>
           ))}
         </div>
@@ -94,7 +94,7 @@ export default function MenuSection({ items, burritoConfig, promotions, aderezos
       <div>
         {hasDual && <SizeHint/>}
         <div style={listStyle}>
-          {catItems.map(i => isDual(i) ? <DualCard key={i.id} item={i} aderezos={aderezos}/> : <SimpleCard key={i.id} item={i} aderezos={aderezos}/>)}
+          {catItems.map(i => isDual(i) ? <DualCard key={i.id} item={i} aderezos={aderezos} disabledIngredients={disabledIngredients}/> : <SimpleCard key={i.id} item={i} aderezos={aderezos} disabledIngredients={disabledIngredients}/>)}
         </div>
       </div>
     );
@@ -155,7 +155,7 @@ export default function MenuSection({ items, burritoConfig, promotions, aderezos
                 {searchResults.length} resultado{searchResults.length !== 1 ? 's' : ''} para "{search}"
               </div>
               <div style={listStyle}>
-                {searchResults.map(i => isDual(i) ? <DualCard key={i.id} item={i} aderezos={aderezos}/> : <SimpleCard key={i.id} item={i} aderezos={aderezos}/>)}
+                {searchResults.map(i => isDual(i) ? <DualCard key={i.id} item={i} aderezos={aderezos} disabledIngredients={disabledIngredients}/> : <SimpleCard key={i.id} item={i} aderezos={aderezos} disabledIngredients={disabledIngredients}/>)}
               </div>
             </div>
           )
