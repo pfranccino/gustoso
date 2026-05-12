@@ -10,10 +10,9 @@ const EXAMPLE_PROMOTIONS = [
     description: 'Sándwich AS a elección + bebida a elección',
     price:       4990,
     badge:       'COMBO',
-    items:       ['Sándwich AS', 'Bebida'],
     choices:     [
-      { label: 'Tipo de AS',  category: 'as',      options: [], required: true  },
-      { label: 'Bebida',      category: 'bebidas',  options: [], required: true  },
+      { label: 'Tipo de AS', category: 'as',     options: [], required: true },
+      { label: 'Bebida',     category: 'bebidas', options: [], required: true },
     ],
     visible:     true,
     sortOrder:   0,
@@ -24,7 +23,6 @@ const EXAMPLE_PROMOTIONS = [
     description: 'Sándwich churrasco a elección + bebida a elección',
     price:       5990,
     badge:       'PROMO',
-    items:       ['Sándwich Churrasco', 'Bebida'],
     choices:     [
       { label: 'Tipo de Churrasco', category: 'churrasco', options: [], required: true },
       { label: 'Bebida',            category: 'bebidas',   options: [], required: true },
@@ -38,7 +36,6 @@ const EXAMPLE_PROMOTIONS = [
     description: 'Sándwich mechada a elección + bebida a elección',
     price:       6490,
     badge:       'COMBO',
-    items:       ['Sándwich Mechada', 'Bebida'],
     choices:     [
       { label: 'Tipo de Mechada', category: 'mechada', options: [], required: true },
       { label: 'Bebida',          category: 'bebidas', options: [], required: true },
@@ -52,7 +49,6 @@ const EXAMPLE_PROMOTIONS = [
     description: 'Churrasco a elección + papas fritas + bebida',
     price:       7490,
     badge:       'OFERTA',
-    items:       ['Sándwich Churrasco', 'Papas Fritas', 'Bebida'],
     choices:     [
       { label: 'Tipo de Churrasco', category: 'churrasco', options: [], required: true },
       { label: 'Bebida',            category: 'bebidas',   options: [], required: true },
@@ -66,7 +62,6 @@ const EXAMPLE_PROMOTIONS = [
     description: 'Vienesa a elección + bebida a elección',
     price:       2990,
     badge:       'ESPECIAL',
-    items:       ['Vienesa', 'Bebida'],
     choices:     [
       { label: 'Tipo de Vienesa', category: 'vienesas', options: [], required: true },
       { label: 'Bebida',          category: 'bebidas',  options: [], required: false },

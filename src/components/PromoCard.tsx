@@ -118,18 +118,6 @@ export default function PromoCard({ promo, aderezos = [], menuItems = [] }: { pr
           </div>
         </div>
 
-        {/* Items included */}
-        {promo.items.length > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            {promo.items.map((it, i) => (
-              <div key={i} style={{ display:'flex', alignItems:'center', gap:6, fontSize:13, color:'var(--text)', fontWeight:500 }}>
-                <span style={{ color:'#F26419', fontWeight:900, fontSize:14, lineHeight:1 }}>✓</span>
-                {it}
-              </div>
-            ))}
-          </div>
-        )}
-
         {/* Price + Add */}
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginTop:4 }}>
           <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:26, color:'var(--orange)' }}>

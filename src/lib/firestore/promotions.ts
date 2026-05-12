@@ -17,7 +17,6 @@ export type Promotion = {
   imageUrl: string | null;
   visible: boolean;
   sortOrder: number;
-  items: string[];      // list of what's included: ["Completo italiano", "Bebida 500ml"]
   choices: PromoChoice[];
 };
 
@@ -34,7 +33,6 @@ function parsePromotion(id: string, d: FirebaseFirestore.DocumentData): Promotio
     imageUrl:    d.imageUrl ?? null,
     visible:     d.visible !== false,
     sortOrder:   Number(d.sortOrder   ?? 0),
-    items:       Array.isArray(d.items) ? d.items.map(String) : [],
     choices:     Array.isArray(d.choices)
       ? d.choices.map((c: Record<string, unknown>) => ({
           label:    String(c.label    ?? ''),
