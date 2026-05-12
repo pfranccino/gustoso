@@ -64,9 +64,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const clearCart  = useCallback(() => setItems([]), []);
 
   const total = items.reduce((s, i) => {
-    const extrasTotal   = (i.extras   ?? []).reduce((e, x) => e + x.price, 0);
-    const aderezosTotal = (i.aderezos ?? []).reduce((e, x) => e + x.price, 0);
-    return s + (i.price + extrasTotal + aderezosTotal) * i.qty;
+    const extrasTotal = (i.extras ?? []).reduce((e, x) => e + x.price, 0);
+    // item.price ya incluye el precio de aderezos (se suma al agregar al carrito)
+    return s + (i.price + extrasTotal) * i.qty;
   }, 0);
   const count = items.reduce((s, i) => s + i.qty, 0);
 

@@ -54,7 +54,7 @@ export default function AddToCartModal({ item, onClose, aderezos = [] }: { item:
     addItem({
       name:               item.name,
       desc:               item.desc ?? undefined,
-      price:              basePrice,
+      price:              basePrice + aderezosPrice,
       size:               isDual ? size : undefined,
       note:               note.trim() || undefined,
       extras:             selectedExtras.length > 0 ? selectedExtras : undefined,
@@ -66,7 +66,7 @@ export default function AddToCartModal({ item, onClose, aderezos = [] }: { item:
       addItem({
         name:               item.name,
         desc:               item.desc ?? undefined,
-        price:              basePrice,
+        price:              basePrice + aderezosPrice,
         size:               isDual ? size : undefined,
         note:               note.trim() || undefined,
         extras:             selectedExtras.length > 0 ? selectedExtras : undefined,

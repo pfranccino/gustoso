@@ -154,12 +154,11 @@ export default function CartDrawer() {
 
   /* ── auto-selección de zona cuando tenemos distancia ── */
   useEffect(() => {
-    if (distKm !== null && selectedZone === null) {
-      const idx = sortedZones.findIndex(z => distKm <= z.maxKm);
-      setSelectedZone(idx >= 0 ? idx : sortedZones.length);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [distKm]);
+    if (distKm === null || selectedZone !== null) return;
+    const zones = delivery?.zones ? [...delivery.zones].sort((a, b) => a.maxKm - b.maxKm) : [];
+    const idx = zones.findIndex(z => distKm <= z.maxKm);
+    setSelectedZone(idx >= 0 ? idx : zones.length);
+  }, [distKm, selectedZone, delivery?.zones]);
 
   /* ── delivery fee ────────────────────────── */
   const deliveryFee = (() => {
@@ -248,9 +247,9 @@ export default function CartDrawer() {
   const buildWAMsg = (orderId: string) => {
     const lines = [`🧾 Pedido ${orderId}`, waGreeting, ''];
     items.forEach((item, i) => {
-      const extrasTotal   = (item.extras   ?? []).reduce((s, e) => s + e.price, 0);
-      const aderezosTotal = (item.aderezos ?? []).reduce((s, a) => s + a.price, 0);
-      lines.push(`${i + 1}. ${item.qty}x ${item.name}${item.size ? ` (${item.size.toUpperCase()})` : ''} — ${fmt((item.price + extrasTotal + aderezosTotal) * item.qty)}`);
+      const extrasTotal = (item.extras ?? []).reduce((s, e) => s + e.price, 0);
+      // item.price ya incluye precio de aderezos
+      lines.push(`${i + 1}. ${item.qty}x ${item.name}${item.size ? ` (${item.size.toUpperCase()})` : ''} — ${fmt((item.price + extrasTotal) * item.qty)}`);
       if (item.desc)                         lines.push(`   📋 ${item.desc}`);
       if (item.removedIngredients?.length)   lines.push(`   ❌ Sin: ${item.removedIngredients.join(', ')}`);
       if (item.extras?.length)               lines.push(`   ➕ ${item.extras.map(e => e.price > 0 ? `${e.name} (+${fmt(e.price)})` : e.name).join(', ')}`);
@@ -331,7 +330,7 @@ export default function CartDrawer() {
                       <span style={{ padding:'0 10px', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:16, color:'var(--text)' }}>{item.qty}</span>
                       <button onClick={() => updateQty(item.id, 1)} style={{ width:32, height:32, border:'none', background:'transparent', cursor:'pointer', fontSize:16, color:'var(--orange)', display:'flex', alignItems:'center', justifyContent:'center' }}>+</button>
                     </div>
-                    <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:18, color:'var(--yellow)' }}>{fmt((item.price + (item.extras ?? []).reduce((s, e) => s + e.price, 0) + (item.aderezos ?? []).reduce((s, a) => s + a.price, 0)) * item.qty)}</div>
+                    <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:18, color:'var(--yellow)' }}>{fmt((item.price + (item.extras ?? []).reduce((s, e) => s + e.price, 0)) * item.qty)}</div>
                   </div>
                 </div>
               ))}

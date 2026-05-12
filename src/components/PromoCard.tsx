@@ -38,10 +38,11 @@ export default function PromoCard({ promo, aderezos = [] }: { promo: Promotion; 
   }
 
   function confirm() {
+    const aderezosPrice = selectedAderezos.reduce((s, a) => s + a.price, 0);
     const aderezosArr = selectedAderezos.length > 0
       ? selectedAderezos.map(a => ({ name: a.name, price: a.price }))
       : undefined;
-    addItem({ name: promo.name, desc: promo.description, price: promo.price, aderezos: aderezosArr });
+    addItem({ name: promo.name, desc: promo.description, price: promo.price + aderezosPrice, aderezos: aderezosArr, alwaysNew: selectedAderezos.length > 0 });
     setModal(false);
   }
 
