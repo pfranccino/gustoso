@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useEffect } from 'react';
 import { Settings, DeliveryZone } from '@/lib/firestore/settingsTypes';
 
 const INPUT: React.CSSProperties = {
@@ -21,6 +21,9 @@ export default function SettingsEditor({ initial }: { initial: Settings }) {
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
   const [isPending, startTransition] = useTransition();
+  const [siteUrl, setSiteUrl] = useState('');
+
+  useEffect(() => { setSiteUrl(window.location.origin); }, []);
 
   function set(key: keyof Settings, value: string | boolean) {
     setForm(f => ({ ...f, [key]: value }));
@@ -263,6 +266,32 @@ ${form.waGreeting}
           </>
         )}
       </div>
+
+      {/* QR de la página */}
+      {siteUrl && (
+        <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '20px', marginBottom: 16, textAlign: 'center' }}>
+          <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 18, color: 'var(--text)', marginBottom: 4 }}>
+            📱 QR de tu página
+          </div>
+          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>{siteUrl}</div>
+          <img
+            src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=10&data=${encodeURIComponent(siteUrl)}`}
+            alt="QR código"
+            width={200}
+            height={200}
+            style={{ borderRadius: 12, border: '1px solid var(--border)', display: 'block', margin: '0 auto 16px' }}
+          />
+          <a
+            href={`https://api.qrserver.com/v1/create-qr-code/?size=400x400&margin=20&data=${encodeURIComponent(siteUrl)}`}
+            download="qr-gustosos.png"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ display: 'inline-block', padding: '10px 24px', borderRadius: 999, background: '#F26419', color: '#fff', fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 16, textDecoration: 'none' }}
+          >
+            ⬇ Descargar QR
+          </a>
+        </div>
+      )}
 
       {/* Save */}
       {error && (
