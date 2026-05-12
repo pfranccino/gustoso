@@ -1,7 +1,8 @@
 import { getAdminDb } from '@/lib/firebase/admin';
 import { FieldValue } from 'firebase-admin/firestore';
 export type { CostEntry } from './costsTypes';
-import type { CostEntry } from './costsTypes';
+import type { CostEntry, Unit } from './costsTypes';
+import { UNITS } from './costsTypes';
 
 export async function getCosts(): Promise<CostEntry[]> {
   const snap = await getAdminDb().collection('costs').orderBy('date', 'desc').get();
@@ -11,6 +12,7 @@ export async function getCosts(): Promise<CostEntry[]> {
       id:         doc.id,
       name:       typeof d.name       === 'string' ? d.name       : '',
       quantity:   typeof d.quantity   === 'number' ? d.quantity   : 0,
+      unit:       (UNITS as readonly string[]).includes(d.unit) ? d.unit as Unit : 'unidad',
       totalPrice: typeof d.totalPrice === 'number' ? d.totalPrice : 0,
       unitPrice:  typeof d.unitPrice  === 'number' ? d.unitPrice  : 0,
       date:       typeof d.date       === 'string' ? d.date       : '',

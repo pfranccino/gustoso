@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { CostEntry } from '@/lib/firestore/costsTypes';
+import { CostEntry, UNITS } from '@/lib/firestore/costsTypes';
 
 const fmt = (n: number) =>
   `$${Math.round(n).toLocaleString('es-CL')}`;
@@ -20,9 +20,9 @@ const LABEL: React.CSSProperties = {
   textTransform: 'uppercase', marginBottom: 5,
 };
 
-type FormState = { name: string; quantity: string; totalPrice: string; date: string; notes: string };
+type FormState = { name: string; quantity: string; unit: string; totalPrice: string; date: string; notes: string };
 const today = () => new Date().toISOString().slice(0, 10);
-const EMPTY: FormState = { name: '', quantity: '', totalPrice: '', date: today(), notes: '' };
+const EMPTY: FormState = { name: '', quantity: '', unit: 'unidad', totalPrice: '', date: today(), notes: '' };
 
 function calcUnit(qty: string, total: string): number | null {
   const q = parseFloat(qty);
@@ -45,7 +45,7 @@ export default function CostsEditor({ initial }: { initial: CostEntry[] }) {
 
   function openEdit(c: CostEntry) {
     setEditId(c.id);
-    setForm({ name: c.name, quantity: String(c.quantity), totalPrice: String(c.totalPrice), date: c.date, notes: c.notes });
+    setForm({ name: c.name, quantity: String(c.quantity), unit: c.unit, totalPrice: String(c.totalPrice), date: c.date, notes: c.notes });
     setError('');
   }
 
@@ -63,7 +63,7 @@ export default function CostsEditor({ initial }: { initial: CostEntry[] }) {
 
     startTransition(async () => {
       try {
-        const body = { name, quantity, totalPrice, unitPrice, date: form.date, notes: form.notes.trim() };
+        const body = { name, quantity, unit: form.unit, totalPrice, unitPrice, date: form.date, notes: form.notes.trim() };
         if (editId) {
           await fetch(`/api/admin/costs/${editId}`, {
             method: 'PATCH', headers: { 'Content-Type': 'application/json' },
@@ -114,13 +114,20 @@ export default function CostsEditor({ initial }: { initial: CostEntry[] }) {
           </div>
         </div>
 
-        {/* Cantidad + Precio total + Precio unitario */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 10 }}>
+        {/* Cantidad + Unidad + Precio total + Precio unitario */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 10, marginBottom: 10 }}>
           <div>
             <label style={LABEL}>Cantidad</label>
             <input type="number" min="0" step="any" value={form.quantity}
               onChange={e => setForm(f => ({ ...f, quantity: e.target.value }))}
               placeholder="Ej: 100" style={INPUT} />
+          </div>
+          <div>
+            <label style={LABEL}>Unidad</label>
+            <select value={form.unit} onChange={e => setForm(f => ({ ...f, unit: e.target.value }))}
+              style={{ ...INPUT, cursor: 'pointer' }}>
+              {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
+            </select>
           </div>
           <div>
             <label style={LABEL}>Precio Total ($)</label>
@@ -191,9 +198,9 @@ export default function CostsEditor({ initial }: { initial: CostEntry[] }) {
               {/* Stats */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginTop: 12 }}>
                 {[
-                  { label: 'Cantidad',       value: c.quantity.toLocaleString('es-CL') },
+                  { label: 'Cantidad',       value: `${c.quantity.toLocaleString('es-CL')} ${c.unit}` },
                   { label: 'Total',          value: fmt(c.totalPrice) },
-                  { label: 'Precio unitario',value: fmt(c.unitPrice) },
+                  { label: `Por ${c.unit}`,  value: fmt(c.unitPrice) },
                 ].map(s => (
                   <div key={s.label} style={{ background: 'var(--bg2)', borderRadius: 8, padding: '8px 12px', textAlign: 'center' }}>
                     <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 3 }}>{s.label}</div>
