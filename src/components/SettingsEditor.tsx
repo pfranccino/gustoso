@@ -156,6 +156,25 @@ ${form.waGreeting}
         </div>
       </div>
 
+      {/* PIN Mostrador */}
+      <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '20px', marginBottom: 16 }}>
+        <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 18, color: 'var(--text)', marginBottom: 4 }}>
+          🏪 Mostrador
+        </div>
+        <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12 }}>
+          PIN numérico para acceder a la pantalla de toma de pedidos en local (<a href="/mostrador" target="_blank" style={{ color:'var(--orange)' }}>/mostrador</a>).
+        </div>
+        <label style={LABEL}>PIN de acceso</label>
+        <input
+          style={{ ...INPUT, maxWidth: 160, letterSpacing: 4, fontFamily: 'monospace', fontSize: 18 }}
+          value={form.mostradorPin ?? '1234'}
+          onChange={e => set('mostradorPin', e.target.value.replace(/\D/g,'').slice(0,6))}
+          placeholder="1234"
+          inputMode="numeric"
+          maxLength={6}
+        />
+      </div>
+
       {/* Delivery */}
       <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '20px', marginBottom: 16 }}>
         <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 18, color: 'var(--text)', marginBottom: 4 }}>

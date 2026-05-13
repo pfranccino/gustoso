@@ -6,13 +6,14 @@ export type { DeliveryZone, DeliveryConfig, Settings } from './settingsTypes';
 export { DEFAULT_DELIVERY } from './settingsTypes';
 
 const DEFAULT: Settings = {
-  waNumber:   '56985219094',
-  address:    'Marino José Manuel Ramírez #1641',
-  schedule:   'Lunes a Domingo 12:00 – 22:00',
-  isOpen:     true,
-  waGreeting: "Hola Gustoso's! Quiero hacer un pedido 🛒",
-  waFooter:   '',
-  delivery:   { ...DEFAULT_DELIVERY },
+  waNumber:     '56985219094',
+  address:      'Marino José Manuel Ramírez #1641',
+  schedule:     'Lunes a Domingo 12:00 – 22:00',
+  isOpen:       true,
+  waGreeting:   "Hola Gustoso's! Quiero hacer un pedido 🛒",
+  waFooter:     '',
+  delivery:     { ...DEFAULT_DELIVERY },
+  mostradorPin: '1234',
 };
 
 function parseDelivery(raw: unknown): DeliveryConfig {
@@ -41,7 +42,8 @@ export async function getSettings(): Promise<Settings> {
     isOpen:     typeof d.isOpen     === 'boolean' ? d.isOpen     : DEFAULT.isOpen,
     waGreeting: typeof d.waGreeting === 'string'  ? d.waGreeting : DEFAULT.waGreeting,
     waFooter:   typeof d.waFooter   === 'string'  ? d.waFooter   : DEFAULT.waFooter,
-    delivery:   parseDelivery(d.delivery),
+    delivery:     parseDelivery(d.delivery),
+    mostradorPin: typeof d.mostradorPin === 'string' ? d.mostradorPin : DEFAULT.mostradorPin,
   };
 }
 

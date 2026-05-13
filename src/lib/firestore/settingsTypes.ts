@@ -14,13 +14,14 @@ export type DeliveryConfig = {
 };
 
 export type Settings = {
-  waNumber:   string;
-  address:    string;
-  schedule:   string;
-  isOpen:     boolean;
-  waGreeting: string;
-  waFooter:   string;
-  delivery:   DeliveryConfig;
+  waNumber:     string;
+  address:      string;
+  schedule:     string;
+  isOpen:       boolean;
+  waGreeting:   string;
+  waFooter:     string;
+  delivery:     DeliveryConfig;
+  mostradorPin: string; // PIN numérico para el modo mostrador
 };
 
 export const DEFAULT_DELIVERY: DeliveryConfig = {

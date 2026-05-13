@@ -5,13 +5,14 @@ export const dynamic = 'force-dynamic';
 
 export default async function SettingsPage() {
   let settings: Settings = {
-    waNumber:   '56985219094',
-    address:    'Marino José Manuel Ramírez #1641',
-    schedule:   'Lunes a Domingo 12:00 – 22:00',
-    isOpen:     true,
-    waGreeting: "Hola Gustoso's! Quiero hacer un pedido 🛒",
-    waFooter:   '',
-    delivery:   { ...DEFAULT_DELIVERY },
+    waNumber:     '56985219094',
+    address:      'Marino José Manuel Ramírez #1641',
+    schedule:     'Lunes a Domingo 12:00 – 22:00',
+    isOpen:       true,
+    waGreeting:   "Hola Gustoso's! Quiero hacer un pedido 🛒",
+    waFooter:     '',
+    delivery:     { ...DEFAULT_DELIVERY },
+    mostradorPin: '1234',
   };
 
   try {

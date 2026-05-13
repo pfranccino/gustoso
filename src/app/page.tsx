@@ -14,13 +14,14 @@ export const revalidate = 60;
 import { DEFAULT_DELIVERY } from '@/lib/firestore/settings';
 
 const DEFAULT_SETTINGS: Settings = {
-  waNumber:   '56985219094',
-  address:    'Marino José Manuel Ramírez #1641',
-  isOpen:     true,
-  schedule:   'Lunes a Domingo 12:00 – 22:00',
-  waGreeting: "Hola Gustoso's! Quiero hacer un pedido 🛒",
-  waFooter:   '',
-  delivery:   { ...DEFAULT_DELIVERY },
+  waNumber:     '56985219094',
+  address:      'Marino José Manuel Ramírez #1641',
+  isOpen:       true,
+  schedule:     'Lunes a Domingo 12:00 – 22:00',
+  waGreeting:   "Hola Gustoso's! Quiero hacer un pedido 🛒",
+  waFooter:     '',
+  delivery:     { ...DEFAULT_DELIVERY },
+  mostradorPin: '1234',
 };
 
 export default async function Home() {

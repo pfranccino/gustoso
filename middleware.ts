@@ -4,10 +4,7 @@ import { decodeJwt } from 'jose';
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  const isProtected = (pathname.startsWith('/admin') && !pathname.startsWith('/admin/login'))
-    || pathname.startsWith('/mostrador');
-
-  if (isProtected) {
+  if (pathname.startsWith('/admin') && !pathname.startsWith('/admin/login')) {
     const sessionCookie = request.cookies.get('session')?.value;
 
     if (!sessionCookie) {
@@ -36,5 +33,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/mostrador'],
+  matcher: ['/admin/:path*'],
 };
