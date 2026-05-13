@@ -22,6 +22,7 @@ import Footer from './Footer';
 import FloatingWA from './FloatingWA';
 import CartBar from './CartBar';
 import CartDrawer from './CartDrawer';
+import { ZoneProvider } from '@/contexts/ZoneContext';
 
 export default function AppShell({ settings, menuItems, burritoConfig, promotions, aderezos, disabledIngredients = [], galleryItems = [], reviewItems = [], mostrador = false }: { settings: PublicSettings; menuItems: MenuItem[]; burritoConfig: BurritoConfig; promotions: Promotion[]; aderezos: Aderezo[]; disabledIngredients?: string[]; galleryItems?: GalleryItem[]; reviewItems?: Review[]; mostrador?: boolean }) {
   const [scrolled, setScrolled] = useState(false);
@@ -34,6 +35,7 @@ export default function AppShell({ settings, menuItems, burritoConfig, promotion
 
   return (
     <SettingsProvider value={settings}>
+    <ZoneProvider>
     <CartProvider>
       <div className="pub-outer" style={{ maxWidth:'var(--max)', margin:'0 auto', position:'relative' }}>
         <Nav scrolled={scrolled}/>
@@ -56,6 +58,7 @@ export default function AppShell({ settings, menuItems, burritoConfig, promotion
         <CartDrawer mostrador={mostrador}/>
       </div>
     </CartProvider>
+    </ZoneProvider>
     </SettingsProvider>
   );
 }
