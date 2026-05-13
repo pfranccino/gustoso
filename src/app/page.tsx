@@ -7,6 +7,7 @@ import { getAderezos } from '@/lib/firestore/aderezos';
 import { Aderezo } from '@/lib/firestore/aderezosTypes';
 import { getDisabledIngredients } from '@/lib/firestore/ingredientStatus';
 import { getGalleryItems, GalleryItem } from '@/lib/firestore/gallery';
+import { getReviews, Review } from '@/lib/firestore/reviews';
 
 export const revalidate = 60;
 
@@ -30,10 +31,11 @@ export default async function Home() {
   let aderezos: Aderezo[]           = [];
   let disabledIngredients: string[] = [];
   let galleryItems: GalleryItem[]   = [];
+  let reviewItems:  Review[]        = [];
   try {
-    [settings, menuItems, burritoConfig, promotions, aderezos, disabledIngredients, galleryItems] = await Promise.all([
-      getSettings(), getMenuItems(), getBurritoConfig(), getPromotions(), getAderezos(), getDisabledIngredients(), getGalleryItems(),
+    [settings, menuItems, burritoConfig, promotions, aderezos, disabledIngredients, galleryItems, reviewItems] = await Promise.all([
+      getSettings(), getMenuItems(), getBurritoConfig(), getPromotions(), getAderezos(), getDisabledIngredients(), getGalleryItems(), getReviews(),
     ]);
   } catch {}
-  return <AppShell settings={settings} menuItems={menuItems} burritoConfig={burritoConfig} promotions={promotions} aderezos={aderezos} disabledIngredients={disabledIngredients} galleryItems={galleryItems} />;
+  return <AppShell settings={settings} menuItems={menuItems} burritoConfig={burritoConfig} promotions={promotions} aderezos={aderezos} disabledIngredients={disabledIngredients} galleryItems={galleryItems} reviewItems={reviewItems} />;
 }

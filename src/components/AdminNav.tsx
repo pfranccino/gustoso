@@ -15,6 +15,7 @@ const NAV_ITEMS = [
   { href: '/admin/costs',       label: 'Costos',       emoji: '💰' },
   { href: '/admin/ingredients', label: 'Ingredientes', emoji: '🥬' },
   { href: '/admin/gallery',    label: 'Galería',      emoji: '📷' },
+  { href: '/admin/reviews',    label: 'Reseñas',      emoji: '⭐' },
   { href: '/admin/seed',       label: 'Seed',          emoji: '🌱' },
   { href: '/admin/settings',   label: 'Configuración',emoji: '⚙️' },
 ];
