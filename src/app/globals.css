@@ -6,10 +6,11 @@
 :root{
   --orange:#F26419;--orange-light:#FF8C42;--orange-dark:#C94E0A;
   --yellow:#FFD600;
+  --green:#15803D;
   --bg:#FFF9F5;--bg2:#FFF1E6;--bg3:#FFE5CC;
-  --card:#FFFFFF;
+  --card:#FFFFFF;--card-subtle:#FFFBF5;
   --text:#1A0800;--text-muted:#A0541A;
-  --border:rgba(242,100,25,0.2);
+  --border:rgba(242,100,25,0.2);--border-strong:rgba(242,100,25,0.35);
   --radius:14px;--radius-sm:8px;--max:680px;
 }
 html{scroll-behavior:smooth}
@@ -44,6 +45,8 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--text);min-
   .hero-collage{display:block!important}
   .hero-eyebrow{display:flex!important}
   .hero-logo-mobile{display:none!important}
+  .hero-status-pill{display:none!important}
+  .hero-scroll-hint{display:none!important}
 
   /* Nav desktop */
   .nav-desktop-links{display:flex!important}

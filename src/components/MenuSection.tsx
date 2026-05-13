@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { MenuItem } from '@/lib/firestore/menuItems';
 import { BurritoConfig } from '@/lib/firestore/burritoConfig';
 import { Promotion } from '@/lib/firestore/promotions';
@@ -122,7 +122,6 @@ export default function MenuSection({ items, burritoConfig, promotions, aderezos
 
   const [activeTab, setActiveTab] = useState<TabId>(defaultTab);
   const [search, setSearch] = useState('');
-  const tabBarRef = useRef<HTMLDivElement>(null);
 
   const hasBebidas = items.some(i => i.category === 'bebidas' && i.visible);
   const visibleTabs = TABS.filter(t => {
@@ -134,10 +133,6 @@ export default function MenuSection({ items, burritoConfig, promotions, aderezos
   const switchTab = (id: TabId) => {
     setActiveTab(id);
     setSearch('');
-    if (tabBarRef.current) {
-      const btn = tabBarRef.current.querySelector(`[data-tab="${id}"]`) as HTMLElement | null;
-      if (btn) tabBarRef.current.scrollLeft = btn.offsetLeft - tabBarRef.current.clientWidth / 2 + btn.offsetWidth / 2;
-    }
   };
 
   const activeTabData = visibleTabs.find(t => t.id === activeTab);
@@ -209,14 +204,26 @@ export default function MenuSection({ items, burritoConfig, promotions, aderezos
           )}
         </div>
 
-        {/* Mobile tabs — hidden on desktop */}
+        {/* Mobile tabs — 4×2 grid, hidden on desktop */}
         {!q && (
-          <div ref={tabBarRef} className="menu-tabs-mobile" style={{ display:'flex', gap:8, overflowX:'auto', scrollbarWidth:'none', msOverflowStyle:'none', paddingBottom:2 }}>
-            {visibleTabs.map(tab => (
-              <button key={tab.id} data-tab={tab.id} onClick={() => switchTab(tab.id)} style={{ display:'flex', alignItems:'center', gap:5, padding:'7px 13px', borderRadius:999, border: activeTab===tab.id?'2px solid var(--orange)':'2px solid transparent', background: activeTab===tab.id?'var(--orange)':'var(--bg3)', color: activeTab===tab.id?'#fff':'var(--text-muted)', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:13, whiteSpace:'nowrap', cursor:'pointer', transition:'all .2s', letterSpacing:.5, flexShrink:0 }}>
-                <span style={{ fontSize:13 }}>{tab.emoji}</span>{tab.label}
-              </button>
-            ))}
+          <div className="menu-tabs-mobile" style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:6 }}>
+            {visibleTabs.map(tab => {
+              const on = activeTab === tab.id;
+              return (
+                <button key={tab.id} data-tab={tab.id} onClick={() => switchTab(tab.id)} style={{
+                  display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
+                  gap:3, padding:'8px 4px', borderRadius:10,
+                  border: on ? '2px solid var(--orange)' : '2px solid transparent',
+                  background: on ? 'var(--orange)' : 'var(--bg3)',
+                  color: on ? '#fff' : 'var(--text-muted)',
+                  fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:11,
+                  cursor:'pointer', transition:'all .2s', letterSpacing:.3,
+                }}>
+                  <span style={{ fontSize:18, lineHeight:1 }}>{tab.emoji}</span>
+                  <span style={{ lineHeight:1.2, textAlign:'center' }}>{tab.label}</span>
+                </button>
+              );
+            })}
           </div>
         )}
       </div>

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Logo from './Logo';
+import { useLiveOrders } from '@/hooks/useLiveOrders';
 
 const NAV_GROUPS = [
   {
@@ -53,6 +54,10 @@ export default function AdminSidebar({ email }: { email: string }) {
   const router     = useRouter();
   const [open, setOpen] = useState(false);
 
+  // Live pending badge
+  const { orders: allOrders } = useLiveOrders(null);
+  const pendingCount = allOrders.filter(o => o.status === 'pending').length;
+
   // cierra drawer en cambio de ruta
   useEffect(() => { setOpen(false); }, [pathname]);
 
@@ -78,7 +83,9 @@ export default function AdminSidebar({ email }: { email: string }) {
               {group.label}
             </div>
             {group.items.map(item => {
-              const active = pathname === item.href;
+              const active  = pathname === item.href;
+              const isPedidos = item.href === '/admin/orders';
+              const badge = isPedidos && pendingCount > 0 ? pendingCount : 0;
               return (
                 <button key={item.href} onClick={() => router.push(item.href)}
                   style={{
@@ -93,7 +100,12 @@ export default function AdminSidebar({ email }: { email: string }) {
                     fontSize: 14,
                   }}>
                   <span style={{ fontSize:16, flexShrink:0, lineHeight:1 }}>{item.emoji}</span>
-                  {item.label}
+                  <span style={{ flex:1 }}>{item.label}</span>
+                  {badge > 0 && (
+                    <span style={{ minWidth:18, height:18, borderRadius:999, background:'var(--orange)', color:'#fff', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:11, display:'flex', alignItems:'center', justifyContent:'center', padding:'0 5px', flexShrink:0 }}>
+                      {badge > 99 ? '99+' : badge}
+                    </span>
+                  )}
                 </button>
               );
             })}

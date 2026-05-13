@@ -13,29 +13,23 @@ function shortDate(iso: string) {
   return `${d.getDate()}/${d.getMonth() + 1}`;
 }
 
-function BarChart({ days }: { days: DayBucket[] }) {
+function MiniBarChart({ days }: { days: DayBucket[] }) {
   const max = Math.max(...days.map(d => d.total), 1);
-  const W = 600, H = 100;
-  const barW = Math.floor((W - days.length) / days.length);
-
   return (
-    <div style={{ overflowX: 'auto' }}>
-      <svg viewBox={`0 0 ${W} ${H + 24}`} style={{ width: '100%', minWidth: 300, display: 'block' }}>
-        {days.map((d, i) => {
-          const bh = Math.max(2, Math.round((d.total / max) * H));
-          const x = i * (barW + 1);
-          return (
-            <g key={d.date}>
-              <rect x={x} y={H - bh} width={barW} height={bh} rx={3} fill="#F26419" opacity={d.total > 0 ? 1 : 0.15} />
-              {i % 2 === 0 && (
-                <text x={x + barW / 2} y={H + 16} textAnchor="middle" fontSize={9} fill="#A0541A">
-                  {shortDate(d.date)}
-                </text>
-              )}
-            </g>
-          );
-        })}
-      </svg>
+    <div style={{ display:'flex', alignItems:'flex-end', gap:3, height:80, width:'100%' }}>
+      {days.map((d, i) => {
+        const pct = Math.max(2, Math.round((d.total / max) * 100));
+        return (
+          <div key={d.date} style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', gap:4, height:'100%', justifyContent:'flex-end' }} title={`${shortDate(d.date)}: ${d.total > 0 ? `$${d.total.toLocaleString('es-CL')}` : 'sin pedidos'}`}>
+            <div style={{ width:'100%', background:'var(--orange)', borderRadius:'3px 3px 0 0', height:`${pct}%`, opacity: d.total > 0 ? 1 : 0.15, transition:'height .3s' }}/>
+            {i % 2 === 0 && (
+              <div style={{ fontSize:8, color:'var(--text-muted)', whiteSpace:'nowrap', textAlign:'center', lineHeight:1, marginTop:2 }}>
+                {shortDate(d.date)}
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -204,7 +198,7 @@ export default function DashboardPage() {
             <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 18, color: 'var(--text)', marginBottom: 16 }}>
               Pedidos — últimos 14 días
             </div>
-            <BarChart days={metrics.last14Days} />
+            <MiniBarChart days={metrics.last14Days} />
           </div>
           <div style={{ minWidth:220, maxWidth:280 }}>
             <PaymentBreakdownPanel breakdown={payment}/>

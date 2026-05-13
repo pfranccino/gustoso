@@ -5,19 +5,19 @@ import Logo from './Logo';
 import { WAIcon } from './icons';
 
 export default function Hero() {
-  const { waNumber } = useSettings();
+  const { waNumber, isOpen } = useSettings();
   const waUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent("Hola Gustoso's, quiero hacer un pedido 🌭")}`;
 
   return (
     <section className="hero-section" style={{
       position: 'relative',
-      minHeight: '100dvh',
+      minHeight: 'auto',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
       overflow: 'hidden',
-      padding: '80px 20px 80px',
+      padding: '88px 24px 32px',
       textAlign: 'center',
     }}>
       {/* Background */}
@@ -42,6 +42,12 @@ export default function Hero() {
             <Logo size={64}/>
           </div>
 
+          {/* Status pill — mobile only */}
+          <div className="fade-up hero-status-pill" style={{ display:'inline-flex', alignItems:'center', gap:6, background: isOpen ? 'rgba(21,128,61,0.1)' : 'rgba(107,114,128,0.1)', border:`1px solid ${isOpen ? 'rgba(21,128,61,0.25)' : 'rgba(107,114,128,0.25)'}`, borderRadius:999, padding:'4px 12px', marginBottom:14, fontSize:11, fontWeight:700, color: isOpen ? 'var(--green)' : '#6b7280', letterSpacing:.5 }}>
+            <span style={{ width:6, height:6, borderRadius:'50%', background: isOpen ? 'var(--green)' : '#9ca3af', display:'inline-block' }}/>
+            {isOpen ? 'ABIERTO · 25 MIN' : 'CERRADO'}
+          </div>
+
           {/* Desktop eyebrow */}
           <div className="hero-eyebrow fade-up" style={{ display:'none', alignItems:'center', gap:8, marginBottom:16 }}>
             <span style={{ fontSize:10, fontWeight:800, color:'var(--text-muted)', letterSpacing:2, textTransform:'uppercase' }}>Los Andes · V Región</span>
@@ -49,7 +55,7 @@ export default function Hero() {
             <span style={{ fontSize:10, fontWeight:800, color:'var(--text-muted)', letterSpacing:2, textTransform:'uppercase' }}>5+ años</span>
           </div>
 
-          <h1 className="fade-up-2" style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:'clamp(40px,10vw,76px)', lineHeight:.95, color:'var(--text)', marginBottom:14, letterSpacing:-1 }}>
+          <h1 className="fade-up-2" style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:'clamp(44px,10vw,76px)', lineHeight:.95, color:'var(--text)', marginBottom:14, letterSpacing:-1 }}>
             El sabor que<br/><span style={{ color:'var(--orange)' }}>te conquista</span>
           </h1>
 
@@ -57,7 +63,7 @@ export default function Hero() {
             Vienesas, sándwiches, burritos y más.<br/>Hecho con sabor, entregado con gusto.
           </p>
 
-          <div className="hero-cta fade-up-3" style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:10, marginBottom:28 }}>
+          <div className="hero-cta fade-up-3" style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:10, marginBottom:20 }}>
             <button
               onClick={() => document.getElementById('menu')?.scrollIntoView({ behavior:'smooth' })}
               style={{ display:'inline-flex', alignItems:'center', gap:8, background:'var(--orange)', color:'#fff', padding:'15px 30px', borderRadius:999, border:'none', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:20, letterSpacing:.5, cursor:'pointer', boxShadow:'0 6px 24px rgba(242,100,25,0.35)', whiteSpace:'nowrap' }}
@@ -67,6 +73,11 @@ export default function Hero() {
             <a href={waUrl} target="_blank" rel="noopener noreferrer" style={{ display:'inline-flex', alignItems:'center', gap:6, color:'#25D366', textDecoration:'none', fontSize:14, fontWeight:700 }}>
               <WAIcon size={16} color="#25D366"/> +56 9 8521 0940
             </a>
+          </div>
+
+          {/* Scroll hint — hidden on desktop */}
+          <div className="hero-scroll-hint" style={{ fontSize:12, color:'var(--text-muted)', fontWeight:600, letterSpacing:.5, display:'flex', alignItems:'center', gap:5, marginBottom:12 }}>
+            <span>↓</span><span>Nuestra carta</span>
           </div>
 
           {/* Stats bar */}

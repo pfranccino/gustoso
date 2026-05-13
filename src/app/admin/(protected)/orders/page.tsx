@@ -314,16 +314,28 @@ function OrderCard({ order, onStatus, onAddNote }: {
         </div>
 
         {/* Action buttons */}
-        <div style={{ display:'flex', gap:6, marginTop:10 }}>
-          <button onClick={() => printComanda(order)}
-            style={{ flex:1, padding:'7px 10px', borderRadius:6, border:'1px solid var(--border)', background:'transparent', color:'var(--text-muted)', fontSize:11, fontWeight:700, cursor:'pointer' }}>
-            🖨️ Comanda
-          </button>
-          <button onClick={() => { const win = window.open('', '_blank'); if(win) win.location.href = `https://wa.me/?text=${encodeURIComponent(`Pedido ${order.orderId ?? ''} — Total: ${fmt(order.total)}`)}` }}
-            style={{ flex:1, padding:'7px 10px', borderRadius:6, border:'none', background:'#25D366', color:'#fff', fontSize:11, fontWeight:800, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:4 }}>
-            💬 WhatsApp
-          </button>
-        </div>
+        {(() => {
+          const NEXT_STATUS: Partial<Record<OrderStatus, OrderStatus>> = {
+            pending:    'confirmed',
+            confirmed:  'on_the_way',
+            on_the_way: 'delivered',
+          };
+          const nextStatus = NEXT_STATUS[order.status];
+          return (
+            <div style={{ display:'flex', gap:6, marginTop:10 }}>
+              <button onClick={() => printComanda(order)}
+                style={{ flex:1, padding:'7px 10px', borderRadius:6, border:'1px solid var(--border)', background:'transparent', color:'var(--text-muted)', fontSize:11, fontWeight:700, cursor:'pointer' }}>
+                🖨️ Comanda
+              </button>
+              {nextStatus && (
+                <button onClick={() => change(nextStatus)} disabled={busy}
+                  style={{ flex:1, padding:'7px 10px', borderRadius:6, border:'none', background:'var(--orange)', color:'#fff', fontSize:11, fontWeight:800, cursor: busy ? 'not-allowed' : 'pointer', opacity: busy ? 0.6 : 1, display:'flex', alignItems:'center', justifyContent:'center', gap:4 }}>
+                  {STATUS_CFG[nextStatus].emoji} {STATUS_CFG[nextStatus].label} →
+                </button>
+              )}
+            </div>
+          );
+        })()}
 
         {/* Notes section (internal) */}
         <NotesSection order={order} onAddNote={onAddNote} />
