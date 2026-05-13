@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import AdminHeader from '@/components/admin/AdminHeader';
 
 type SeedStatus = 'idle' | 'loading' | 'success' | 'skipped' | 'error';
 
@@ -93,14 +94,10 @@ export default function SeedPage() {
 
   return (
     <div>
-      <div style={{ marginBottom: 28 }}>
-        <h1 style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 32, color: 'var(--text)', margin: 0 }}>
-          Seed de datos
-        </h1>
-        <p style={{ fontSize: 14, color: 'var(--text-muted)', marginTop: 4 }}>
-          Carga datos iniciales en la base de datos. Cada seed verifica si ya existe data antes de insertar — es seguro ejecutarlos más de una vez.
-        </p>
-      </div>
+      <AdminHeader
+        title="Seed de datos"
+        subtitle={<>Solo para desarrollo · <span style={{ color:'#dc2626', fontWeight:800 }}>⚠️ DANGER</span></>}
+      />
 
       {/* Aviso */}
       <div style={{ background: 'rgba(217,119,6,0.07)', border: '1px solid rgba(217,119,6,0.25)', borderRadius: 'var(--radius)', padding: '12px 16px', marginBottom: 24, fontSize: 13, color: '#92400e', lineHeight: 1.6 }}>

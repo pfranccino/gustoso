@@ -4,6 +4,9 @@ import { useState } from 'react';
 import { useLiveOrders } from '@/hooks/useLiveOrders';
 import { Order } from '@/lib/firestore/orders';
 import { useSettings } from '@/contexts/SettingsContext';
+import AdminHeader from '@/components/admin/AdminHeader';
+import AdminButton from '@/components/admin/AdminButton';
+import AdminCard from '@/components/admin/AdminCard';
 
 const fmt = (n: number) =>
   n.toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 });
@@ -180,14 +183,18 @@ export default function RoutesPage() {
 
   return (
     <div>
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 32, color: 'var(--text)', margin: 0 }}>
-          Optimizar ruta
-        </h1>
-        <p style={{ fontSize: 14, color: 'var(--text-muted)', marginTop: 4 }}>
-          Selecciona los pedidos con ubicación y calcula el orden óptimo de entrega.
-        </p>
-      </div>
+      <AdminHeader
+        title="Optimizar ruta"
+        subtitle={route ? `${route.length} paradas · ${dist?.toFixed(1)} km estimados` : 'Selecciona pedidos y calcula el orden óptimo'}
+        isLive={!!route}
+        actions={<>
+          {mapsUrl && (
+            <AdminButton variant="primary" size="md" onClick={() => window.open(mapsUrl, '_blank')}>
+              🗺️ Abrir en Google Maps
+            </AdminButton>
+          )}
+        </>}
+      />
 
       {/* Panel de prueba */}
       <div style={{ background: 'rgba(8,145,178,0.06)', border: '1px dashed rgba(8,145,178,0.35)', borderRadius: 'var(--radius)', padding: '10px 16px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
@@ -289,15 +296,8 @@ export default function RoutesPage() {
         {/* Panel derecho: resultado */}
         {route && (
           <div>
-            <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '16px' }}>
-              <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 20, color: 'var(--text)', marginBottom: 4 }}>
-                Ruta sugerida
-              </div>
-              {dist != null && (
-                <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 16 }}>
-                  Distancia total estimada: <strong style={{ color: 'var(--orange)' }}>{dist.toFixed(1)} km</strong> en línea recta
-                </div>
-              )}
+            <AdminCard title="Orden de paradas" subtitle={dist != null ? `${dist.toFixed(1)} km estimados (línea recta)` : undefined}>
+              {dist != null && false && null /* subtitle is shown in card header */}
 
               {/* Paradas */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
@@ -338,15 +338,13 @@ export default function RoutesPage() {
                 })}
               </div>
 
-              {/* Botón Google Maps */}
               {mapsUrl && (
                 <a href={mapsUrl} target="_blank" rel="noopener noreferrer"
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 20, padding: '13px', borderRadius: 999, background: '#4285F4', color: '#fff', fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 18, textDecoration: 'none', boxShadow: '0 4px 16px rgba(66,133,244,0.3)' }}>
-                  🗺 Abrir en Google Maps
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 20, padding: '12px', borderRadius: 999, background: '#4285F4', color: '#fff', fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 16, textDecoration: 'none' }}>
+                  🗺️ Abrir en Google Maps
                 </a>
               )}
-
-            </div>
+            </AdminCard>
           </div>
         )}
       </div>

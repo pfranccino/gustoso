@@ -1,6 +1,7 @@
 import { getAderezos } from '@/lib/firestore/aderezos';
 import { Aderezo } from '@/lib/firestore/aderezosTypes';
 import AderezosEditor from '@/components/AderezosEditor';
+import AdminHeader from '@/components/admin/AdminHeader';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,16 +9,14 @@ export default async function AderezosPage() {
   let aderezos: Aderezo[] = [];
   try { aderezos = await getAderezos(); } catch {}
 
+  const available = aderezos.filter(a => a.available).length;
+
   return (
     <div>
-      <div style={{ marginBottom: 28 }}>
-        <h1 style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 32, color: 'var(--text)', marginBottom: 4 }}>
-          Aderezos
-        </h1>
-        <p style={{ fontSize: 14, color: 'var(--text-muted)' }}>
-          Opcionales disponibles para todos los pedidos. Precio 0 = gratis.
-        </p>
-      </div>
+      <AdminHeader
+        title="Aderezos"
+        subtitle={`${available} disponible${available !== 1 ? 's' : ''} de ${aderezos.length} · Precio 0 = gratis`}
+      />
       <AderezosEditor initial={aderezos} />
     </div>
   );

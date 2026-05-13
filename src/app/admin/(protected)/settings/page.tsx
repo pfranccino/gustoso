@@ -1,5 +1,6 @@
 import { getSettings, Settings, DEFAULT_DELIVERY, DEFAULT_AUTO_SCHEDULE, getSettingsUpdatedAt } from '@/lib/firestore/settings';
 import SettingsEditor from '@/components/SettingsEditor';
+import AdminHeader from '@/components/admin/AdminHeader';
 
 export const dynamic = 'force-dynamic';
 
@@ -37,15 +38,11 @@ export default async function SettingsPage() {
 
   return (
     <div>
-      <div style={{ marginBottom: 28 }}>
-        <h1 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:32, color:'var(--text)', marginBottom:4, display:'flex', alignItems:'baseline', gap:10, flexWrap:'wrap' }}>
-          Configuración
-          <LastEdited iso={updatedAt}/>
-        </h1>
-        <p style={{ fontSize:14, color:'var(--text-muted)' }}>
-          Número de WhatsApp, dirección y horario del local.
-        </p>
-      </div>
+      <AdminHeader
+        title="Configuración"
+        subtitle={<>Número de WA, dirección y horario<LastEdited iso={updatedAt}/></>}
+        isLive={settings.isOpen}
+      />
       <div style={{ maxWidth: 560 }}>
         <SettingsEditor initial={settings} />
       </div>

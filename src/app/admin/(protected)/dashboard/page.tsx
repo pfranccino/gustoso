@@ -3,6 +3,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLiveMetrics, PaymentBreakdown } from '@/hooks/useLiveMetrics';
 import { DayBucket, RecentOrder } from '@/lib/firestore/metrics';
+import AdminHeader from '@/components/admin/AdminHeader';
+import AdminCard from '@/components/admin/AdminCard';
+import AdminButton from '@/components/admin/AdminButton';
+import StatusBadge from '@/components/admin/StatusBadge';
 
 function fmt(n: number) {
   return n.toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 });
@@ -34,6 +38,14 @@ function MiniBarChart({ days }: { days: DayBucket[] }) {
   );
 }
 
+const ORDER_STATUS_CFG: Record<string, { label: string; color: string }> = {
+  pending:    { label: 'Pendiente',  color: '#d97706' },
+  confirmed:  { label: 'Confirmado', color: '#16a34a' },
+  on_the_way: { label: 'En camino',  color: '#ea580c' },
+  delivered:  { label: 'Entregado',  color: '#2563eb' },
+  rejected:   { label: 'Rechazado',  color: '#dc2626' },
+};
+
 function OrdersTable({ orders, newIds }: { orders: RecentOrder[]; newIds: Set<string> }) {
   if (orders.length === 0) {
     return <p style={{ fontSize: 13, color: 'var(--text-muted)', padding: '16px 0' }}>Aún no hay pedidos registrados.</p>;
@@ -42,25 +54,39 @@ function OrdersTable({ orders, newIds }: { orders: RecentOrder[]; newIds: Set<st
     <div style={{ overflowX: 'auto' }}>
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
         <thead>
-          <tr style={{ borderBottom: '1.5px solid var(--border)' }}>
-            {['Fecha', 'Items', 'Total', 'Desglose'].map(h => (
-              <th key={h} style={{ textAlign: 'left', padding: '6px 10px', fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: 0.5, textTransform: 'uppercase' }}>{h}</th>
+          <tr style={{ background: 'var(--bg2)', borderBottom: '1px solid var(--border)' }}>
+            {['Hora', 'Estado', 'Productos', 'Pago', 'Total'].map(h => (
+              <th key={h} style={{ textAlign: 'left', padding: '10px 14px', fontSize: 10, fontWeight: 800, color: 'var(--text-muted)', letterSpacing: 1, textTransform: 'uppercase' }}>{h}</th>
             ))}
           </tr>
         </thead>
         <tbody>
-          {orders.map(o => (
-            <tr key={o.id} style={{ borderBottom: '1px solid var(--border)', animation: newIds.has(o.id) ? 'slideIn 0.4s ease, flash 1.2s ease' : undefined }}>
-              <td style={{ padding: '8px 10px', whiteSpace: 'nowrap', color: 'var(--text-muted)' }}>
-                {new Date(o.createdAt).toLocaleString('es-CL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
-              </td>
-              <td style={{ padding: '8px 10px', fontWeight: 700, color: 'var(--orange)' }}>{o.itemCount}</td>
-              <td style={{ padding: '8px 10px', fontWeight: 700, color: 'var(--text)' }}>{fmt(o.total)}</td>
-              <td style={{ padding: '8px 10px', color: 'var(--text-muted)', lineHeight: 1.5 }}>
-                {o.items.map(it => `${it.qty}× ${it.name}`).join(', ')}
-              </td>
-            </tr>
-          ))}
+          {orders.map((o, i) => {
+            const sCfg = ORDER_STATUS_CFG[(o as unknown as { status?: string }).status ?? ''];
+            return (
+              <tr key={o.id} style={{ borderBottom: i < orders.length - 1 ? '1px solid var(--border)' : 'none', animation: newIds.has(o.id) ? 'slideIn 0.4s ease, flash 1.2s ease' : undefined }}>
+                <td style={{ padding: '11px 14px', whiteSpace: 'nowrap', color: 'var(--text-muted)', fontWeight: 600 }}>
+                  {new Date(o.createdAt).toLocaleString('es-CL', { hour: '2-digit', minute: '2-digit' })}
+                </td>
+                <td style={{ padding: '11px 14px' }}>
+                  {sCfg ? (
+                    <StatusBadge color={sCfg.color} label={sCfg.label}/>
+                  ) : (
+                    <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>—</span>
+                  )}
+                </td>
+                <td style={{ padding: '11px 14px', color: 'var(--text)', lineHeight: 1.5 }}>
+                  {o.items.map(it => `${it.qty}× ${it.name}`).join(' · ')}
+                </td>
+                <td style={{ padding: '11px 14px', color: 'var(--text-muted)', fontSize: 12, fontWeight: 600 }}>
+                  {(o as unknown as { paymentMethod?: string }).paymentMethod ?? '—'}
+                </td>
+                <td style={{ padding: '11px 14px', fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 15, color: 'var(--text)' }}>
+                  {fmt(o.total)}
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
@@ -138,14 +164,11 @@ export default function DashboardPage() {
 
   return (
     <div>
-      <div style={{ marginBottom: 28 }}>
-        <h1 style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 32, color: 'var(--text)', marginBottom: 4 }}>
-          Dashboard
-        </h1>
-        <p style={{ fontSize: 14, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 6 }}>
-          {loading ? 'Conectando…' : <><span style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e', display: 'inline-block' }}/> En vivo</>}
-        </p>
-      </div>
+      <AdminHeader
+        title="Dashboard"
+        subtitle={loading ? 'Conectando…' : 'En vivo'}
+        isLive={!loading && !error}
+      />
 
       {error && (
         <div style={{ background: 'rgba(220,38,38,0.08)', border: '1px solid rgba(220,38,38,0.3)', borderRadius: 8, padding: '10px 14px', fontSize: 13, color: '#dc2626', fontWeight: 600, marginBottom: 20 }}>
@@ -154,68 +177,64 @@ export default function DashboardPage() {
       )}
 
       {/* KPI cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12, marginBottom: 28 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12, marginBottom: 24 }}>
         {kpis.map(kpi => (
-          <div key={kpi.label} style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '20px 16px', animation: kpiFlash ? 'flash 1.2s ease' : undefined }}>
-            <div style={{ fontSize: 22, marginBottom: 8 }}>{kpi.emoji}</div>
+          <div key={kpi.label} style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 16, padding: '18px 20px', boxShadow: '0 1px 2px rgba(60,30,10,0.04),0 8px 24px rgba(60,30,10,0.06)', animation: kpiFlash ? 'flash 1.2s ease' : undefined, position: 'relative', overflow: 'hidden' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 14 }}>
+              <span style={{ fontSize: 10, fontWeight: 800, color: 'var(--text-muted)', letterSpacing: 1.4, textTransform: 'uppercase' }}>{kpi.label}</span>
+              <span style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(242,100,25,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>{kpi.emoji}</span>
+            </div>
 
             {kpi.label === 'Producto top' ? (
-              /* Render especial: nombre como texto de producto, no como valor numérico */
               loading ? (
-                <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 26, color: 'var(--orange)', marginBottom: 2, opacity: 0.3 }}>—</div>
+                <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 28, color: 'var(--orange)', opacity: 0.3, lineHeight: 1 }}>—</div>
               ) : metrics?.topProduct ? (
                 <>
-                  <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)', marginBottom: 2, lineHeight: 1.3, wordBreak: 'break-word' }}>
+                  <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 22, color: 'var(--text)', lineHeight: 1.1, wordBreak: 'break-word' }}>
                     {metrics.topProduct.name}
                   </div>
-                  <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 22, color: 'var(--orange)', marginBottom: 2 }}>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600, marginTop: 6 }}>
                     {metrics.topProduct.qty} vendidos
                   </div>
                 </>
               ) : (
-                <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-muted)', marginBottom: 2 }}>Sin datos</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-muted)' }}>Sin datos</div>
               )
             ) : (
               <>
-                <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 26, color: 'var(--orange)', marginBottom: 2, wordBreak: 'break-word', lineHeight: 1.1 }}>
+                <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 32, color: 'var(--text)', lineHeight: 1, letterSpacing: -0.5 }}>
                   {loading ? <span style={{ opacity: 0.3 }}>—</span> : kpi.value}
                 </div>
                 {kpi.sub && !loading && (
-                  <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4 }}>{kpi.sub}</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600, marginTop: 6 }}>{kpi.sub}</div>
                 )}
               </>
             )}
-
-            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: 0.5, textTransform: 'uppercase' }}>{kpi.label}</div>
           </div>
         ))}
       </div>
 
       {/* Bar chart + payment breakdown side by side */}
       {metrics && metrics.last14Days.length > 0 && (
-        <div style={{ display:'grid', gridTemplateColumns:'1fr auto', gap:12, marginBottom:20, alignItems:'stretch' }}>
-          <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: 20 }}>
-            <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 18, color: 'var(--text)', marginBottom: 16 }}>
-              Pedidos — últimos 14 días
-            </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: 12, marginBottom: 20, alignItems: 'stretch' }}>
+          <AdminCard title="Pedidos por día" subtitle="Últimos 14 días">
             <MiniBarChart days={metrics.last14Days} />
-          </div>
-          <div style={{ minWidth:220, maxWidth:280 }}>
-            <PaymentBreakdownPanel breakdown={payment}/>
-          </div>
+          </AdminCard>
+          <PaymentBreakdownPanel breakdown={payment}/>
         </div>
       )}
 
       {/* Orders table */}
-      <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: 20 }}>
-        <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 18, color: 'var(--text)', marginBottom: 16 }}>
-          Últimos 10 pedidos
-        </div>
+      <AdminCard title="Últimos pedidos" actions={
+        <AdminButton variant="ghost" size="sm" onClick={() => window.location.href = '/admin/orders'}>
+          Ver todos →
+        </AdminButton>
+      } padding="0">
         {loading
-          ? <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>Cargando…</p>
+          ? <p style={{ fontSize: 13, color: 'var(--text-muted)', padding: '16px 20px' }}>Cargando…</p>
           : <OrdersTable orders={metrics?.lastOrders ?? []} newIds={newIds} />
         }
-      </div>
+      </AdminCard>
     </div>
   );
 }

@@ -3,6 +3,8 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useLiveOrders } from '@/hooks/useLiveOrders';
 import { Order, OrderStatus, PaymentMethod } from '@/lib/firestore/orders';
+import AdminHeader from '@/components/admin/AdminHeader';
+import AdminButton from '@/components/admin/AdminButton';
 
 const fmt = (n: number) =>
   n.toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 });
@@ -324,13 +326,23 @@ function OrderCard({ order, onStatus, onAddNote }: {
           return (
             <div style={{ display:'flex', gap:6, marginTop:10 }}>
               <button onClick={() => printComanda(order)}
-                style={{ flex:1, padding:'7px 10px', borderRadius:6, border:'1px solid var(--border)', background:'transparent', color:'var(--text-muted)', fontSize:11, fontWeight:700, cursor:'pointer' }}>
-                🖨️ Comanda
+                style={{ flex:1, padding:'7px 8px', borderRadius:6, border:'1px solid var(--border)', background:'transparent', color:'var(--text-muted)', fontSize:11, fontWeight:700, cursor:'pointer' }}>
+                📋 Detalle
               </button>
+              {order.locationUrl ? (
+                <a href={order.locationUrl} target="_blank" rel="noopener noreferrer"
+                  style={{ flex:1, padding:'7px 8px', borderRadius:6, border:'1px solid var(--border)', background:'transparent', color:'var(--text-muted)', fontSize:11, fontWeight:700, cursor:'pointer', textDecoration:'none', display:'flex', alignItems:'center', justifyContent:'center', gap:3 }}>
+                  📍 Ubicación
+                </a>
+              ) : (
+                <button disabled style={{ flex:1, padding:'7px 8px', borderRadius:6, border:'1px solid var(--border)', background:'transparent', color:'var(--text-muted)', fontSize:11, fontWeight:700, cursor:'not-allowed', opacity:0.4 }}>
+                  📍 Ubicación
+                </button>
+              )}
               {nextStatus && (
                 <button onClick={() => change(nextStatus)} disabled={busy}
-                  style={{ flex:1, padding:'7px 10px', borderRadius:6, border:'none', background:'var(--orange)', color:'#fff', fontSize:11, fontWeight:800, cursor: busy ? 'not-allowed' : 'pointer', opacity: busy ? 0.6 : 1, display:'flex', alignItems:'center', justifyContent:'center', gap:4 }}>
-                  {STATUS_CFG[nextStatus].emoji} {STATUS_CFG[nextStatus].label} →
+                  style={{ flex:1, padding:'7px 8px', borderRadius:6, border:'none', background:'var(--text)', color:'var(--bg)', fontSize:11, fontWeight:800, cursor: busy ? 'not-allowed' : 'pointer', opacity: busy ? 0.6 : 1, display:'flex', alignItems:'center', justifyContent:'center', gap:3, whiteSpace:'nowrap' }}>
+                  {STATUS_CFG[nextStatus].label} →
                 </button>
               )}
             </div>
@@ -567,22 +579,20 @@ export default function OrdersPage() {
         />
       )}
 
-      {/* Header */}
-      <div style={{ marginBottom:16 }}>
-        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:8, flexWrap:'wrap', gap:8 }}>
-          <h1 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:32, color:'var(--text)', margin:0 }}>Pedidos</h1>
-          <div style={{ display:'flex', gap:8 }}>
-            <button onClick={() => window.open('/mostrador', '_blank')}
-              style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 16px', borderRadius:999, border:'none', background:'#F26419', color:'#fff', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:14, cursor:'pointer' }}>
-              🏪 Mostrador
-            </button>
-            <button onClick={() => exportCSV(filteredOrders)} disabled={filteredOrders.length === 0}
-            style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 16px', borderRadius:999, border:'1.5px solid #16a34a', background:'transparent', color:'#16a34a', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:14, cursor: filteredOrders.length === 0 ? 'not-allowed' : 'pointer', opacity: filteredOrders.length === 0 ? 0.4 : 1 }}>
-            ⬇ Exportar Excel {filteredOrders.length > 0 && <span style={{ fontSize:11, opacity:.7 }}>({filteredOrders.length})</span>}
-          </button>
-          </div>
-        </div>
+      <AdminHeader
+        title="Pedidos"
+        subtitle={`${orders.length} pedido${orders.length !== 1 ? 's' : ''} · ${orders.filter(o => o.status === 'pending').length} pendientes`}
+        isLive={!loading}
+        actions={<>
+          <AdminButton variant="primary" size="md" onClick={() => window.open('/mostrador', '_blank')}>🏪 Mostrador</AdminButton>
+          <AdminButton variant="ghost" size="md" onClick={() => exportCSV(filteredOrders)} disabled={filteredOrders.length === 0}>
+            ⬇ CSV {filteredOrders.length > 0 && `(${filteredOrders.length})`}
+          </AdminButton>
+        </>}
+      />
 
+      {/* Controls */}
+      <div style={{ marginBottom:16 }}>
         {/* Controles del día */}
         <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap', marginBottom:10 }}>
           {isClosed

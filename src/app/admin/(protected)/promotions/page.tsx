@@ -1,6 +1,7 @@
 import { getPromotions, Promotion } from '@/lib/firestore/promotions';
 import { getMenuItems, MenuItem } from '@/lib/firestore/menuItems';
 import PromotionsEditor from '@/components/PromotionsEditor';
+import AdminHeader from '@/components/admin/AdminHeader';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,16 +12,16 @@ export default async function PromotionsPage() {
     [promos, menuItems] = await Promise.all([getPromotions(), getMenuItems()]);
   } catch {}
 
+  const active  = promos.filter(p => p.visible).length;
+  const hidden  = promos.length - active;
+
   return (
     <div>
-      <div style={{ marginBottom: 28 }}>
-        <h1 style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 32, color: 'var(--text)', marginBottom: 4 }}>
-          Promociones
-        </h1>
-        <p style={{ fontSize: 14, color: 'var(--text-muted)' }}>
-          Crea y gestiona combos y ofertas especiales. Aparecen en la pestaña &quot;Promos&quot; del menú.
-        </p>
-      </div>
+      <AdminHeader
+        title="Promociones"
+        subtitle={`${active} activa${active !== 1 ? 's' : ''}${hidden > 0 ? ` · ${hidden} oculta${hidden !== 1 ? 's' : ''}` : ''}`}
+        isLive={active > 0}
+      />
       <PromotionsEditor initial={promos} menuItems={menuItems} />
     </div>
   );

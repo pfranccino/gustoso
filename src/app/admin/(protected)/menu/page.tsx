@@ -3,6 +3,7 @@ import { getCategories, getCategoriesUpdatedAt } from '@/lib/firestore/categorie
 import type { Category } from '@/lib/firestore/categories';
 import MenuEditor from '@/components/MenuEditor';
 import CategoryManager from '@/components/CategoryManager';
+import AdminHeader from '@/components/admin/AdminHeader';
 
 export const dynamic = 'force-dynamic';
 
@@ -43,17 +44,15 @@ export default async function AdminMenuPage() {
     /* Firestore no disponible — editor mostrará vacío con botón seed */
   }
 
+  const visibleCount = items.filter(i => i.visible).length;
+  const hiddenCount  = items.length - visibleCount;
+
   return (
     <div>
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:32, color:'var(--text)', marginBottom:4, display:'flex', alignItems:'baseline', gap:10, flexWrap:'wrap' }}>
-          Menú
-          <LastEdited iso={updatedAt}/>
-        </h1>
-        <p style={{ fontSize:14, color:'var(--text-muted)' }}>
-          Edita precios, descripción y visibilidad de cada ítem.
-        </p>
-      </div>
+      <AdminHeader
+        title="Menú"
+        subtitle={<>{visibleCount} productos{hiddenCount > 0 && ` · ${hiddenCount} ocultos`}<LastEdited iso={updatedAt}/></>}
+      />
 
       <CategoryManager initial={categories}/>
       <MenuEditor initialItems={items} categories={categories}/>
