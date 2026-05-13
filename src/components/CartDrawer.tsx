@@ -334,11 +334,20 @@ export default function CartDrawer({ mostrador = false }: { mostrador?: boolean 
     setMostradorSending(true);
     try {
       const orderId = await generateOrderId();
-      await fetch('/api/orders', {
+
+      // Normalizar items: sumar extras al precio base para que el registro sea correcto
+      const apiItems = items.map(item => ({
+        name:  item.name,
+        qty:   item.qty,
+        price: item.price + (item.extras ?? []).reduce((s, e) => s + e.price, 0),
+        size:  item.size ?? undefined,
+      }));
+
+      const res = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          items,
+          items:         apiItems,
           total:         finalTotal,
           orderId,
           sessionId:     getSessionId(),
@@ -346,9 +355,19 @@ export default function CartDrawer({ mostrador = false }: { mostrador?: boolean 
           source:        'local',
         }),
       });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        alert(`Error al guardar el pedido: ${err.error ?? res.status}`);
+        return;
+      }
+
       printComanda(orderId, items, finalTotal, paymentMethod);
       clearCart();
       setIsOpen(false);
+    } catch (e) {
+      alert('Error de red al guardar el pedido. Revisa la conexión.');
+      console.error(e);
     } finally {
       setMostradorSending(false);
     }

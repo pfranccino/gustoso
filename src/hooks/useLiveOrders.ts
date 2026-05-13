@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { collection, onSnapshot, orderBy, query, where, Timestamp, QueryDocumentSnapshot } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { getClientFirestore, getClientAuth } from '@/lib/firebase/client';
-import { Order, OrderStatus } from '@/lib/firestore/orders';
+import { Order, OrderStatus, OrderSource } from '@/lib/firestore/orders';
 
 function docToOrder(doc: QueryDocumentSnapshot): Order {
   const d = doc.data();
@@ -21,6 +21,7 @@ function docToOrder(doc: QueryDocumentSnapshot): Order {
     discountAmount: d.discountAmount ?? undefined,
     deliveryFee:    d.deliveryFee    ?? undefined,
     status:         (d.status        ?? 'pending') as OrderStatus,
+    source:         (d.source        ?? 'whatsapp') as OrderSource,
     items:          d.items          ?? [],
     notes:          Array.isArray(d.notes) ? d.notes : [],
   };
