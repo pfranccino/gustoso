@@ -11,6 +11,7 @@ import { GalleryItem } from '@/lib/firestore/gallery';
 import { Review } from '@/lib/firestore/reviews';
 import Nav from './Nav';
 import Hero from './Hero';
+import SectionDivider from './SectionDivider';
 import MenuSection from './MenuSection';
 import Gallery from './Gallery';
 import About from './About';
@@ -36,18 +37,18 @@ export default function AppShell({ settings, menuItems, burritoConfig, promotion
     <CartProvider>
       <div className="pub-outer" style={{ maxWidth:'var(--max)', margin:'0 auto', position:'relative' }}>
         <Nav scrolled={scrolled}/>
-        <Hero/>
+        <Hero menuItems={menuItems}/>
         <div className="section-divider"></div>
         <MenuSection items={menuItems} burritoConfig={burritoConfig} promotions={promotions} aderezos={aderezos} disabledIngredients={disabledIngredients}/>
-        <div className="section-divider"></div>
+        <SectionDivider num={2} label="GALERÍA"/>
         <Gallery items={galleryItems}/>
         <div className="section-divider"></div>
         <About/>
         <div className="section-divider"></div>
         <Reviews items={reviewItems}/>
-        <div className="section-divider"></div>
+        <SectionDivider num={3} label="PROPINA"/>
         <TipSection/>
-        <div className="section-divider"></div>
+        <SectionDivider num={4} label="ENCUÉNTRANOS"/>
         <Contact/>
         <Footer/>
         <FloatingWA/>

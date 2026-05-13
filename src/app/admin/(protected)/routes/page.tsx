@@ -217,6 +217,26 @@ export default function RoutesPage() {
       </div>
 
 
+      {/* KPI strip — shown when route is calculated */}
+      {route && dist !== null && (
+        <div style={{ display:'flex', gap:20, flexWrap:'wrap', background:'var(--card)', border:'1px solid var(--border)', borderRadius:12, padding:'14px 20px', marginBottom:16, alignItems:'center' }}>
+          <div>
+            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:22, color:'var(--orange)', lineHeight:1 }}>{dist.toFixed(1)} km</div>
+            <div style={{ fontSize:11, color:'var(--text-muted)', fontWeight:600, marginTop:2 }}>Distancia total</div>
+          </div>
+          <div style={{ width:1, height:32, background:'var(--border)', flexShrink:0 }}/>
+          <div>
+            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:22, color:'var(--text)', lineHeight:1 }}>~{Math.round(dist * 2.5)} min</div>
+            <div style={{ fontSize:11, color:'var(--text-muted)', fontWeight:600, marginTop:2 }}>Tiempo estimado</div>
+          </div>
+          <div style={{ width:1, height:32, background:'var(--border)', flexShrink:0 }}/>
+          <div>
+            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:22, color:'var(--text)', lineHeight:1 }}>{route.length}</div>
+            <div style={{ fontSize:11, color:'var(--text-muted)', fontWeight:600, marginTop:2 }}>Parada{route.length !== 1 ? 's' : ''}</div>
+          </div>
+        </div>
+      )}
+
       <div style={{ display: 'grid', gridTemplateColumns: route ? '1fr 1fr' : '1fr', gap: 16, alignItems: 'start' }}>
 
         {/* Panel izquierdo: selección de pedidos */}

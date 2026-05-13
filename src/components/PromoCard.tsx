@@ -131,11 +131,9 @@ export default function PromoCard({ promo, aderezos = [], menuItems = [] }: { pr
           <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:26, color:'var(--orange)' }}>
             {fmt(promo.price)}
           </span>
-          <button onClick={handleAdd}
-            style={{ padding:'9px 20px', borderRadius:999, border:'none', background:'#F26419', color:'#fff',
-              fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:15,
-              cursor:'pointer', boxShadow:'0 3px 10px rgba(242,100,25,0.3)' }}>
-            + Agregar
+          <button onClick={handleAdd} aria-label="Agregar al carrito"
+            style={{ width:36, height:36, borderRadius:'50%', border:'none', background:'#F26419', color:'#fff', fontSize:20, fontWeight:300, cursor:'pointer', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 2px 8px rgba(242,100,25,0.25)', transition:'transform .15s' }}>
+            +
           </button>
         </div>
       </div>

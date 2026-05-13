@@ -49,8 +49,8 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--text);min-
   .hero-collage{display:block!important}
   .hero-eyebrow{display:flex!important}
   .hero-logo-mobile{display:none!important}
-  .hero-status-pill{display:none!important}
   .hero-scroll-hint{display:none!important}
+  .search-wrapper{display:none!important}
 
   /* Nav desktop */
   .nav-desktop-links{display:flex!important}

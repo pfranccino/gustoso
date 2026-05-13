@@ -8,6 +8,7 @@ import { Aderezo } from '@/lib/firestore/aderezosTypes';
 import { useCart } from '@/contexts/CartContext';
 import SimpleCard from './SimpleCard';
 import DualCard from './DualCard';
+import FeaturedCard from './FeaturedCard';
 import SectionHeader from './SectionHeader';
 import BurritoBuilder from './BurritoBuilder';
 import PromoCard from './PromoCard';
@@ -163,15 +164,22 @@ export default function MenuSection({ items, burritoConfig, promotions, aderezos
           {Object.entries(grouped).map(([g, its]) => (
             <div key={g}>
               <SectionHeader title={g}/>
-              <div style={listStyle}>{its.map(i => isDual(i) ? <DualCard key={i.id} item={i} aderezos={aderezos} disabledIngredients={disabledIngredients}/> : <SimpleCard key={i.id} item={i} aderezos={aderezos} disabledIngredients={disabledIngredients}/>)}</div>
+              <div style={listStyle} className="menu-products-2col">
+                {its.map(i => isDual(i) ? <DualCard key={i.id} item={i} aderezos={aderezos} disabledIngredients={disabledIngredients}/> : <SimpleCard key={i.id} item={i} aderezos={aderezos} disabledIngredients={disabledIngredients}/>)}
+              </div>
             </div>
           ))}
         </div>
       );
     }
     return (
-      <div style={listStyle}>
-        {catItems.map(i => isDual(i) ? <DualCard key={i.id} item={i} aderezos={aderezos} disabledIngredients={disabledIngredients}/> : <SimpleCard key={i.id} item={i} aderezos={aderezos} disabledIngredients={disabledIngredients}/>)}
+      <div style={listStyle} className="menu-products-2col">
+        {catItems.map((i, idx) => {
+          if (idx === 0) return <FeaturedCard key={i.id} item={i} aderezos={aderezos} disabledIngredients={disabledIngredients}/>;
+          return isDual(i)
+            ? <DualCard key={i.id} item={i} aderezos={aderezos} disabledIngredients={disabledIngredients}/>
+            : <SimpleCard key={i.id} item={i} aderezos={aderezos} disabledIngredients={disabledIngredients}/>;
+        })}
       </div>
     );
   };
@@ -190,8 +198,8 @@ export default function MenuSection({ items, burritoConfig, promotions, aderezos
     <section id="menu" style={{ paddingBottom:100 }}>
       {/* ── Sticky header (search + mobile tabs) ── */}
       <div className="menu-sticky-header" style={{ position:'sticky', top:52, zIndex:30, background:'rgba(255,249,245,0.96)', backdropFilter:'blur(12px)', borderBottom:'1px solid var(--border)', padding:'10px 20px' }}>
-        {/* Search bar */}
-        <div style={{ position:'relative', marginBottom:8 }}>
+        {/* Search bar — hidden on desktop (navigation via category rail) */}
+        <div className="search-wrapper" style={{ position:'relative', marginBottom:8 }}>
           <span style={{ position:'absolute', left:12, top:'50%', transform:'translateY(-50%)', fontSize:14, color:'var(--text-muted)', pointerEvents:'none' }}>🔍</span>
           <input
             value={search}

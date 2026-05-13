@@ -3,9 +3,13 @@
 import { useSettings } from '@/contexts/SettingsContext';
 import Logo from './Logo';
 import { WAIcon } from './icons';
+import { MenuItem } from '@/lib/firestore/menuItems';
 
-export default function Hero() {
+export default function Hero({ menuItems = [] }: { menuItems?: MenuItem[] }) {
   const { waNumber, isOpen } = useSettings();
+
+  /* Top 3 visible items with photos for the collage */
+  const collagePhotos = menuItems.filter(m => m.visible && m.imageUrl).slice(0, 3);
   const waUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent("Hola Gustoso's, quiero hacer un pedido 🌭")}`;
 
   return (
@@ -42,17 +46,17 @@ export default function Hero() {
             <Logo size={64}/>
           </div>
 
-          {/* Status pill — mobile only */}
-          <div className="fade-up hero-status-pill" style={{ display:'inline-flex', alignItems:'center', gap:6, background: isOpen ? 'rgba(21,128,61,0.1)' : 'rgba(107,114,128,0.1)', border:`1px solid ${isOpen ? 'rgba(21,128,61,0.25)' : 'rgba(107,114,128,0.25)'}`, borderRadius:999, padding:'4px 12px', marginBottom:14, fontSize:11, fontWeight:700, color: isOpen ? 'var(--green)' : '#6b7280', letterSpacing:.5 }}>
-            <span style={{ width:6, height:6, borderRadius:'50%', background: isOpen ? 'var(--green)' : '#9ca3af', display:'inline-block' }}/>
-            {isOpen ? 'ABIERTO · 25 MIN' : 'CERRADO'}
-          </div>
-
           {/* Desktop eyebrow */}
-          <div className="hero-eyebrow fade-up" style={{ display:'none', alignItems:'center', gap:8, marginBottom:16 }}>
+          <div className="hero-eyebrow fade-up" style={{ display:'none', alignItems:'center', gap:8, marginBottom:12 }}>
             <span style={{ fontSize:10, fontWeight:800, color:'var(--text-muted)', letterSpacing:2, textTransform:'uppercase' }}>Los Andes · V Región</span>
             <span style={{ width:4, height:4, borderRadius:'50%', background:'var(--border)' }}></span>
             <span style={{ fontSize:10, fontWeight:800, color:'var(--text-muted)', letterSpacing:2, textTransform:'uppercase' }}>5+ años</span>
+          </div>
+
+          {/* Status pill — mobile + desktop (after eyebrow) */}
+          <div className="fade-up hero-status-pill" style={{ display:'inline-flex', alignItems:'center', gap:6, background: isOpen ? 'rgba(21,128,61,0.1)' : 'rgba(107,114,128,0.1)', border:`1px solid ${isOpen ? 'rgba(21,128,61,0.25)' : 'rgba(107,114,128,0.25)'}`, borderRadius:999, padding:'5px 11px', marginBottom:16, fontSize:11, fontWeight:700, color: isOpen ? 'var(--green)' : '#6b7280', letterSpacing:.3, whiteSpace:'nowrap' }}>
+            <span style={{ width:6, height:6, borderRadius:'50%', background: isOpen ? 'var(--green)' : '#9ca3af', display:'inline-block', boxShadow: isOpen ? '0 0 0 3px rgba(21,128,61,0.25)' : 'none' }}/>
+            {isOpen ? 'ABIERTO · 25 MIN' : 'CERRADO'}
           </div>
 
           <h1 className="fade-up-2" style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:'clamp(44px,10vw,76px)', lineHeight:.95, color:'var(--text)', marginBottom:14, letterSpacing:-1 }}>
@@ -94,16 +98,31 @@ export default function Hero() {
         {/* ── Right / photo collage — desktop only ── */}
         <div className="hero-collage" style={{ display:'none', position:'relative', height:480 }}>
           {/* Main circle */}
-          <div style={{ position:'absolute', top:0, right:40, width:280, height:280, borderRadius:'50%', background:'linear-gradient(135deg, var(--bg2) 0%, var(--bg3) 100%)', border:'1.5px dashed var(--border)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, color:'var(--text-muted)', fontFamily:'ui-monospace,monospace', letterSpacing:.3 }}>
-            AS Italiano Queso
+          <div style={{ position:'absolute', top:0, right:40, width:280, height:280, borderRadius:'50%', overflow:'hidden', boxShadow:'0 12px 40px rgba(60,30,10,0.18)' }}>
+            {collagePhotos[0]?.imageUrl
+              ? <img src={collagePhotos[0].imageUrl} alt={collagePhotos[0].name} style={{ width:'100%', height:'100%', objectFit:'cover' }}/>
+              : <div style={{ width:'100%', height:'100%', background:'linear-gradient(135deg,var(--bg2),var(--bg3))', display:'flex', alignItems:'center', justifyContent:'center', color:'var(--orange)', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:22, textAlign:'center', padding:24 }}>
+                  {collagePhotos[0]?.name?.split(' ').slice(0,2).join(' ') ?? 'AS Italiano'}
+                </div>
+            }
           </div>
           {/* Small card — bottom right */}
-          <div style={{ position:'absolute', bottom:60, right:0, width:180, height:180, borderRadius:20, background:'linear-gradient(135deg, var(--bg3) 0%, var(--bg2) 100%)', border:'1.5px dashed var(--border)', transform:'rotate(6deg)', boxShadow:'0 8px 24px rgba(60,30,10,0.08)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, color:'var(--text-muted)', fontFamily:'ui-monospace,monospace' }}>
-            Burrito
+          <div style={{ position:'absolute', bottom:60, right:0, width:180, height:180, borderRadius:20, overflow:'hidden', transform:'rotate(6deg)', boxShadow:'0 8px 24px rgba(60,30,10,0.14)' }}>
+            {collagePhotos[1]?.imageUrl
+              ? <img src={collagePhotos[1].imageUrl} alt={collagePhotos[1].name} style={{ width:'100%', height:'100%', objectFit:'cover' }}/>
+              : <div style={{ width:'100%', height:'100%', background:'linear-gradient(135deg,var(--bg3),var(--bg2))', display:'flex', alignItems:'center', justifyContent:'center', color:'var(--orange)', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:18, textAlign:'center', padding:16 }}>
+                  {collagePhotos[1]?.name?.split(' ').slice(0,2).join(' ') ?? 'Burrito'}
+                </div>
+            }
           </div>
           {/* Small card — top left */}
-          <div style={{ position:'absolute', top:40, left:0, width:150, height:150, borderRadius:18, background:'linear-gradient(135deg, var(--bg3) 0%, var(--bg2) 100%)', border:'1.5px dashed var(--border)', transform:'rotate(-8deg)', boxShadow:'0 8px 24px rgba(60,30,10,0.06)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, color:'var(--text-muted)', fontFamily:'ui-monospace,monospace' }}>
-            Mechada XL
+          <div style={{ position:'absolute', top:40, left:0, width:150, height:150, borderRadius:18, overflow:'hidden', transform:'rotate(-8deg)', boxShadow:'0 8px 24px rgba(60,30,10,0.10)' }}>
+            {collagePhotos[2]?.imageUrl
+              ? <img src={collagePhotos[2].imageUrl} alt={collagePhotos[2].name} style={{ width:'100%', height:'100%', objectFit:'cover' }}/>
+              : <div style={{ width:'100%', height:'100%', background:'linear-gradient(135deg,var(--bg3),var(--bg2))', display:'flex', alignItems:'center', justifyContent:'center', color:'var(--orange)', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:16, textAlign:'center', padding:14 }}>
+                  {collagePhotos[2]?.name?.split(' ').slice(0,2).join(' ') ?? 'Mechada XL'}
+                </div>
+            }
           </div>
           {/* Social proof pill */}
           <div style={{ position:'absolute', bottom:10, left:60, padding:'10px 16px', background:'var(--card)', border:'1px solid var(--border)', borderRadius:'var(--radius)', boxShadow:'0 4px 16px rgba(60,30,10,0.08)', display:'flex', alignItems:'center', gap:10, whiteSpace:'nowrap' }}>
