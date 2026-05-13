@@ -153,7 +153,7 @@ export default function SettingsEditor({ initial }: { initial: Settings }) {
 
   useEffect(() => { setSiteUrl(window.location.origin); }, []);
 
-  function set(key: keyof Settings, value: string | boolean) {
+  function set(key: keyof Settings, value: string | boolean | number) {
     setForm(f => ({ ...f, [key]: value }));
     setSaved(false);
   }
