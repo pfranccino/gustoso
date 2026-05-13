@@ -2,8 +2,8 @@
 
 import { useState, useTransition, useRef, useImperativeHandle, forwardRef } from 'react';
 import { MenuItem, Extra, Ingredient } from '@/lib/firestore/menuItems';
-import type { Category } from '@/lib/firestore/categories';
-import { DEFAULT_CATEGORIES } from '@/lib/firestore/categories';
+import type { Category } from '@/lib/firestore/categoriesTypes';
+import { DEFAULT_CATEGORIES } from '@/lib/firestore/categoriesTypes';
 
 const VOLUMES = ['237ml', '330ml', '350ml', '400ml', '500ml', '600ml', '1L', '1.5L', '2L', '3L'];
 

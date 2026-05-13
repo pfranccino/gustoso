@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import type { Category } from '@/lib/firestore/categories';
+import type { Category } from '@/lib/firestore/categoriesTypes';
 
 const EMOJI_SUGGESTIONS = ['🍔','🌭','🥪','🥩','🥖','🌯','🍟','🥤','🍕','🍣','🌮','🌶️','🥗','🧆','🍱','☕','🧃','🍦','🍰','🥞'];
 
