@@ -27,6 +27,7 @@ export default async function SettingsPage() {
     delivery:     { ...DEFAULT_DELIVERY },
     mostradorPin: '',
     autoSchedule: { ...DEFAULT_AUTO_SCHEDULE },
+    avgMinutes:   25,
   };
   let updatedAt: string | null = null;
 
