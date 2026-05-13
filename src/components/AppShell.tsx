@@ -22,7 +22,7 @@ import FloatingWA from './FloatingWA';
 import CartBar from './CartBar';
 import CartDrawer from './CartDrawer';
 
-export default function AppShell({ settings, menuItems, burritoConfig, promotions, aderezos, disabledIngredients = [], galleryItems = [], reviewItems = [] }: { settings: PublicSettings; menuItems: MenuItem[]; burritoConfig: BurritoConfig; promotions: Promotion[]; aderezos: Aderezo[]; disabledIngredients?: string[]; galleryItems?: GalleryItem[]; reviewItems?: Review[] }) {
+export default function AppShell({ settings, menuItems, burritoConfig, promotions, aderezos, disabledIngredients = [], galleryItems = [], reviewItems = [], mostrador = false }: { settings: PublicSettings; menuItems: MenuItem[]; burritoConfig: BurritoConfig; promotions: Promotion[]; aderezos: Aderezo[]; disabledIngredients?: string[]; galleryItems?: GalleryItem[]; reviewItems?: Review[]; mostrador?: boolean }) {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -52,7 +52,7 @@ export default function AppShell({ settings, menuItems, burritoConfig, promotion
         <Footer/>
         <FloatingWA/>
         <CartBar/>
-        <CartDrawer/>
+        <CartDrawer mostrador={mostrador}/>
       </div>
     </CartProvider>
     </SettingsProvider>

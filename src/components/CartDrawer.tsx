@@ -158,16 +158,12 @@ function printComanda(
   if (w) { w.document.write(html); w.document.close(); }
 }
 
-export default function CartDrawer() {
+export default function CartDrawer({ mostrador = false }: { mostrador?: boolean }) {
   const { items, updateQty, removeItem, clearCart, total, count, isOpen, setIsOpen } = useCart();
   const { waNumber, waGreeting, waFooter, delivery } = useSettings();
   const { state: geo, request: requestGeo, clear } = useGeolocation();
   const [paymentMethod, setPaymentMethod]   = useState<PaymentMethod | null>(null);
-  const [isMostrador, setIsMostrador]       = useState(false);
-
-  useEffect(() => {
-    setIsMostrador(new URLSearchParams(window.location.search).get('mostrador') === '1');
-  }, []);
+  const isMostrador = mostrador;
   const [discountInput, setDiscountInput]   = useState('');
   const [discountStatus, setDiscountStatus] = useState<'idle' | 'loading' | 'applied' | 'error'>('idle');
   const [discountError,  setDiscountError]  = useState('');

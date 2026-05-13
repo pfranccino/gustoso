@@ -471,7 +471,7 @@ export default function OrdersPage() {
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:8, flexWrap:'wrap', gap:8 }}>
           <h1 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:32, color:'var(--text)', margin:0 }}>Pedidos</h1>
           <div style={{ display:'flex', gap:8 }}>
-            <button onClick={() => window.open('/?mostrador=1', '_blank')}
+            <button onClick={() => window.open('/mostrador', '_blank')}
               style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 16px', borderRadius:999, border:'none', background:'#F26419', color:'#fff', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:14, cursor:'pointer' }}>
               🏪 Mostrador
             </button>
