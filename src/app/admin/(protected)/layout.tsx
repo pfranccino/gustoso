@@ -18,8 +18,10 @@ export default async function ProtectedLayout({ children }: { children: React.Re
   return (
     <div style={{ minHeight:'100dvh', background:'var(--bg)', display:'flex', alignItems:'stretch' }}>
       <AdminSidebar email={email}/>
-      <main className="adm-main" style={{ flex:1, minWidth:0, padding:'28px 24px 48px', overflowX:'hidden' }}>
-        {children}
+      <main className="adm-main" style={{ flex:1, minWidth:0, overflowX:'hidden', padding:'28px 24px 48px' }}>
+        <div style={{ maxWidth:860, width:'100%' }}>
+          {children}
+        </div>
       </main>
     </div>
   );

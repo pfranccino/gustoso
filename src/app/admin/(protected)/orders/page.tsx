@@ -685,9 +685,9 @@ export default function OrdersPage() {
       {/* KPIs */}
       {!loading && (
         <>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:8, marginBottom: paymentBreakdown.length > 0 ? 8 : 16 }}>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(160px,1fr))', gap:8, marginBottom: paymentBreakdown.length > 0 ? 8 : 16 }}>
             {/* Recaudado (confirmados + entregados) */}
-            <div style={{ gridColumn:'span 2', background:'rgba(242,100,25,0.08)', border:'1px solid var(--border)', borderRadius:'var(--radius)', padding:'12px 16px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+            <div style={{ gridColumn:'1/-1', background:'rgba(242,100,25,0.08)', border:'1px solid var(--border)', borderRadius:'var(--radius)', padding:'12px 16px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
               <div style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:.5 }}>Recaudado (confirmados + entregados)</div>
               <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:26, color:'var(--orange)' }}>{fmt(kpiRevenue)}</div>
             </div>
