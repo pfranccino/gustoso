@@ -11,7 +11,10 @@
   --card:#FFFFFF;--card-subtle:#FFFBF5;
   --text:#1A0800;--text-muted:#A0541A;
   --border:rgba(242,100,25,0.2);--border-strong:rgba(242,100,25,0.35);
-  --radius:14px;--radius-sm:8px;--max:680px;
+  --radius:14px;--radius-sm:8px;--max:100%;
+}
+@media(min-width:768px){
+  :root{--max:720px}
 }
 html{scroll-behavior:smooth}
 body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--text);min-height:100dvh;overflow-x:hidden}
@@ -30,8 +33,9 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--text);min-
 @keyframes flash{0%{background:rgba(242,100,25,0.18)}100%{background:transparent}}
 @keyframes slideIn{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:translateX(0)}}
 
-/* ── Desktop layout (≥900px) ─────────────────────────────────────── */
-@media(min-width:900px){
+/* ── Desktop layout (≥1024px) ───────────────────────────────────── */
+@media(min-width:1024px){
+  :root{--max:1280px}
   /* AppShell full-width */
   .pub-outer{max-width:none!important}
 
@@ -73,4 +77,28 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--text);min-
   /* Nav full-width on desktop */
   .nav-inner{max-width:none!important;padding:14px 48px!important}
   .nav-cart-label{display:inline!important}
+}
+
+@media(min-width:1440px){
+  :root{--max:1440px}
+}
+
+/* ── AdminHeader responsive ──────────────────────────────────────── */
+.adm-header-title{font-size:24px!important;letter-spacing:-0.3px!important}
+.adm-header-subtitle-text{font-size:11px!important}
+.adm-header-actions-wrap{display:none!important}
+.adm-header-kebab{display:flex!important;position:relative}
+.adm-header-kebab-menu{
+  position:absolute;right:0;top:calc(100% + 6px);z-index:200;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:10px;padding:6px;display:flex;flex-direction:column;gap:4px;
+  min-width:180px;box-shadow:0 8px 24px rgba(0,0,0,0.12)
+}
+@media(min-width:768px){
+  .adm-header-title{font-size:28px!important}
+  .adm-header-actions-wrap{display:flex!important}
+  .adm-header-kebab{display:none!important}
+}
+@media(min-width:1024px){
+  .adm-header-title{font-size:32px!important;letter-spacing:-0.5px!important}
 }

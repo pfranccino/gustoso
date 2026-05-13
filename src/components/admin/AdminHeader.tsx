@@ -1,4 +1,6 @@
-import React from 'react';
+'use client';
+
+import React, { useState, useEffect, useRef } from 'react';
 
 interface AdminHeaderProps {
   title: string;
@@ -8,6 +10,21 @@ interface AdminHeaderProps {
 }
 
 export default function AdminHeader({ title, subtitle, isLive, actions }: AdminHeaderProps) {
+  const [kebabOpen, setKebabOpen] = useState(false);
+  const kebabRef = useRef<HTMLDivElement>(null);
+
+  /* Close kebab when clicking outside */
+  useEffect(() => {
+    if (!kebabOpen) return;
+    function onOutside(e: MouseEvent) {
+      if (kebabRef.current && !kebabRef.current.contains(e.target as Node)) {
+        setKebabOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', onOutside);
+    return () => document.removeEventListener('mousedown', onOutside);
+  }, [kebabOpen]);
+
   return (
     <div style={{
       display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between',
@@ -21,10 +38,10 @@ export default function AdminHeader({ title, subtitle, isLive, actions }: AdminH
       flexWrap: 'wrap',
     }}>
       <div>
-        <h1 style={{
+        <h1 className="adm-header-title" style={{
           fontFamily: "'Barlow Condensed', sans-serif",
-          fontWeight: 900, fontSize: 32, color: 'var(--text)',
-          letterSpacing: -0.5, lineHeight: 1, margin: 0,
+          fontWeight: 900, color: 'var(--text)',
+          lineHeight: 1, margin: 0,
         }}>{title}</h1>
         {subtitle && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6 }}>
@@ -36,14 +53,40 @@ export default function AdminHeader({ title, subtitle, isLive, actions }: AdminH
                 display: 'inline-block', flexShrink: 0,
               }}/>
             )}
-            <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>{subtitle}</span>
+            <span className="adm-header-subtitle-text" style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>{subtitle}</span>
           </div>
         )}
       </div>
+
       {actions && (
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-          {actions}
-        </div>
+        <>
+          {/* Desktop / tablet: inline actions */}
+          <div className="adm-header-actions-wrap" style={{ display: 'none', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+            {actions}
+          </div>
+
+          {/* Mobile: kebab ⋯ */}
+          <div className="adm-header-kebab" ref={kebabRef} style={{ display: 'none' }}>
+            <button
+              onClick={() => setKebabOpen(o => !o)}
+              style={{
+                width: 36, height: 36, borderRadius: 8,
+                border: '1px solid var(--border)',
+                background: kebabOpen ? 'var(--bg3)' : 'transparent',
+                color: 'var(--text)', fontSize: 20, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}
+              aria-label="Acciones"
+            >
+              ⋯
+            </button>
+            {kebabOpen && (
+              <div className="adm-header-kebab-menu" onClick={() => setKebabOpen(false)}>
+                {actions}
+              </div>
+            )}
+          </div>
+        </>
       )}
     </div>
   );
