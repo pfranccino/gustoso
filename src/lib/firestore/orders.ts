@@ -11,6 +11,8 @@ export type OrderItem = {
 
 export type PaymentMethod = 'efectivo' | 'transferencia' | 'debito';
 
+export type OrderSource = 'whatsapp' | 'local';
+
 export type NewOrder = {
   items: OrderItem[];
   total: number;
@@ -22,6 +24,7 @@ export type NewOrder = {
   discountCode?: string | null;
   discountAmount?: number | null;
   deliveryFee?: number | null;
+  source?: OrderSource;
 };
 
 export type OrderStatus =
@@ -52,6 +55,7 @@ export type Order = {
   discountAmount?: number;
   deliveryFee?: number;
   status: OrderStatus;
+  source?: OrderSource;
   items: OrderItem[];
   notes: OrderNote[];
 };
@@ -61,7 +65,8 @@ export async function createOrder(order: NewOrder) {
     ...order,
     discountCode:   order.discountCode   ?? null,
     discountAmount: order.discountAmount ?? null,
-    status: 'pending',
+    source:         order.source         ?? 'whatsapp',
+    status: order.source === 'local' ? 'confirmed' : 'pending',
     createdAt: FieldValue.serverTimestamp(),
   });
   return ref.id;
@@ -102,6 +107,7 @@ export async function getOrders(limit = 50): Promise<Order[]> {
       discountAmount: d.discountAmount ?? undefined,
       deliveryFee:    d.deliveryFee    ?? undefined,
       status:         (d.status        ?? 'pending') as OrderStatus,
+      source:         (d.source        ?? 'whatsapp') as OrderSource,
       items:          d.items          ?? [],
       notes:          Array.isArray(d.notes) ? d.notes : [],
     };

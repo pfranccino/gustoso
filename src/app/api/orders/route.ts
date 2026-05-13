@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { items, total, sessionId, locationUrl, orderId, paymentMethod, discountCode, deliveryFee } = body;
+    const { items, total, sessionId, locationUrl, orderId, paymentMethod, discountCode, deliveryFee, source } = body;
 
     if (!items?.length || !total || !sessionId) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -49,6 +49,7 @@ export async function POST(request: NextRequest) {
       discountCode:   validatedCode ?? null,
       discountAmount: discountAmount ?? null,
       deliveryFee:    fee || null,
+      source:         source === 'local' ? 'local' : 'whatsapp',
     });
 
     return NextResponse.json({ id });

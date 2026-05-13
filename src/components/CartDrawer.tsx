@@ -112,11 +112,62 @@ const PAYMENT_LABEL: Record<PaymentMethod, string> = {
   debito:        'Débito / Crédito',
 };
 
+/* ── Comanda para pedido de mostrador ────────── */
+function printComanda(
+  orderId: string,
+  cartItems: ReturnType<typeof useCart>['items'],
+  total: number,
+  paymentMethod: PaymentMethod | null,
+) {
+  const now     = new Date();
+  const timeStr = now.toLocaleTimeString('es-CL', { hour:'2-digit', minute:'2-digit' });
+  const dateStr = now.toLocaleDateString('es-CL');
+
+  const rows = cartItems.map(item => {
+    const extras = (item.extras ?? []).map(e => `+ ${e.name}`).join(', ');
+    const aderezos = (item.aderezos ?? []).map(a => a.name).join(', ');
+    const removed  = item.removedIngredients?.length ? `Sin: ${item.removedIngredients.join(', ')}` : '';
+    const choices  = item.choices?.map(c => `${c.label}: ${c.selected}`).join(', ') ?? '';
+    const mods     = [choices, removed, extras, aderezos, item.note ? `Nota: ${item.note}` : ''].filter(Boolean).join(' | ');
+    return `
+      <div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px dashed #ccc">
+        <div style="font-weight:bold;font-size:15px">${item.qty}x ${item.name}${item.size ? ` <span style="font-size:12px">(${item.size.toUpperCase()})</span>` : ''}</div>
+        ${mods ? `<div style="font-size:12px;color:#555;margin-top:3px">${mods}</div>` : ''}
+      </div>`;
+  }).join('');
+
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Comanda ${orderId}</title>
+  <style>body{font-family:'Courier New',monospace;max-width:300px;margin:0 auto;padding:16px;font-size:13px}
+  h2{text-align:center;margin:0 0 4px;font-size:16px}
+  .sub{text-align:center;font-size:12px;color:#666;margin-bottom:12px}
+  .total{font-size:18px;font-weight:bold;text-align:right;margin-top:12px;border-top:2px solid #000;padding-top:8px}
+  @media print{button{display:none}}</style></head>
+  <body>
+    <h2>🏪 MOSTRADOR</h2>
+    <div class="sub">${orderId} · ${dateStr} ${timeStr}</div>
+    <hr/>
+    ${rows}
+    <div class="total">TOTAL: $${total.toLocaleString('es-CL')}</div>
+    ${paymentMethod ? `<div style="text-align:right;font-size:12px;margin-top:4px">Pago: ${paymentMethod === 'efectivo' ? 'Efectivo' : paymentMethod === 'transferencia' ? 'Transferencia' : 'Débito/Crédito'}</div>` : ''}
+    <br/>
+    <button onclick="window.print()" style="width:100%;padding:10px;background:#000;color:#fff;border:none;font-size:14px;cursor:pointer;margin-top:8px">🖨️ Imprimir</button>
+    <script>window.onload=function(){window.print();}<\/script>
+  </body></html>`;
+
+  const w = window.open('', '_blank', 'width=380,height=620');
+  if (w) { w.document.write(html); w.document.close(); }
+}
+
 export default function CartDrawer() {
   const { items, updateQty, removeItem, clearCart, total, count, isOpen, setIsOpen } = useCart();
   const { waNumber, waGreeting, waFooter, delivery } = useSettings();
   const { state: geo, request: requestGeo, clear } = useGeolocation();
   const [paymentMethod, setPaymentMethod]   = useState<PaymentMethod | null>(null);
+  const [isMostrador, setIsMostrador]       = useState(false);
+
+  useEffect(() => {
+    setIsMostrador(new URLSearchParams(window.location.search).get('mostrador') === '1');
+  }, []);
   const [discountInput, setDiscountInput]   = useState('');
   const [discountStatus, setDiscountStatus] = useState<'idle' | 'loading' | 'applied' | 'error'>('idle');
   const [discountError,  setDiscountError]  = useState('');
@@ -281,6 +332,32 @@ export default function CartDrawer() {
     window.open(buildWAMsg(orderId), '_blank');
   };
 
+  const [mostradorSending, setMostradorSending] = useState(false);
+
+  const handleMostradorSend = async () => {
+    setMostradorSending(true);
+    try {
+      const orderId = await generateOrderId();
+      await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items,
+          total:         finalTotal,
+          orderId,
+          sessionId:     getSessionId(),
+          paymentMethod: paymentMethod ?? undefined,
+          source:        'local',
+        }),
+      });
+      printComanda(orderId, items, finalTotal, paymentMethod);
+      clearCart();
+      setIsOpen(false);
+    } finally {
+      setMostradorSending(false);
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -289,6 +366,11 @@ export default function CartDrawer() {
       <div style={{ position:'relative', zIndex:1, width:'100%', maxWidth:'var(--max)', background:'var(--card)', borderRadius:'var(--radius) var(--radius) 0 0', maxHeight:'85dvh', display:'flex', flexDirection:'column', animation:'slideUp .3s ease', boxShadow:'0 -8px 40px rgba(0,0,0,0.3)' }}>
 
         {/* Header */}
+        {isMostrador && (
+          <div style={{ background:'#1e293b', padding:'6px 20px', display:'flex', alignItems:'center', gap:8 }}>
+            <span style={{ fontSize:12, fontWeight:700, color:'#94a3b8', letterSpacing:1, textTransform:'uppercase' }}>🏪 Modo mostrador</span>
+          </div>
+        )}
         <div style={{ padding:'16px 20px 12px', borderBottom:'1px solid var(--border)', display:'flex', justifyContent:'space-between', alignItems:'center', flexShrink:0 }}>
           <div>
             <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:22, color:'var(--text)' }}>Tu pedido</div>
@@ -406,8 +488,8 @@ export default function CartDrawer() {
               )}
             </div>
 
-            {/* Delivery */}
-            {delivery?.enabled && (delivery.zones?.length ?? 0) > 0 && (
+            {/* Delivery — hidden in mostrador mode */}
+            {!isMostrador && delivery?.enabled && (delivery.zones?.length ?? 0) > 0 && (
               <div style={{ marginBottom:12, background:'var(--bg2)', borderRadius:'var(--radius-sm)', border:'1px solid var(--border)', padding:'12px 14px' }}>
                 <div style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', letterSpacing:.5, textTransform:'uppercase', marginBottom:10 }}>🛵 Delivery</div>
 
@@ -544,9 +626,16 @@ export default function CartDrawer() {
               </div>
             </div>
 
-            <button onClick={handleSend} style={{ width:'100%', display:'flex', alignItems:'center', justifyContent:'center', gap:10, background:'#25D366', color:'#fff', padding:'15px 24px', borderRadius:999, border:'none', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:20, letterSpacing:.5, cursor:'pointer', boxShadow:'0 4px 16px rgba(37,211,102,0.3)' }}>
-              <WAIcon size={20} color="#fff"/> Enviar pedido por WhatsApp
-            </button>
+            {isMostrador ? (
+              <button onClick={handleMostradorSend} disabled={mostradorSending}
+                style={{ width:'100%', display:'flex', alignItems:'center', justifyContent:'center', gap:10, background: mostradorSending ? '#555' : '#1e293b', color:'#fff', padding:'15px 24px', borderRadius:999, border:'none', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:20, letterSpacing:.5, cursor: mostradorSending ? 'not-allowed' : 'pointer', boxShadow:'0 4px 16px rgba(0,0,0,0.25)' }}>
+                🖨️ {mostradorSending ? 'Creando pedido…' : 'Crear pedido + imprimir comanda'}
+              </button>
+            ) : (
+              <button onClick={handleSend} style={{ width:'100%', display:'flex', alignItems:'center', justifyContent:'center', gap:10, background:'#25D366', color:'#fff', padding:'15px 24px', borderRadius:999, border:'none', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:20, letterSpacing:.5, cursor:'pointer', boxShadow:'0 4px 16px rgba(37,211,102,0.3)' }}>
+                <WAIcon size={20} color="#fff"/> Enviar pedido por WhatsApp
+              </button>
+            )}
           </div>
         )}
       </div>

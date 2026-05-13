@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useLiveOrders } from '@/hooks/useLiveOrders';
-import { Order, OrderStatus, OrderNote, PaymentMethod } from '@/lib/firestore/orders';
+import { Order, OrderStatus, PaymentMethod } from '@/lib/firestore/orders';
 
 const fmt = (n: number) =>
   n.toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 });
@@ -274,230 +274,6 @@ ${notesList ? `<div class="divider"></div>${notesList}` : ''}
   if (w) { w.document.write(html); w.document.close(); }
 }
 
-/* ── InStoreOrderModal ─────────────────────────── */
-
-type MenuItemSimple = { id: string; name: string; category: string; price: number | null; priceNormal: number | null; priceXL: number | null; visible: boolean };
-type CartLine = { item: MenuItemSimple; size: 'normal' | 'xl' | null; qty: number };
-
-const CATEGORY_LABEL_LOCAL: Record<string, string> = {
-  vienesas:'🌭 Vienesas', as:'🥪 AS', churrasco:'🥩 Churrasco',
-  mechada:'🥖 Mechada', papas:'🍟 Papas & Más', bebidas:'🥤 Bebidas',
-};
-
-function InStoreOrderModal({ onClose, onCreated }: { onClose: () => void; onCreated: (o: Order) => void }) {
-  const [menuItems,    setMenuItems]    = useState<MenuItemSimple[]>([]);
-  const [loadingMenu,  setLoadingMenu]  = useState(true);
-  const [cart,         setCart]         = useState<CartLine[]>([]);
-  const [customerName, setCustomerName] = useState('');
-  const [payment,      setPayment]      = useState<PaymentMethod>('efectivo');
-  const [kitchenNote,  setKitchenNote]  = useState('');
-  const [saving,       setSaving]       = useState(false);
-  const [search,       setSearch]       = useState('');
-
-  useEffect(() => {
-    fetch('/api/menu').then(r => r.json()).then((data: MenuItemSimple[]) => {
-      setMenuItems(data.filter(m => m.visible));
-      setLoadingMenu(false);
-    }).catch(() => setLoadingMenu(false));
-  }, []);
-
-  const filtered = search.trim()
-    ? menuItems.filter(m => m.name.toLowerCase().includes(search.toLowerCase()))
-    : menuItems;
-
-  const grouped = filtered.reduce<Record<string, MenuItemSimple[]>>((acc, m) => {
-    (acc[m.category] ??= []).push(m); return acc;
-  }, {});
-
-  function addToCart(item: MenuItemSimple, size: 'normal' | 'xl' | null) {
-    setCart(prev => {
-      const exists = prev.find(l => l.item.id === item.id && l.size === size);
-      if (exists) return prev.map(l => l.item.id === item.id && l.size === size ? { ...l, qty: l.qty + 1 } : l);
-      return [...prev, { item, size, qty: 1 }];
-    });
-  }
-
-  function updateQty(item: MenuItemSimple, size: 'normal' | 'xl' | null, delta: number) {
-    setCart(prev => prev.map(l => l.item.id === item.id && l.size === size
-      ? { ...l, qty: l.qty + delta } : l).filter(l => l.qty > 0));
-  }
-
-  function linePrice(l: CartLine) {
-    if (l.size === 'xl')     return (l.item.priceXL     ?? 0) * l.qty;
-    if (l.size === 'normal') return (l.item.priceNormal ?? 0) * l.qty;
-    return (l.item.price ?? 0) * l.qty;
-  }
-
-  const total = cart.reduce((s, l) => s + linePrice(l), 0);
-
-  async function handleSubmit() {
-    if (cart.length === 0) return;
-    setSaving(true);
-    try {
-      const items = cart.map(l => ({
-        name: l.item.name, qty: l.qty,
-        price: l.size === 'xl' ? (l.item.priceXL ?? 0) : l.size === 'normal' ? (l.item.priceNormal ?? 0) : (l.item.price ?? 0),
-        size: l.size === 'xl' ? 'XL' : l.size === 'normal' ? 'Normal' : undefined,
-      }));
-      const res = await fetch('/api/orders', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          items, total, sessionId: `local-${Date.now()}`,
-          paymentMethod: payment, source: 'local',
-          customerName: customerName.trim() || undefined,
-        }),
-      });
-      if (!res.ok) throw new Error();
-      const { id } = await res.json();
-
-      // Construir objeto Order local para imprimir y notificar
-      const newOrder: Order = {
-        id, orderId: undefined, createdAt: new Date().toISOString(), status: 'confirmed',
-        items: items.map(i => ({ ...i, subtotal: i.price * i.qty })),
-        total, itemCount: cart.reduce((s,l) => s + l.qty, 0),
-        sessionId: `local-${Date.now()}`, paymentMethod: payment,
-        locationUrl: null, discountCode: null, discountAmount: null, deliveryFee: null, notes: [],
-      } as unknown as Order;
-
-      if (kitchenNote.trim()) {
-        await fetch(`/api/orders/${id}`, {
-          method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ note: kitchenNote.trim() }),
-        });
-        (newOrder.notes as OrderNote[]).push({ text: kitchenNote.trim(), createdAt: new Date().toISOString() });
-      }
-
-      onCreated(newOrder);
-      printComanda({ ...newOrder, source: 'local' } as unknown as Order);
-      onClose();
-    } catch {
-      alert('Error al crear el pedido.');
-    }
-    setSaving(false);
-  }
-
-  const INPUT: React.CSSProperties = { width:'100%', padding:'8px 11px', borderRadius:8, border:'1.5px solid rgba(242,100,25,0.25)', background:'var(--bg2)', color:'var(--text)', fontSize:13, fontFamily:"'Barlow',sans-serif", outline:'none', boxSizing:'border-box' };
-
-  return (
-    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.6)', zIndex:9999, display:'flex', alignItems:'flex-end', justifyContent:'center' }}
-      onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div style={{ background:'var(--card)', borderRadius:'16px 16px 0 0', width:'100%', maxWidth:540, maxHeight:'95dvh', display:'flex', flexDirection:'column' }}>
-
-        {/* Header */}
-        <div style={{ padding:'16px 20px 12px', borderBottom:'1px solid var(--border)', display:'flex', justifyContent:'space-between', alignItems:'center', flexShrink:0 }}>
-          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:22, color:'var(--text)' }}>🏪 Pedido en mostrador</div>
-          <button onClick={onClose} style={{ width:32, height:32, borderRadius:'50%', border:'none', background:'var(--bg2)', cursor:'pointer', fontSize:18, color:'var(--text-muted)' }}>×</button>
-        </div>
-
-        <div style={{ overflowY:'auto', flex:1, padding:'16px 20px', display:'flex', flexDirection:'column', gap:16 }}>
-
-          {/* Buscador de items */}
-          <div>
-            <div style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', letterSpacing:.5, textTransform:'uppercase', marginBottom:8 }}>Agregar productos</div>
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar producto…" style={{ ...INPUT, marginBottom:10 }} />
-
-            {loadingMenu ? (
-              <div style={{ fontSize:13, color:'var(--text-muted)', textAlign:'center', padding:'20px 0' }}>Cargando menú…</div>
-            ) : (
-              <div style={{ maxHeight:260, overflowY:'auto', border:'1px solid var(--border)', borderRadius:8 }}>
-                {Object.entries(grouped).map(([cat, items]) => (
-                  <div key={cat}>
-                    <div style={{ fontSize:10, fontWeight:800, color:'#A0541A', letterSpacing:1, textTransform:'uppercase', padding:'6px 12px 3px', background:'rgba(242,100,25,0.04)', borderBottom:'1px solid rgba(242,100,25,0.08)' }}>
-                      {CATEGORY_LABEL_LOCAL[cat] ?? cat}
-                    </div>
-                    {items.map(m => {
-                      const isDual = m.priceNormal != null;
-                      return (
-                        <div key={m.id} style={{ padding:'8px 12px', borderBottom:'1px solid rgba(0,0,0,0.04)', display:'flex', alignItems:'center', gap:10 }}>
-                          <span style={{ flex:1, fontSize:13, fontWeight:600, color:'var(--text)' }}>{m.name}</span>
-                          {isDual ? (
-                            <div style={{ display:'flex', gap:5 }}>
-                              <button onClick={() => addToCart(m, 'normal')}
-                                style={{ padding:'4px 10px', borderRadius:999, border:'1.5px solid var(--orange)', background:'transparent', color:'var(--orange)', fontSize:11, fontWeight:700, cursor:'pointer' }}>
-                                + Normal ${(m.priceNormal??0).toLocaleString('es-CL')}
-                              </button>
-                              <button onClick={() => addToCart(m, 'xl')}
-                                style={{ padding:'4px 10px', borderRadius:999, border:'none', background:'var(--orange)', color:'#fff', fontSize:11, fontWeight:700, cursor:'pointer' }}>
-                                + XL ${(m.priceXL??0).toLocaleString('es-CL')}
-                              </button>
-                            </div>
-                          ) : (
-                            <button onClick={() => addToCart(m, null)}
-                              style={{ padding:'4px 14px', borderRadius:999, border:'none', background:'var(--orange)', color:'#fff', fontSize:12, fontWeight:700, cursor:'pointer' }}>
-                              + ${(m.price??0).toLocaleString('es-CL')}
-                            </button>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                ))}
-                {Object.keys(grouped).length === 0 && <div style={{ padding:16, fontSize:13, color:'#999', textAlign:'center' }}>Sin resultados</div>}
-              </div>
-            )}
-          </div>
-
-          {/* Carrito */}
-          {cart.length > 0 && (
-            <div>
-              <div style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', letterSpacing:.5, textTransform:'uppercase', marginBottom:8 }}>Pedido</div>
-              <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
-                {cart.map((l, i) => (
-                  <div key={i} style={{ display:'flex', alignItems:'center', gap:10, background:'rgba(242,100,25,0.05)', borderRadius:8, padding:'8px 12px' }}>
-                    <div style={{ flex:1, fontSize:13, fontWeight:600, color:'var(--text)' }}>
-                      {l.item.name}{l.size === 'xl' ? ' XL' : l.size === 'normal' ? ' Normal' : ''}
-                    </div>
-                    <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-                      <button onClick={() => updateQty(l.item, l.size, -1)} style={{ width:24, height:24, borderRadius:'50%', border:'1.5px solid var(--border)', background:'transparent', cursor:'pointer', fontSize:14, fontWeight:700, color:'var(--text)', display:'flex', alignItems:'center', justifyContent:'center' }}>−</button>
-                      <span style={{ fontSize:14, fontWeight:700, color:'var(--text)', minWidth:18, textAlign:'center' }}>{l.qty}</span>
-                      <button onClick={() => updateQty(l.item, l.size, 1)} style={{ width:24, height:24, borderRadius:'50%', border:'none', background:'var(--orange)', cursor:'pointer', fontSize:14, fontWeight:700, color:'#fff', display:'flex', alignItems:'center', justifyContent:'center' }}>+</button>
-                    </div>
-                    <div style={{ fontSize:13, fontWeight:700, color:'var(--orange)', minWidth:60, textAlign:'right' }}>${linePrice(l).toLocaleString('es-CL')}</div>
-                  </div>
-                ))}
-                <div style={{ display:'flex', justifyContent:'flex-end', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:20, color:'var(--orange)', paddingRight:12, paddingTop:4 }}>
-                  Total ${total.toLocaleString('es-CL')}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Cliente + pago + nota */}
-          <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-            <div>
-              <label style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', display:'block', marginBottom:5, letterSpacing:.5, textTransform:'uppercase' }}>Nombre cliente (opcional)</label>
-              <input value={customerName} onChange={e => setCustomerName(e.target.value)} placeholder="Ej: Mesa 3, Juan" style={INPUT} />
-            </div>
-            <div>
-              <label style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', display:'block', marginBottom:5, letterSpacing:.5, textTransform:'uppercase' }}>Método de pago</label>
-              <div style={{ display:'flex', gap:6 }}>
-                {(['efectivo','transferencia','debito'] as PaymentMethod[]).map(pm => (
-                  <button key={pm} onClick={() => setPayment(pm)}
-                    style={{ flex:1, padding:'7px 4px', borderRadius:8, border:`2px solid ${payment === pm ? 'var(--orange)' : 'var(--border)'}`, background: payment === pm ? 'rgba(242,100,25,0.1)' : 'transparent', color: payment === pm ? 'var(--orange)' : 'var(--text-muted)', fontSize:11, fontWeight:700, cursor:'pointer' }}>
-                    {PAYMENT_LABEL[pm]}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div>
-              <label style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', display:'block', marginBottom:5, letterSpacing:.5, textTransform:'uppercase' }}>Nota para cocina (opcional)</label>
-              <input value={kitchenNote} onChange={e => setKitchenNote(e.target.value)} placeholder="Sin ají, alergia a la mostaza…" style={INPUT} />
-            </div>
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div style={{ padding:'12px 20px 20px', borderTop:'1px solid var(--border)', flexShrink:0 }}>
-          <button onClick={handleSubmit} disabled={saving || cart.length === 0}
-            style={{ width:'100%', padding:'13px', borderRadius:999, border:'none', background: cart.length === 0 ? '#d1bfb8' : '#F26419', color:'#fff', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:17, cursor: (saving || cart.length === 0) ? 'not-allowed' : 'pointer' }}>
-            {saving ? 'Guardando…' : `🖨️ Crear pedido e imprimir comanda`}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 /* ── OrderCard ─────────────────────────────────── */
 
 function OrderCard({ order, onStatus, onAddNote }: {
@@ -591,7 +367,6 @@ export default function OrdersPage() {
   const [search,       setSearch]       = useState('');
   const [filters,      setFilters]      = useState<Filters>(EMPTY_FILTERS);
   const [showFilters,  setShowFilters]  = useState(false);
-  const [showInStore,  setShowInStore]  = useState(false);
 
   const isClosed   = !!dayClosedAt && !!dayStartedAt && dayClosedAt > dayStartedAt;
   const activeFrom = showAll ? null : dayStartedAt;
@@ -696,7 +471,7 @@ export default function OrdersPage() {
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:8, flexWrap:'wrap', gap:8 }}>
           <h1 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:32, color:'var(--text)', margin:0 }}>Pedidos</h1>
           <div style={{ display:'flex', gap:8 }}>
-            <button onClick={() => setShowInStore(true)}
+            <button onClick={() => window.open('/?mostrador=1', '_blank')}
               style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 16px', borderRadius:999, border:'none', background:'#F26419', color:'#fff', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:14, cursor:'pointer' }}>
               🏪 Mostrador
             </button>
@@ -865,12 +640,6 @@ export default function OrdersPage() {
         })
       )}
 
-      {showInStore && (
-        <InStoreOrderModal
-          onClose={() => setShowInStore(false)}
-          onCreated={() => setShowInStore(false)}
-        />
-      )}
     </div>
   );
 }
