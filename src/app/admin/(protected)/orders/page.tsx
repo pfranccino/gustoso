@@ -355,6 +355,108 @@ function OrderCard({ order, onStatus, onAddNote }: {
   );
 }
 
+/* ── DaySummaryModal ───────────────────────────── */
+
+function DaySummaryModal({ orders, dayStartedAt, onConfirm, onCancel, closing }: {
+  orders: Order[];
+  dayStartedAt: Date;
+  onConfirm: () => void;
+  onCancel: () => void;
+  closing: boolean;
+}) {
+  const confirmed = orders.filter(o => o.status === 'confirmed' || o.status === 'delivered');
+  const totalRevenue = confirmed.reduce((s, o) => s + o.total, 0);
+  const totalOrders  = orders.length;
+
+  const payRows = (['efectivo','transferencia','debito'] as PaymentMethod[]).map(pm => ({
+    label: PAYMENT_LABEL[pm],
+    total: confirmed.filter(o => o.paymentMethod === pm).reduce((s, o) => s + o.total, 0),
+    count: confirmed.filter(o => o.paymentMethod === pm).length,
+  })).filter(r => r.count > 0);
+
+  // Top 5 productos
+  const itemCounts: Record<string, number> = {};
+  confirmed.forEach(o => o.items.forEach(it => {
+    const k = it.name + (it.size ? ` (${it.size})` : '');
+    itemCounts[k] = (itemCounts[k] ?? 0) + it.qty;
+  }));
+  const topItems = Object.entries(itemCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+
+  const dayLabel = dayStartedAt.toLocaleString('es-CL', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
+  const pending  = orders.filter(o => o.status === 'pending').length;
+
+  return (
+    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.55)', zIndex:200, display:'flex', alignItems:'center', justifyContent:'center', padding:16 }}
+      onClick={e => { if (e.target === e.currentTarget) onCancel(); }}>
+      <div style={{ background:'var(--card)', borderRadius:'var(--radius)', border:'1px solid var(--border)', width:'100%', maxWidth:420, maxHeight:'90vh', overflowY:'auto', padding:24 }}>
+
+        <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:20 }}>
+          <span style={{ fontSize:28 }}>🌙</span>
+          <div>
+            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:22, color:'var(--text)', lineHeight:1 }}>Resumen del día</div>
+            <div style={{ fontSize:12, color:'var(--text-muted)', marginTop:2 }}>Desde {dayLabel}</div>
+          </div>
+        </div>
+
+        {/* Revenue */}
+        <div style={{ background:'rgba(242,100,25,0.08)', border:'1px solid rgba(242,100,25,0.2)', borderRadius:10, padding:'14px 16px', marginBottom:16, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+          <div>
+            <div style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:.5 }}>Total recaudado</div>
+            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:30, color:'var(--orange)' }}>{fmt(totalRevenue)}</div>
+          </div>
+          <div style={{ textAlign:'right' }}>
+            <div style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:.5 }}>Pedidos</div>
+            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:26, color:'var(--text)' }}>{totalOrders}</div>
+          </div>
+        </div>
+
+        {/* Desglose por método */}
+        {payRows.length > 0 && (
+          <div style={{ marginBottom:16 }}>
+            <div style={{ fontSize:11, fontWeight:800, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:1, marginBottom:8 }}>Por método de pago</div>
+            {payRows.map(r => (
+              <div key={r.label} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'7px 0', borderBottom:'1px solid var(--border)' }}>
+                <span style={{ fontSize:13, color:'var(--text)' }}>{r.label} <span style={{ fontSize:11, color:'var(--text-muted)' }}>({r.count} ped.)</span></span>
+                <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:800, fontSize:16, color:'var(--orange)' }}>{fmt(r.total)}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Top items */}
+        {topItems.length > 0 && (
+          <div style={{ marginBottom:16 }}>
+            <div style={{ fontSize:11, fontWeight:800, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:1, marginBottom:8 }}>Más vendidos hoy</div>
+            {topItems.map(([name, qty]) => (
+              <div key={name} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'6px 0', borderBottom:'1px solid var(--border)' }}>
+                <span style={{ fontSize:13, color:'var(--text)', flex:1, minWidth:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{name}</span>
+                <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:800, fontSize:15, color:'var(--text-muted)', flexShrink:0, marginLeft:8 }}>{qty}×</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {pending > 0 && (
+          <div style={{ background:'rgba(217,119,6,0.1)', border:'1px solid rgba(217,119,6,0.3)', borderRadius:8, padding:'10px 14px', marginBottom:16, fontSize:13, color:'#d97706', fontWeight:600 }}>
+            ⚠️ Hay {pending} pedido{pending > 1 ? 's' : ''} pendiente{pending > 1 ? 's' : ''} sin confirmar.
+          </div>
+        )}
+
+        <div style={{ display:'flex', gap:8 }}>
+          <button onClick={onCancel} disabled={closing}
+            style={{ flex:1, padding:'10px', borderRadius:999, border:'1.5px solid var(--border)', background:'transparent', color:'var(--text-muted)', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:14, cursor:'pointer' }}>
+            Cancelar
+          </button>
+          <button onClick={onConfirm} disabled={closing}
+            style={{ flex:2, padding:'10px', borderRadius:999, border:'none', background:'#16a34a', color:'#fff', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:14, cursor: closing ? 'not-allowed' : 'pointer', opacity: closing ? 0.6 : 1 }}>
+            {closing ? 'Cerrando…' : '🌙 Confirmar cierre'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ── OrdersPage ────────────────────────────────── */
 
 export default function OrdersPage() {
@@ -364,6 +466,7 @@ export default function OrdersPage() {
   const [startingDay,  setStartingDay]  = useState(false);
   const [closingDay,   setClosingDay]   = useState(false);
   const [showAll,      setShowAll]      = useState(false);
+  const [showDaySummary, setShowDaySummary] = useState(false);
   const [search,       setSearch]       = useState('');
   const [filters,      setFilters]      = useState<Filters>(EMPTY_FILTERS);
   const [showFilters,  setShowFilters]  = useState(false);
@@ -396,16 +499,15 @@ export default function OrdersPage() {
     } finally { setStartingDay(false); }
   };
 
-  const handleCloseDay = async () => {
-    const pending = orders.filter(o => o.status === 'pending');
-    if (pending.length > 0) {
-      if (!confirm(`Hay ${pending.length} pedido(s) pendiente(s). ¿Cerrar el día de todas formas?`)) return;
-    }
+  const handleCloseDay = () => setShowDaySummary(true);
+
+  const confirmCloseDay = async () => {
     setClosingDay(true);
     try {
       const res = await fetch('/api/admin/start-day', { method: 'DELETE' });
       const { closedAt } = await res.json();
       setDayClosedAt(new Date(closedAt));
+      setShowDaySummary(false);
     } finally { setClosingDay(false); }
   };
 
@@ -466,6 +568,16 @@ export default function OrdersPage() {
 
   return (
     <div>
+      {showDaySummary && dayStartedAt && (
+        <DaySummaryModal
+          orders={orders}
+          dayStartedAt={dayStartedAt}
+          onConfirm={confirmCloseDay}
+          onCancel={() => setShowDaySummary(false)}
+          closing={closingDay}
+        />
+      )}
+
       {/* Header */}
       <div style={{ marginBottom:16 }}>
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:8, flexWrap:'wrap', gap:8 }}>

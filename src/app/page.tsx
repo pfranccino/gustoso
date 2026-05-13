@@ -11,7 +11,7 @@ import { getReviews, Review } from '@/lib/firestore/reviews';
 
 export const revalidate = 60;
 
-import { DEFAULT_DELIVERY } from '@/lib/firestore/settings';
+import { DEFAULT_DELIVERY, DEFAULT_AUTO_SCHEDULE } from '@/lib/firestore/settings';
 
 const DEFAULT_SETTINGS: Settings = {
   waNumber:     '56985219094',
@@ -21,7 +21,8 @@ const DEFAULT_SETTINGS: Settings = {
   waGreeting:   "Hola Gustoso's! Quiero hacer un pedido 🛒",
   waFooter:     '',
   delivery:     { ...DEFAULT_DELIVERY },
-  mostradorPin: '1234',
+  mostradorPin: '',
+  autoSchedule: { ...DEFAULT_AUTO_SCHEDULE },
 };
 
 export default async function Home() {

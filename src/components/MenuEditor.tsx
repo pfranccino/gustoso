@@ -26,6 +26,7 @@ type EditState = {
   price: string;
   priceNormal: string;
   priceXL: string;
+  costEstimado: string;
   extras: Extra[];
   ingredients: Ingredient[];
 };
@@ -39,6 +40,7 @@ type CreateState = {
   price: string;
   priceNormal: string;
   priceXL: string;
+  costEstimado: string;
   extras: Extra[];
   ingredients: Ingredient[];
   visible: boolean;
@@ -46,7 +48,7 @@ type CreateState = {
 
 const emptyCreate = (): CreateState => ({
   category: 'vienesas', name: '', desc: '', volume: '', dual: false,
-  price: '', priceNormal: '', priceXL: '', extras: [], ingredients: [], visible: true,
+  price: '', priceNormal: '', priceXL: '', costEstimado: '', extras: [], ingredients: [], visible: true,
 });
 
 /* ── componente principal ─────────────────────── */
@@ -94,14 +96,15 @@ export default function MenuEditor({ initialItems }: { initialItems: MenuItem[] 
   function openEdit(item: MenuItem) {
     setEditing({
       item,
-      name:        item.name,
-      desc:        item.desc ?? '',
-      volume:      item.volume ?? '',
-      price:       item.price != null ? String(item.price) : '',
-      priceNormal: item.priceNormal != null ? String(item.priceNormal) : '',
-      priceXL:     item.priceXL != null ? String(item.priceXL) : '',
-      extras:      item.extras ?? [],
-      ingredients: item.ingredients ?? [],
+      name:         item.name,
+      desc:         item.desc ?? '',
+      volume:       item.volume ?? '',
+      price:        item.price != null ? String(item.price) : '',
+      priceNormal:  item.priceNormal != null ? String(item.priceNormal) : '',
+      priceXL:      item.priceXL != null ? String(item.priceXL) : '',
+      costEstimado: item.costEstimado != null ? String(item.costEstimado) : '',
+      extras:       item.extras ?? [],
+      ingredients:  item.ingredients ?? [],
     });
     setSaveError('');
   }
@@ -114,11 +117,12 @@ export default function MenuEditor({ initialItems }: { initialItems: MenuItem[] 
     const isDual = item.priceNormal != null;
 
     const update: Partial<MenuItem> = {
-      name:        editing.name.trim() || item.name,
-      desc:        editing.desc.trim() || null,
-      volume:      editing.volume.trim() || null,
-      extras:      editing.extras,
-      ingredients: editing.ingredients,
+      name:         editing.name.trim() || item.name,
+      desc:         editing.desc.trim() || null,
+      volume:       editing.volume.trim() || null,
+      costEstimado: editing.costEstimado.trim() ? (parseInt(editing.costEstimado, 10) || null) : null,
+      extras:       editing.extras,
+      ingredients:  editing.ingredients,
     };
 
     if (isDual) {
@@ -163,7 +167,8 @@ export default function MenuEditor({ initialItems }: { initialItems: MenuItem[] 
 
     startTransition(async () => {
       try {
-        const body: Record<string, unknown> = { category, name: name.trim(), desc: desc.trim() || null, volume: volume.trim() || null, extras, ingredients, visible };
+        const { costEstimado } = creating;
+        const body: Record<string, unknown> = { category, name: name.trim(), desc: desc.trim() || null, volume: volume.trim() || null, costEstimado: costEstimado.trim() ? (parseInt(costEstimado, 10) || null) : null, extras, ingredients, visible };
         if (dual) {
           body.priceNormal = parseInt(priceNormal, 10) || 0;
           body.priceXL     = parseInt(priceXL,     10) || 0;
@@ -189,6 +194,7 @@ export default function MenuEditor({ initialItems }: { initialItems: MenuItem[] 
           imageUrl: null,
           visible,
           sortOrder: items.filter(i => i.category === category).length,
+          costEstimado: creating.costEstimado.trim() ? (parseInt(creating.costEstimado, 10) || null) : null,
           extras,
           ingredients,
         };
@@ -289,8 +295,16 @@ export default function MenuEditor({ initialItems }: { initialItems: MenuItem[] 
                       {item.extras.length > 0 && <div style={{ fontSize:11, color:'var(--orange)', fontWeight:600 }}>➕ {item.extras.length} extra{item.extras.length > 1 ? 's' : ''}</div>}
                     </div>
                   </div>
-                  <div style={{ fontSize:13, fontWeight:700, color:'var(--orange)', whiteSpace:'nowrap', flexShrink:0 }}>
-                    {isDual(item) ? `${fmt(item.priceNormal!)} / ${fmt(item.priceXL!)}` : fmt(item.price!)}
+                  <div style={{ textAlign:'right', flexShrink:0 }}>
+                    <div style={{ fontSize:13, fontWeight:700, color:'var(--orange)', whiteSpace:'nowrap' }}>
+                      {isDual(item) ? `${fmt(item.priceNormal!)} / ${fmt(item.priceXL!)}` : fmt(item.price!)}
+                    </div>
+                    {item.costEstimado != null && (() => {
+                      const ref = item.price ?? item.priceNormal ?? 0;
+                      const margin = ref > 0 ? Math.round((ref - item.costEstimado) / ref * 100) : 0;
+                      const color = margin >= 60 ? '#16a34a' : margin >= 40 ? '#d97706' : '#dc2626';
+                      return <div style={{ fontSize:11, fontWeight:700, color, whiteSpace:'nowrap' }}>Margen {margin}%</div>;
+                    })()}
                   </div>
                   <button onClick={() => openEdit(item)} style={{ flexShrink:0, padding:'5px 12px', borderRadius:6, border:'1px solid var(--border)', background:'transparent', fontSize:12, fontWeight:700, color:'var(--text-muted)', cursor:'pointer' }}>Editar</button>
                   <button onClick={() => handleDelete(item)} style={{ flexShrink:0, padding:'5px 10px', borderRadius:6, border:'1px solid rgba(220,38,38,0.3)', background:'transparent', fontSize:12, fontWeight:700, color:'#dc2626', cursor:'pointer' }}>✕</button>
@@ -315,6 +329,8 @@ export default function MenuEditor({ initialItems }: { initialItems: MenuItem[] 
           ) : (
             <Field label="Precio" type="number" value={editing.price} onChange={e => setEditing(p => p && ({ ...p, price: e.target.value }))} />
           )}
+          <CostField value={editing.costEstimado} onChange={v => setEditing(p => p && ({ ...p, costEstimado: v }))}
+            refPrice={editing.item.price ?? editing.item.priceNormal ?? null} />
           <IngredientsEditor ref={editIngredientsRef} ingredients={editing.ingredients} onChange={ingredients => setEditing(p => p && ({ ...p, ingredients }))} />
           <ExtrasEditor ref={editExtrasRef} extras={editing.extras} onChange={extras => setEditing(p => p && ({ ...p, extras }))} />
           {saveError && <div style={{ fontSize:13, color:'#dc2626', fontWeight:600, marginBottom:12 }}>{saveError}</div>}
@@ -352,6 +368,8 @@ export default function MenuEditor({ initialItems }: { initialItems: MenuItem[] 
             <Field label="Precio" type="number" value={creating.price} onChange={e => setCreating(p => p && ({ ...p, price: e.target.value }))} />
           )}
 
+          <CostField value={creating.costEstimado} onChange={v => setCreating(p => p && ({ ...p, costEstimado: v }))}
+            refPrice={creating.dual ? (parseInt(creating.priceNormal, 10) || null) : (parseInt(creating.price, 10) || null)} />
           <IngredientsEditor ref={createIngredientsRef} ingredients={creating.ingredients} onChange={ingredients => setCreating(p => p && ({ ...p, ingredients }))} />
           <ExtrasEditor ref={createExtrasRef} extras={creating.extras} onChange={extras => setCreating(p => p && ({ ...p, extras }))} />
 
@@ -518,6 +536,32 @@ function ExtrasEditor({ extras, onChange }, ref) {
     </div>
   );
 });
+
+function CostField({ value, onChange, refPrice }: { value: string; onChange: (v: string) => void; refPrice: number | null }) {
+  const cost   = parseInt(value, 10);
+  const margin = refPrice && refPrice > 0 && !isNaN(cost) && cost > 0
+    ? Math.round((refPrice - cost) / refPrice * 100) : null;
+  const marginColor = margin === null ? '#999' : margin >= 60 ? '#16a34a' : margin >= 40 ? '#d97706' : '#dc2626';
+
+  return (
+    <div style={{ marginBottom:14 }}>
+      <label style={{ display:'block', fontSize:11, fontWeight:700, color:'#A0541A', letterSpacing:1, textTransform:'uppercase', marginBottom:6 }}>
+        Costo estimado <span style={{ fontWeight:400, textTransform:'none', letterSpacing:0, fontSize:10, color:'#999' }}>(opcional — para calcular margen)</span>
+      </label>
+      <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+        <input
+          value={value} onChange={e => onChange(e.target.value)} type="number" placeholder="$0"
+          style={{ flex:1, padding:'10px 12px', borderRadius:8, border:'1.5px solid rgba(242,100,25,0.25)', background:'#FFF9F5', color:'#1A0800', fontSize:14, fontFamily:"'Barlow',sans-serif", boxSizing:'border-box', outline:'none' }}
+        />
+        {margin !== null && (
+          <div style={{ flexShrink:0, fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:16, color: marginColor }}>
+            Margen {margin}%
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 function Field({ label, ...inputProps }: { label: string } & React.InputHTMLAttributes<HTMLInputElement>) {
   return (

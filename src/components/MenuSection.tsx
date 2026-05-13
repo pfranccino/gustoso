@@ -10,6 +10,7 @@ import DualCard from './DualCard';
 import SectionHeader from './SectionHeader';
 import BurritoBuilder from './BurritoBuilder';
 import PromoCard from './PromoCard';
+import TopItems from './TopItems';
 
 const TABS = [
   { id:'promos',    label:'Promos',      emoji:'🏷️' },
@@ -156,6 +157,8 @@ export default function MenuSection({ items, burritoConfig, promotions, aderezos
           </div>
         )}
       </div>
+
+      {!q && <TopItems menuItems={items}/>}
 
       <div style={{ maxWidth:'var(--max)', margin:'0 auto', padding:'20px 16px 0' }}>
         {q ? (

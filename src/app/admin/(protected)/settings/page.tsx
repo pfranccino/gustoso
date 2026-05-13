@@ -1,4 +1,4 @@
-import { getSettings, Settings, DEFAULT_DELIVERY } from '@/lib/firestore/settings';
+import { getSettings, Settings, DEFAULT_DELIVERY, DEFAULT_AUTO_SCHEDULE } from '@/lib/firestore/settings';
 import SettingsEditor from '@/components/SettingsEditor';
 
 export const dynamic = 'force-dynamic';
@@ -11,8 +11,9 @@ export default async function SettingsPage() {
     isOpen:       true,
     waGreeting:   "Hola Gustoso's! Quiero hacer un pedido 🛒",
     waFooter:     '',
-    delivery:     { ...DEFAULT_DELIVERY },
-    mostradorPin: '1234',
+    delivery:      { ...DEFAULT_DELIVERY },
+    mostradorPin:  '',
+    autoSchedule:  { ...DEFAULT_AUTO_SCHEDULE },
   };
 
   try {

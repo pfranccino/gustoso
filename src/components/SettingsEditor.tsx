@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition, useEffect } from 'react';
-import { Settings, DeliveryZone } from '@/lib/firestore/settingsTypes';
+import { Settings, DeliveryZone, AutoSchedule } from '@/lib/firestore/settingsTypes';
 
 const INPUT: React.CSSProperties = {
   display: 'block', width: '100%', padding: '11px 13px',
@@ -71,6 +71,75 @@ function MostradorPinPanel() {
           </>
         )}
       </div>
+    </div>
+  );
+}
+
+const DAY_LABELS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+
+function AutoSchedulePanel({ value, onChange }: { value: AutoSchedule; onChange: (v: AutoSchedule) => void }) {
+  function toggleDay(d: number) {
+    const days = value.days.includes(d) ? value.days.filter(x => x !== d) : [...value.days, d].sort((a, b) => a - b);
+    onChange({ ...value, days });
+  }
+
+  return (
+    <div style={{ marginTop: 20, borderTop: '1px dashed var(--border)', paddingTop: 18 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+        <button
+          onClick={() => onChange({ ...value, enabled: !value.enabled })}
+          style={{ width: 44, height: 24, borderRadius: 999, border: 'none', background: value.enabled ? '#2563eb' : '#d1d5db', cursor: 'pointer', position: 'relative', transition: 'background .2s', flexShrink: 0 }}>
+          <span style={{ position: 'absolute', top: 3, left: value.enabled ? 22 : 3, width: 18, height: 18, borderRadius: '50%', background: '#fff', transition: 'left .2s' }}/>
+        </button>
+        <div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: value.enabled ? '#2563eb' : 'var(--text-muted)' }}>
+            🤖 Horario automático
+          </div>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>
+            Abre y cierra el local automáticamente según el horario configurado
+          </div>
+        </div>
+      </div>
+
+      {value.enabled && (
+        <div style={{ paddingLeft: 0, display: 'flex', flexDirection: 'column', gap: 14 }}>
+          {/* Días */}
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#A0541A', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 8 }}>Días activos</div>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {DAY_LABELS.map((label, i) => {
+                const on = value.days.includes(i);
+                return (
+                  <button key={i} onClick={() => toggleDay(i)}
+                    style={{ padding: '5px 12px', borderRadius: 999, border: `1.5px solid ${on ? '#2563eb' : 'var(--border)'}`, background: on ? 'rgba(37,99,235,0.1)' : 'transparent', color: on ? '#2563eb' : 'var(--text-muted)', fontWeight: 700, fontSize: 13, cursor: 'pointer', transition: 'all .15s' }}>
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Hora apertura / cierre */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div>
+              <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#A0541A', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 6 }}>Apertura</label>
+              <input type="time" value={value.openTime}
+                onChange={e => onChange({ ...value, openTime: e.target.value })}
+                style={INPUT} />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#A0541A', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 6 }}>Cierre</label>
+              <input type="time" value={value.closeTime}
+                onChange={e => onChange({ ...value, closeTime: e.target.value })}
+                style={INPUT} />
+            </div>
+          </div>
+
+          <div style={{ fontSize: 12, color: '#2563eb', background: 'rgba(37,99,235,0.07)', border: '1px solid rgba(37,99,235,0.2)', borderRadius: 8, padding: '8px 12px' }}>
+            💡 Cuando el horario automático está activo, anula el toggle manual de arriba. El local se abrirá y cerrará según este horario (hora Santiago).
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -213,6 +282,12 @@ ${form.waGreeting}
             {form.isOpen ? 'Local abierto' : 'Local cerrado'}
           </span>
         </div>
+
+        {/* Horario automático */}
+        <AutoSchedulePanel
+          value={form.autoSchedule}
+          onChange={v => setForm(f => ({ ...f, autoSchedule: v }))}
+        />
       </div>
 
       {/* PIN Mostrador */}

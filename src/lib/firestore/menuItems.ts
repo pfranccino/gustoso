@@ -20,6 +20,7 @@ export type MenuItem = {
   price: number | null;
   priceNormal: number | null;
   priceXL: number | null;
+  costEstimado: number | null;
   imageUrl: string | null;
   visible: boolean;
   sortOrder: number;
@@ -35,12 +36,13 @@ export type NewMenuItem = {
   price?: number | null;
   priceNormal?: number | null;
   priceXL?: number | null;
+  costEstimado?: number | null;
   extras?: Extra[];
   ingredients?: Ingredient[];
   visible?: boolean;
 };
 
-export type MenuItemUpdate = Partial<Pick<MenuItem, 'name' | 'desc' | 'volume' | 'price' | 'priceNormal' | 'priceXL' | 'visible' | 'imageUrl' | 'extras' | 'ingredients'>>;
+export type MenuItemUpdate = Partial<Pick<MenuItem, 'name' | 'desc' | 'volume' | 'price' | 'priceNormal' | 'priceXL' | 'costEstimado' | 'visible' | 'imageUrl' | 'extras' | 'ingredients'>>;
 
 export async function getMenuItems(): Promise<MenuItem[]> {
   const snap = await getAdminDb().collection('menu_items').get();
@@ -55,6 +57,7 @@ export async function getMenuItems(): Promise<MenuItem[]> {
       price:       d.price       ?? null,
       priceNormal: d.priceNormal ?? null,
       priceXL:     d.priceXL     ?? null,
+      costEstimado: typeof d.costEstimado === 'number' ? d.costEstimado : null,
       imageUrl:    d.imageUrl    ?? null,
       visible:     d.visible     ?? true,
       sortOrder:   d.sortOrder   ?? 0,

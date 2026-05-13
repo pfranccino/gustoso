@@ -13,6 +13,20 @@ export type DeliveryConfig = {
   extraPricePerKm: number;
 };
 
+export type AutoSchedule = {
+  enabled:   boolean;
+  openTime:  string;   // "HH:MM" hora apertura
+  closeTime: string;   // "HH:MM" hora cierre
+  days:      number[]; // 0=Dom, 1=Lun … 6=Sáb
+};
+
+export const DEFAULT_AUTO_SCHEDULE: AutoSchedule = {
+  enabled:   false,
+  openTime:  '12:00',
+  closeTime: '22:00',
+  days:      [0, 1, 2, 3, 4, 5, 6],
+};
+
 export type Settings = {
   waNumber:     string;
   address:      string;
@@ -21,7 +35,8 @@ export type Settings = {
   waGreeting:   string;
   waFooter:     string;
   delivery:     DeliveryConfig;
-  mostradorPin: string; // PIN numérico para el modo mostrador
+  mostradorPin: string;
+  autoSchedule: AutoSchedule;
 };
 
 export const DEFAULT_DELIVERY: DeliveryConfig = {
