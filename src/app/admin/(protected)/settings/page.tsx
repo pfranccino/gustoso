@@ -46,7 +46,9 @@ export default async function SettingsPage() {
           Número de WhatsApp, dirección y horario del local.
         </p>
       </div>
-      <SettingsEditor initial={settings} />
+      <div style={{ maxWidth: 560 }}>
+        <SettingsEditor initial={settings} />
+      </div>
     </div>
   );
 }

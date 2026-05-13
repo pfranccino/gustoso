@@ -128,7 +128,7 @@ export default function DashboardPage() {
       )}
 
       {/* KPI cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12, marginBottom: 28 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12, marginBottom: 28 }}>
         {kpis.map(kpi => (
           <div key={kpi.label} style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '20px 16px', animation: kpiFlash ? 'flash 1.2s ease' : undefined }}>
             <div style={{ fontSize: 22, marginBottom: 8 }}>{kpi.emoji}</div>

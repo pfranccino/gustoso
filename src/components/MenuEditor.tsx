@@ -277,7 +277,7 @@ export default function MenuEditor({ initialItems, categories = DEFAULT_CATEGORI
             <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:20, color:'var(--text)', marginBottom:12, borderBottom:'1.5px solid var(--border)', paddingBottom:8 }}>
               {emoji} {label}
             </div>
-            <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(340px, 1fr))', gap:8 }}>
               {catItems.map(item => (
                 <div key={item.id} style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:'var(--radius)', padding:'12px 14px', display:'flex', alignItems:'center', gap:12, opacity: item.visible ? 1 : 0.5 }}>
                   <button onClick={() => toggleVisible(item)} title={item.visible?'Ocultar':'Mostrar'}

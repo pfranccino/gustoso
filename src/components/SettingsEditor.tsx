@@ -177,7 +177,7 @@ export default function SettingsEditor({ initial }: { initial: Settings }) {
   }
 
   return (
-    <div style={{ maxWidth: 520 }}>
+    <div>
       {/* WhatsApp */}
       <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '20px', marginBottom: 16 }}>
         <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 18, color: 'var(--text)', marginBottom: 16 }}>

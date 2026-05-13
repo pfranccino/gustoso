@@ -138,7 +138,7 @@ export default function AdminSidebar({ email }: { email: string }) {
         @media (max-width: 767px) {
           .adm-sidebar  { display: none   !important; }
           .adm-topbar   { display: flex   !important; }
-          .adm-main     { padding-top: 76px !important; }
+          .adm-main     { padding: 68px 14px 40px !important; max-width: 100% !important; }
         }
       `}</style>
 

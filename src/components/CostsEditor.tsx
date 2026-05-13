@@ -202,7 +202,7 @@ export default function CostsEditor({ initial }: { initial: CostEntry[] }) {
   }
 
   return (
-    <div style={{ maxWidth:780 }}>
+    <div>
 
       {/* Formulario */}
       <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:'var(--radius)', padding:20, marginBottom:16 }}>
@@ -338,7 +338,7 @@ export default function CostsEditor({ initial }: { initial: CostEntry[] }) {
                         <button onClick={() => handleDelete(c)} style={{ padding:'4px 10px', borderRadius:8, border:'1px solid rgba(220,38,38,0.3)', background:'transparent', color:'#dc2626', fontSize:13, fontWeight:700, cursor:'pointer' }}>✕</button>
                       </div>
                     </div>
-                    <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8, marginTop:12 }}>
+                    <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(130px, 1fr))', gap:8, marginTop:12 }}>
                       {[
                         { label:'Cantidad',     value:`${c.quantity.toLocaleString('es-CL')} ${c.unit}` },
                         { label:'Total',        value:fmt(c.totalPrice) },
