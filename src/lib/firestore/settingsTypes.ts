@@ -37,6 +37,7 @@ export type Settings = {
   delivery:     DeliveryConfig;
   mostradorPin: string;
   autoSchedule: AutoSchedule;
+  avgMinutes:   number;   // tiempo promedio de preparación + entrega (mostrado al cliente)
 };
 
 export const DEFAULT_DELIVERY: DeliveryConfig = {

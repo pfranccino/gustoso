@@ -15,6 +15,7 @@ const DEFAULT: Settings = {
   delivery:     { ...DEFAULT_DELIVERY },
   mostradorPin: '',
   autoSchedule: { ...DEFAULT_AUTO_SCHEDULE },
+  avgMinutes:   25,
 };
 
 function parseDelivery(raw: unknown): DeliveryConfig {
@@ -74,6 +75,7 @@ export async function getSettings(): Promise<Settings> {
     delivery:     parseDelivery(d.delivery),
     mostradorPin: typeof d.mostradorPin === 'string'  ? d.mostradorPin : DEFAULT.mostradorPin,
     autoSchedule,
+    avgMinutes:   typeof d.avgMinutes   === 'number'  ? d.avgMinutes   : DEFAULT.avgMinutes,
   };
 }
 

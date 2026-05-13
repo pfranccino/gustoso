@@ -1,5 +1,6 @@
 import AppShell from '@/components/AppShell';
 import { getSettings, Settings } from '@/lib/firestore/settings';
+import { PublicSettings } from '@/contexts/SettingsContext';
 import { getMenuItems, MenuItem } from '@/lib/firestore/menuItems';
 import { getBurritoConfig, BurritoConfig, DEFAULT_BURRITO } from '@/lib/firestore/burritoConfig';
 import { getPromotions, Promotion } from '@/lib/firestore/promotions';
@@ -23,7 +24,22 @@ const DEFAULT_SETTINGS: Settings = {
   delivery:     { ...DEFAULT_DELIVERY },
   mostradorPin: '',
   autoSchedule: { ...DEFAULT_AUTO_SCHEDULE },
+  avgMinutes:   25,
 };
+
+function toPublicSettings(s: Settings): PublicSettings {
+  return {
+    waNumber:   s.waNumber,
+    address:    s.address,
+    isOpen:     s.isOpen,
+    schedule:   s.schedule,
+    waGreeting: s.waGreeting,
+    waFooter:   s.waFooter,
+    delivery:   s.delivery,
+    avgMinutes: s.avgMinutes,
+    openTime:   s.autoSchedule.enabled ? s.autoSchedule.openTime : '',
+  };
+}
 
 export default async function Home() {
   let settings: Settings            = DEFAULT_SETTINGS;
@@ -39,5 +55,5 @@ export default async function Home() {
       getSettings(), getMenuItems(), getBurritoConfig(), getPromotions(), getAderezos(), getDisabledIngredients(), getGalleryItems(), getReviews(),
     ]);
   } catch {}
-  return <AppShell settings={settings} menuItems={menuItems} burritoConfig={burritoConfig} promotions={promotions} aderezos={aderezos} disabledIngredients={disabledIngredients} galleryItems={galleryItems} reviewItems={reviewItems} />;
+  return <AppShell settings={toPublicSettings(settings)} menuItems={menuItems} burritoConfig={burritoConfig} promotions={promotions} aderezos={aderezos} disabledIngredients={disabledIngredients} galleryItems={galleryItems} reviewItems={reviewItems} />;
 }

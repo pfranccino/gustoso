@@ -13,6 +13,8 @@ export type PublicSettings = {
   waGreeting: string;
   waFooter:   string;
   delivery:   DeliveryConfig;
+  avgMinutes: number;
+  openTime:   string;  // hora apertura (HH:MM) cuando autoSchedule está activo, '' si no aplica
 };
 
 const DEFAULT: PublicSettings = {
@@ -23,6 +25,8 @@ const DEFAULT: PublicSettings = {
   waGreeting: "Hola Gustoso's! Quiero hacer un pedido 🛒",
   waFooter:   '',
   delivery:   { ...DEFAULT_DELIVERY },
+  avgMinutes: 25,
+  openTime:   '',
 };
 
 const SettingsContext = createContext<PublicSettings>(DEFAULT);

@@ -6,7 +6,7 @@ import { WAIcon } from './icons';
 import { MenuItem } from '@/lib/firestore/menuItems';
 
 export default function Hero({ menuItems = [] }: { menuItems?: MenuItem[] }) {
-  const { waNumber, isOpen } = useSettings();
+  const { waNumber, isOpen, avgMinutes, openTime } = useSettings();
 
   /* Top 3 visible items with photos for the collage */
   const collagePhotos = menuItems.filter(m => m.visible && m.imageUrl).slice(0, 3);
@@ -56,7 +56,7 @@ export default function Hero({ menuItems = [] }: { menuItems?: MenuItem[] }) {
           {/* Status pill — mobile + desktop (after eyebrow) */}
           <div className="fade-up hero-status-pill" style={{ display:'inline-flex', alignItems:'center', gap:6, background: isOpen ? 'rgba(21,128,61,0.1)' : 'rgba(107,114,128,0.1)', border:`1px solid ${isOpen ? 'rgba(21,128,61,0.25)' : 'rgba(107,114,128,0.25)'}`, borderRadius:999, padding:'5px 11px', marginBottom:16, fontSize:11, fontWeight:700, color: isOpen ? 'var(--green)' : '#6b7280', letterSpacing:.3, whiteSpace:'nowrap' }}>
             <span style={{ width:6, height:6, borderRadius:'50%', background: isOpen ? 'var(--green)' : '#9ca3af', display:'inline-block', boxShadow: isOpen ? '0 0 0 3px rgba(21,128,61,0.25)' : 'none' }}/>
-            {isOpen ? 'ABIERTO · 25 MIN' : 'CERRADO'}
+            {isOpen ? `ABIERTO · ${avgMinutes} MIN` : openTime ? `CERRADO · Abre ${openTime}` : 'CERRADO'}
           </div>
 
           <h1 className="fade-up-2" style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:'clamp(44px,10vw,76px)', lineHeight:.95, color:'var(--text)', marginBottom:14, letterSpacing:-1 }}>

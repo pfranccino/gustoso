@@ -263,6 +263,17 @@ ${form.waGreeting}
           placeholder="Lunes a Domingo 12:00 – 22:00"
         />
 
+        <label style={{ ...LABEL, marginTop: 14 }}>Tiempo promedio de pedido (minutos)</label>
+        <input
+          type="number"
+          min={1}
+          max={120}
+          style={INPUT}
+          value={form.avgMinutes}
+          onChange={e => set('avgMinutes', Number(e.target.value))}
+          placeholder="25"
+        />
+
         <div style={{ marginTop: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
           <button
             onClick={() => set('isOpen', !form.isOpen)}
