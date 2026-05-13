@@ -28,3 +28,46 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--text);min-
 @keyframes slideUp{from{transform:translateY(100%);opacity:0}to{transform:translateY(0);opacity:1}}
 @keyframes flash{0%{background:rgba(242,100,25,0.18)}100%{background:transparent}}
 @keyframes slideIn{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:translateX(0)}}
+
+/* ── Desktop layout (≥900px) ─────────────────────────────────────── */
+@media(min-width:900px){
+  /* AppShell full-width */
+  .pub-outer{max-width:none!important}
+
+  /* Hero split */
+  .hero-section{min-height:auto!important;padding:56px 48px 40px!important;text-align:left!important;align-items:flex-start!important;justify-content:flex-start!important}
+  .hero-bg-circles{display:none!important}
+  .hero-inner{max-width:1280px;margin:0 auto;display:grid;grid-template-columns:1.1fr 1fr;gap:48px;align-items:center;width:100%}
+  .hero-text{display:flex;flex-direction:column;align-items:flex-start!important;text-align:left}
+  .hero-cta{flex-direction:row!important;align-items:center!important}
+  .hero-stats{max-width:none!important;border-radius:var(--radius)!important}
+  .hero-collage{display:block!important}
+  .hero-eyebrow{display:flex!important}
+  .hero-logo-mobile{display:none!important}
+
+  /* Nav desktop */
+  .nav-desktop-links{display:flex!important}
+  .nav-inner{max-width:none!important;padding:16px 48px!important}
+
+  /* Menu section desktop */
+  .menu-sticky-header{top:73px!important;padding:12px 48px!important}
+  .menu-tabs-mobile{display:none!important}
+  .menu-content-wrap{max-width:1280px;margin:0 auto;padding:24px 48px 80px!important}
+  .menu-desktop-grid{display:grid!important;grid-template-columns:200px 1fr 300px;gap:32px;align-items:flex-start}
+  .menu-cat-rail{display:flex!important;flex-direction:column;gap:4px;position:sticky;top:120px}
+  .menu-cart-sidebar{display:block!important}
+  .menu-products-2col{display:grid!important;grid-template-columns:1fr 1fr;gap:14px}
+  .menu-products-2col>*{display:flex!important}
+  .menu-section-head{padding:0 0 16px!important}
+  .menu-num-divider{display:block!important}
+
+  /* Top items desktop */
+  .top-items-wrap{max-width:1280px;margin:0 auto;padding:20px 48px 24px!important}
+  .top-items-list{display:grid!important;grid-template-columns:repeat(4,1fr);overflow-x:visible!important;padding-bottom:0!important}
+  .top-items-card{width:auto!important;flex-shrink:unset!important}
+  .top-items-count{display:inline!important}
+
+  /* Nav full-width on desktop */
+  .nav-inner{max-width:none!important;padding:14px 48px!important}
+  .nav-cart-label{display:inline!important}
+}

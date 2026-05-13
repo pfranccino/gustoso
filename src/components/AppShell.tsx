@@ -34,7 +34,7 @@ export default function AppShell({ settings, menuItems, burritoConfig, promotion
   return (
     <SettingsProvider value={settings}>
     <CartProvider>
-      <div style={{ maxWidth:'var(--max)', margin:'0 auto', position:'relative' }}>
+      <div className="pub-outer" style={{ maxWidth:'var(--max)', margin:'0 auto', position:'relative' }}>
         <Nav scrolled={scrolled}/>
         <Hero/>
         <div className="section-divider"></div>
