@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import RestaurantJsonLd from '@/components/RestaurantJsonLd';
 
-const SITE_URL  = 'https://gustoso-dun.vercel.app';
+const SITE_URL  = 'https://gustosolosandes.cl';
 const SITE_NAME = "Gustoso's";
 const TITLE     = "Gustoso's Los Andes — Vienesas, Sándwiches & Burritos";
 const DESC      = "El mejor local de vienesas, sándwiches mechada, burritos y papas en Los Andes. Pide directo por WhatsApp con delivery o retiro. Abierto de lunes a domingo.";
