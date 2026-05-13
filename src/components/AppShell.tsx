@@ -7,6 +7,7 @@ import { MenuItem } from '@/lib/firestore/menuItems';
 import { BurritoConfig } from '@/lib/firestore/burritoConfig';
 import { Promotion } from '@/lib/firestore/promotions';
 import { Aderezo } from '@/lib/firestore/aderezosTypes';
+import { GalleryItem } from '@/lib/firestore/gallery';
 import Nav from './Nav';
 import Hero from './Hero';
 import MenuSection from './MenuSection';
@@ -20,7 +21,7 @@ import FloatingWA from './FloatingWA';
 import CartBar from './CartBar';
 import CartDrawer from './CartDrawer';
 
-export default function AppShell({ settings, menuItems, burritoConfig, promotions, aderezos, disabledIngredients = [] }: { settings: PublicSettings; menuItems: MenuItem[]; burritoConfig: BurritoConfig; promotions: Promotion[]; aderezos: Aderezo[]; disabledIngredients?: string[] }) {
+export default function AppShell({ settings, menuItems, burritoConfig, promotions, aderezos, disabledIngredients = [], galleryItems = [] }: { settings: PublicSettings; menuItems: MenuItem[]; burritoConfig: BurritoConfig; promotions: Promotion[]; aderezos: Aderezo[]; disabledIngredients?: string[]; galleryItems?: GalleryItem[] }) {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -38,7 +39,7 @@ export default function AppShell({ settings, menuItems, burritoConfig, promotion
         <div className="section-divider"></div>
         <MenuSection items={menuItems} burritoConfig={burritoConfig} promotions={promotions} aderezos={aderezos} disabledIngredients={disabledIngredients}/>
         <div className="section-divider"></div>
-        <Gallery/>
+        <Gallery items={galleryItems}/>
         <div className="section-divider"></div>
         <About/>
         <div className="section-divider"></div>
