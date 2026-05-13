@@ -2,15 +2,8 @@
 
 import { useState, useTransition, useRef, useImperativeHandle, forwardRef } from 'react';
 import { MenuItem, Extra, Ingredient } from '@/lib/firestore/menuItems';
-
-const CATEGORIES = [
-  { id:'vienesas',  label:'🌭 Vienesas' },
-  { id:'as',        label:'🥪 AS' },
-  { id:'churrasco', label:'🥩 Churrasco' },
-  { id:'mechada',   label:'🥖 Mechada' },
-  { id:'papas',     label:'🍟 Papas & Más' },
-  { id:'bebidas',   label:'🥤 Bebidas' },
-];
+import type { Category } from '@/lib/firestore/categories';
+import { DEFAULT_CATEGORIES } from '@/lib/firestore/categories';
 
 const VOLUMES = ['237ml', '330ml', '350ml', '400ml', '500ml', '600ml', '1L', '1.5L', '2L', '3L'];
 
@@ -22,6 +15,7 @@ type EditState = {
   item: MenuItem;
   name: string;
   desc: string;
+  hasVolume: boolean;
   volume: string;
   price: string;
   priceNormal: string;
@@ -35,6 +29,7 @@ type CreateState = {
   category: string;
   name: string;
   desc: string;
+  hasVolume: boolean;
   volume: string;
   dual: boolean;
   price: string;
@@ -46,14 +41,17 @@ type CreateState = {
   visible: boolean;
 };
 
-const emptyCreate = (): CreateState => ({
-  category: 'vienesas', name: '', desc: '', volume: '', dual: false,
+const emptyCreate = (firstCat = 'vienesas'): CreateState => ({
+  category: firstCat, name: '', desc: '', hasVolume: false, volume: '', dual: false,
   price: '', priceNormal: '', priceXL: '', costEstimado: '', extras: [], ingredients: [], visible: true,
 });
 
 /* ── componente principal ─────────────────────── */
 
-export default function MenuEditor({ initialItems }: { initialItems: MenuItem[] }) {
+export default function MenuEditor({ initialItems, categories = DEFAULT_CATEGORIES }: { initialItems: MenuItem[]; categories?: Category[] }) {
+  // Solo categorías que pueden tener items (excluye promos, burrito especial, bebidas ocultas)
+  const editableCategories = categories.filter(c => !c.special && c.id !== 'promos');
+
   const [items, setItems]       = useState<MenuItem[]>(initialItems);
   const [editing, setEditing]   = useState<EditState | null>(null);
   const [creating, setCreating] = useState<CreateState | null>(null);
@@ -98,6 +96,7 @@ export default function MenuEditor({ initialItems }: { initialItems: MenuItem[] 
       item,
       name:         item.name,
       desc:         item.desc ?? '',
+      hasVolume:    !!(item.volume),
       volume:       item.volume ?? '',
       price:        item.price != null ? String(item.price) : '',
       priceNormal:  item.priceNormal != null ? String(item.priceNormal) : '',
@@ -119,7 +118,7 @@ export default function MenuEditor({ initialItems }: { initialItems: MenuItem[] 
     const update: Partial<MenuItem> = {
       name:         editing.name.trim() || item.name,
       desc:         editing.desc.trim() || null,
-      volume:       editing.volume.trim() || null,
+      volume:       editing.hasVolume ? (editing.volume.trim() || null) : null,
       costEstimado: editing.costEstimado.trim() ? (parseInt(editing.costEstimado, 10) || null) : null,
       extras:       editing.extras,
       ingredients:  editing.ingredients,
@@ -162,13 +161,14 @@ export default function MenuEditor({ initialItems }: { initialItems: MenuItem[] 
     if (!creating) return;
     createExtrasRef.current?.flush();
     createIngredientsRef.current?.flush();
-    const { category, name, desc, volume, dual, price, priceNormal, priceXL, extras, ingredients, visible } = creating;
+    const { category, name, desc, hasVolume, volume, dual, price, priceNormal, priceXL, extras, ingredients, visible } = creating;
     if (!name.trim()) { setSaveError('El nombre es obligatorio.'); return; }
 
     startTransition(async () => {
       try {
         const { costEstimado } = creating;
-        const body: Record<string, unknown> = { category, name: name.trim(), desc: desc.trim() || null, volume: volume.trim() || null, costEstimado: costEstimado.trim() ? (parseInt(costEstimado, 10) || null) : null, extras, ingredients, visible };
+        const resolvedVolume = hasVolume ? (volume.trim() || null) : null;
+        const body: Record<string, unknown> = { category, name: name.trim(), desc: desc.trim() || null, volume: resolvedVolume, costEstimado: costEstimado.trim() ? (parseInt(costEstimado, 10) || null) : null, extras, ingredients, visible };
         if (dual) {
           body.priceNormal = parseInt(priceNormal, 10) || 0;
           body.priceXL     = parseInt(priceXL,     10) || 0;
@@ -247,7 +247,7 @@ export default function MenuEditor({ initialItems }: { initialItems: MenuItem[] 
       {/* Toolbar */}
       <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:24, flexWrap:'wrap' }}>
         <button
-          onClick={() => { setCreating(emptyCreate()); setSaveError(''); }}
+          onClick={() => { setCreating(emptyCreate(editableCategories[0]?.id ?? 'vienesas')); setSaveError(''); }}
           style={{ padding:'9px 18px', borderRadius:999, border:'none', background:'#F26419', color:'#fff', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:15, cursor:'pointer' }}
         >
           + Crear producto
@@ -269,13 +269,13 @@ export default function MenuEditor({ initialItems }: { initialItems: MenuItem[] 
       </div>
 
       {/* Category sections */}
-      {CATEGORIES.map(({ id: cat, label }) => {
+      {editableCategories.map(({ id: cat, label, emoji }) => {
         const catItems = byCategory[cat];
         if (!catItems?.length) return null;
         return (
           <div key={cat} style={{ marginBottom:32 }}>
             <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:20, color:'var(--text)', marginBottom:12, borderBottom:'1.5px solid var(--border)', paddingBottom:8 }}>
-              {label}
+              {emoji} {label}
             </div>
             <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
               {catItems.map(item => (
@@ -320,7 +320,9 @@ export default function MenuEditor({ initialItems }: { initialItems: MenuItem[] 
         <Modal title="Editar producto" onClose={() => { setEditing(null); setSaveError(''); }}>
           <Field label="Nombre" value={editing.name} onChange={e => setEditing(p => p && ({ ...p, name: e.target.value }))} />
           <Field label="Descripción" value={editing.desc} placeholder="(opcional)" onChange={e => setEditing(p => p && ({ ...p, desc: e.target.value }))} />
-          <VolumeField value={editing.volume} onChange={v => setEditing(p => p && ({ ...p, volume: v }))} />
+          <VolumeToggle hasVolume={editing.hasVolume} volume={editing.volume}
+            onToggle={v => setEditing(p => p && ({ ...p, hasVolume: v }))}
+            onVolume={v => setEditing(p => p && ({ ...p, volume: v }))} />
           {isDual(editing.item) ? (
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
               <Field label="Precio Normal" type="number" value={editing.priceNormal} onChange={e => setEditing(p => p && ({ ...p, priceNormal: e.target.value }))} />
@@ -345,12 +347,14 @@ export default function MenuEditor({ initialItems }: { initialItems: MenuItem[] 
             <label style={{ display:'block', fontSize:11, fontWeight:700, color:'#A0541A', letterSpacing:1, textTransform:'uppercase', marginBottom:6 }}>Categoría</label>
             <select value={creating.category} onChange={e => setCreating(p => p && ({ ...p, category: e.target.value }))}
               style={{ display:'block', width:'100%', padding:'10px 12px', borderRadius:8, border:'1.5px solid rgba(242,100,25,0.25)', background:'#FFF9F5', color:'#1A0800', fontSize:14, fontFamily:"'Barlow',sans-serif" }}>
-              {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
+              {editableCategories.map(c => <option key={c.id} value={c.id}>{c.emoji} {c.label}</option>)}
             </select>
           </div>
           <Field label="Nombre" value={creating.name} onChange={e => setCreating(p => p && ({ ...p, name: e.target.value }))} />
           <Field label="Descripción" value={creating.desc} placeholder="(opcional)" onChange={e => setCreating(p => p && ({ ...p, desc: e.target.value }))} />
-          <VolumeField value={creating.volume} onChange={v => setCreating(p => p && ({ ...p, volume: v }))} />
+          <VolumeToggle hasVolume={creating.hasVolume} volume={creating.volume}
+            onToggle={v => setCreating(p => p && ({ ...p, hasVolume: v }))}
+            onVolume={v => setCreating(p => p && ({ ...p, volume: v }))} />
 
           <div style={{ marginBottom:14 }}>
             <label style={{ display:'flex', alignItems:'center', gap:8, cursor:'pointer', fontSize:13, fontWeight:600, color:'#1A0800' }}>
@@ -390,26 +394,34 @@ export default function MenuEditor({ initialItems }: { initialItems: MenuItem[] 
 
 /* ── sub-componentes ──────────────────────────── */
 
-function VolumeField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+function VolumeToggle({ hasVolume, volume, onToggle, onVolume }: {
+  hasVolume: boolean; volume: string;
+  onToggle: (v: boolean) => void; onVolume: (v: string) => void;
+}) {
   return (
     <div style={{ marginBottom:14 }}>
-      <label style={{ display:'block', fontSize:11, fontWeight:700, color:'#A0541A', letterSpacing:1, textTransform:'uppercase', marginBottom:6 }}>
-        Volumen <span style={{ fontWeight:400, textTransform:'none', letterSpacing:0, fontSize:10, color:'#999' }}>(opcional — ej: 350ml, 1.5L)</span>
+      <label style={{ display:'flex', alignItems:'center', gap:8, cursor:'pointer', marginBottom: hasVolume ? 12 : 0 }}>
+        <input type="checkbox" checked={hasVolume} onChange={e => onToggle(e.target.checked)} style={{ width:15, height:15, cursor:'pointer' }}/>
+        <span style={{ fontSize:13, fontWeight:600, color:'#1A0800' }}>Tiene volumen / capacidad (ml, L…)</span>
       </label>
-      <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginBottom:8 }}>
-        {VOLUMES.map(v => (
-          <button key={v} type="button" onClick={() => onChange(value === v ? '' : v)}
-            style={{ padding:'4px 10px', borderRadius:999, border:`1.5px solid ${value === v ? '#0891b2' : 'rgba(0,0,0,0.15)'}`, background: value === v ? 'rgba(8,145,178,0.1)' : 'transparent', color: value === v ? '#0891b2' : '#666', fontSize:12, fontWeight:700, cursor:'pointer', transition:'all .15s' }}>
-            {v}
-          </button>
-        ))}
-      </div>
-      <input
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        placeholder="O escribe otro valor…"
-        style={{ width:'100%', padding:'8px 12px', borderRadius:8, border:'1.5px solid rgba(242,100,25,0.25)', background:'#FFF9F5', color:'#1A0800', fontSize:13, fontFamily:"'Barlow',sans-serif", outline:'none', boxSizing:'border-box' }}
-      />
+
+      {hasVolume && (
+        <>
+          <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginBottom:8 }}>
+            {VOLUMES.map(v => (
+              <button key={v} type="button" onClick={() => onVolume(volume === v ? '' : v)}
+                style={{ padding:'4px 10px', borderRadius:999, border:`1.5px solid ${volume === v ? '#0891b2' : 'rgba(0,0,0,0.15)'}`, background: volume === v ? 'rgba(8,145,178,0.1)' : 'transparent', color: volume === v ? '#0891b2' : '#666', fontSize:12, fontWeight:700, cursor:'pointer', transition:'all .15s' }}>
+                {v}
+              </button>
+            ))}
+          </div>
+          <input
+            value={volume} onChange={e => onVolume(e.target.value)}
+            placeholder="O escribe otro valor…"
+            style={{ width:'100%', padding:'8px 12px', borderRadius:8, border:'1.5px solid rgba(242,100,25,0.25)', background:'#FFF9F5', color:'#1A0800', fontSize:13, fontFamily:"'Barlow',sans-serif", outline:'none', boxSizing:'border-box' }}
+          />
+        </>
+      )}
     </div>
   );
 }

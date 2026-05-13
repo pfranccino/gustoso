@@ -77,6 +77,14 @@ export async function getSettings(): Promise<Settings> {
   };
 }
 
+export async function getSettingsUpdatedAt(): Promise<string | null> {
+  try {
+    const doc = await getAdminDb().collection('settings').doc('main').get();
+    const ts = doc.data()?.updatedAt;
+    return ts?.toDate ? ts.toDate().toISOString() : null;
+  } catch { return null; }
+}
+
 export async function updateSettings(update: Partial<Settings>): Promise<void> {
   await getAdminDb().collection('settings').doc('main').set(
     { ...update, updatedAt: FieldValue.serverTimestamp() },
