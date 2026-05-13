@@ -93,7 +93,10 @@ export default function PedidoPage() {
     ? `https://wa.me/${waNumber}?text=${encodeURIComponent(`Hola, quiero consultar por mi pedido ${orderId}`)}`
     : null;
 
-  /* ── Shared shell ─────────────────────────── */
+  const currentStep = order ? (STATUS_STEP[order.status] ?? 0) : 0;
+  const isNegative  = currentStep === -1;
+  const negative    = order ? NEGATIVE_STATUS[order.status] : undefined;
+
   return (
     <div style={{ minHeight:'100dvh', background:'var(--bg)', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'flex-start', padding:'48px 20px 40px', fontFamily:"'Barlow',sans-serif" }}>
       <div style={{ width:'100%', maxWidth:440 }}>
@@ -124,12 +127,7 @@ export default function PedidoPage() {
         )}
 
         {/* Order found */}
-        {!loading && order && (() => {
-          const currentStep = STATUS_STEP[order.status] ?? 0;
-          const isNegative  = currentStep === -1;
-          const negative    = NEGATIVE_STATUS[order.status];
-
-          return (
+        {!loading && order && (
             <>
               {/* Header */}
               <div style={{ textAlign:'center', marginBottom:32 }}>
@@ -162,10 +160,9 @@ export default function PedidoPage() {
                   <div style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', letterSpacing:1, textTransform:'uppercase', marginBottom:16 }}>Estado del pedido</div>
                   <div style={{ display:'flex', flexDirection:'column', gap:0 }}>
                     {TIMELINE_STEPS.map((step, i) => {
-                      const isDone       = i < currentStep;
-                      const isActive     = i === currentStep - 1 && currentStep < 5;
-                      const isFuture     = i >= currentStep && !isActive;
-                      const isAllDone    = currentStep === 5;
+                      const isDone    = i < currentStep;
+                      const isActive  = i === currentStep - 1 && currentStep < 5;
+                      const isAllDone = currentStep === 5;
 
                       const dotColor = (isDone || isAllDone)
                         ? '#16a34a'
@@ -255,8 +252,7 @@ export default function PedidoPage() {
                 </button>
               </div>
             </>
-          );
-        })()}
+        )}
       </div>
 
       <style>{`
