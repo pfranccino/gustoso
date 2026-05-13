@@ -94,18 +94,6 @@ function exportCSV(orders: Order[]) {
   a.click(); URL.revokeObjectURL(url);
 }
 
-/* ── StatusBadge ───────────────────────────────── */
-
-function StatusBadge({ status }: { status: OrderStatus }) {
-  const cfg = STATUS_CFG[status];
-  return (
-    <span style={{ display:'inline-flex', alignItems:'center', gap:5, padding:'3px 10px', borderRadius:999, background:cfg.bg, fontSize:12, fontWeight:700, color:cfg.color }}>
-      <span style={{ width:7, height:7, borderRadius:'50%', background:cfg.dot, flexShrink:0 }}/>
-      {cfg.label}
-    </span>
-  );
-}
-
 /* ── NotesSection ──────────────────────────────── */
 
 function NotesSection({ order, onAddNote }: {
@@ -170,45 +158,6 @@ function NotesSection({ order, onAddNote }: {
           </div>
         </div>
       )}
-    </div>
-  );
-}
-
-/* ── StatusSelector ────────────────────────────── */
-
-function StatusSelector({ current, onStatus, busy }: {
-  current: OrderStatus;
-  onStatus: (s: OrderStatus) => void;
-  busy: boolean;
-}) {
-  const cfg = STATUS_CFG[current];
-  return (
-    <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end' }}>
-      <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: .5, flexShrink: 0 }}>Estado</span>
-      <select
-        value={current}
-        disabled={busy}
-        onChange={e => onStatus(e.target.value as OrderStatus)}
-        style={{
-          padding: '6px 10px',
-          borderRadius: 8,
-          border: `1.5px solid ${cfg.color}55`,
-          background: cfg.bg,
-          color: cfg.color,
-          fontFamily: "'Barlow Condensed',sans-serif",
-          fontWeight: 700,
-          fontSize: 14,
-          cursor: busy ? 'not-allowed' : 'pointer',
-          opacity: busy ? 0.6 : 1,
-          outline: 'none',
-        }}
-      >
-        {ALL_STATUSES.map(s => (
-          <option key={s} value={s}>
-            {STATUS_CFG[s].emoji} {STATUS_CFG[s].label}
-          </option>
-        ))}
-      </select>
     </div>
   );
 }
@@ -290,67 +239,95 @@ function OrderCard({ order, onStatus, onAddNote }: {
     setBusy(false);
   };
 
-  const time = new Date(order.createdAt).toLocaleString('es-CL', { hour:'2-digit', minute:'2-digit' });
-  const date = new Date(order.createdAt).toLocaleDateString('es-CL', { day:'2-digit', month:'2-digit' });
+  const time  = new Date(order.createdAt).toLocaleString('es-CL', { hour:'2-digit', minute:'2-digit' });
+  const date  = new Date(order.createdAt).toLocaleDateString('es-CL', { day:'2-digit', month:'2-digit' });
   const notes = order.notes ?? [];
+  const cfg   = STATUS_CFG[order.status];
+  const isNew = order.status === 'pending';
 
   return (
-    <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:'var(--radius)', padding:'14px 16px', marginBottom:8, animation:'slideIn 0.3s ease' }}>
-      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:12, flexWrap:'wrap', marginBottom:8 }}>
-        <div style={{ flex:1, minWidth:0 }}>
-          <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:6, flexWrap:'wrap' }}>
-            {order.orderId && (
-              <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:15, color:'var(--orange)', background:'rgba(242,100,25,0.1)', padding:'2px 8px', borderRadius:6, letterSpacing:1 }}>
-                {order.orderId}
-              </span>
-            )}
-            <span style={{ fontSize:12, fontWeight:700, color:'var(--text-muted)' }}>{date} · {time}</span>
-            <StatusBadge status={order.status}/>
-            {order.paymentMethod && (
-              <span style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', background:'var(--bg2)', padding:'2px 7px', borderRadius:6, border:'1px solid var(--border)' }}>
-                {PAYMENT_LABEL[order.paymentMethod]}
-              </span>
-            )}
-            {order.locationUrl && (
-              <a href={order.locationUrl} target="_blank" rel="noopener noreferrer"
-                style={{ fontSize:11, color:'var(--orange)', textDecoration:'none', fontWeight:600 }}>📍 Ubicación</a>
-            )}
-            {notes.length > 0 && (
-              <span style={{ fontSize:11, color:'var(--text-muted)', fontWeight:600 }}>💬 {notes.length}</span>
-            )}
-          </div>
-          <div style={{ fontSize:13, color:'var(--text)', lineHeight:1.7 }}>
-            {order.items.map(it => `${it.qty}× ${it.name}${it.size ? ` (${it.size})` : ''}`).join(' · ')}
-          </div>
-          {order.discountCode && (
-            <div style={{ fontSize:12, color:'#16a34a', marginTop:2, fontWeight:600 }}>
-              🏷 {order.discountCode} -{fmt(order.discountAmount ?? 0)}
-            </div>
-          )}
-          {order.deliveryFee != null && (
-            <div style={{ fontSize:12, color:'var(--text-muted)', marginTop:2, fontWeight:600 }}>
-              🛵 Delivery: {fmt(order.deliveryFee)}
-            </div>
-          )}
-        </div>
-        <div style={{ flexShrink:0, textAlign:'right' }}>
-          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:22, color:'var(--orange)' }}>{fmt(order.total)}</div>
-          <div style={{ fontSize:11, color:'var(--text-muted)' }}>{order.itemCount} ítem{order.itemCount !== 1 ? 's' : ''}</div>
-        </div>
-      </div>
+    <div style={{ background:'var(--card)', border:`1px solid ${isNew ? 'rgba(242,100,25,0.4)' : 'var(--border)'}`, borderRadius:'var(--radius)', overflow:'hidden', animation:'slideIn 0.3s ease', position:'relative' }}>
+      {/* Top accent bar for new/pending */}
+      {isNew && (
+        <div style={{ height:3, background:'linear-gradient(90deg,var(--orange),var(--yellow))' }}/>
+      )}
 
-      {/* Selector de estado + imprimir */}
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:8, marginTop:10 }}>
-        <button onClick={() => printComanda(order)}
-          title="Imprimir comanda"
-          style={{ padding:'5px 12px', borderRadius:8, border:'1px solid var(--border)', background:'transparent', color:'var(--text-muted)', fontSize:12, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', gap:5 }}>
-          🖨️ Comanda
-        </button>
-        <StatusSelector current={order.status} onStatus={change} busy={busy} />
-      </div>
+      <div style={{ padding:'14px 16px' }}>
+        {/* Row 1: ID + badges + total */}
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:10 }}>
+          <div>
+            <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap', marginBottom:4 }}>
+              {order.orderId && (
+                <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:16, color:'var(--text)', letterSpacing:.5 }}>
+                  #{order.orderId}
+                </span>
+              )}
+              {isNew && (
+                <span style={{ fontSize:9, fontWeight:800, color:'var(--orange)', background:'rgba(242,100,25,0.1)', padding:'2px 6px', borderRadius:4, letterSpacing:.8, textTransform:'uppercase' }}>NUEVO</span>
+              )}
+            </div>
+            <div style={{ fontSize:11, color:'var(--text-muted)', fontWeight:600 }}>
+              {date} · {time}
+              {order.paymentMethod && <span style={{ marginLeft:8 }}>{PAYMENT_LABEL[order.paymentMethod]}</span>}
+              {order.locationUrl && (
+                <a href={order.locationUrl} target="_blank" rel="noopener noreferrer" style={{ marginLeft:8, color:'var(--orange)', textDecoration:'none' }}>📍 Ubicación</a>
+              )}
+            </div>
+          </div>
+          {/* Status pill */}
+          <select value={order.status} disabled={busy} onChange={e => change(e.target.value as OrderStatus)}
+            style={{ padding:'4px 10px', borderRadius:999, border:`1.5px solid ${cfg.color}55`, background:cfg.bg, color:cfg.color, fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:13, cursor:busy?'not-allowed':'pointer', outline:'none', opacity:busy?0.6:1 }}>
+            {ALL_STATUSES.map(s => <option key={s} value={s}>{STATUS_CFG[s].emoji} {STATUS_CFG[s].label}</option>)}
+          </select>
+        </div>
 
-      {/* Notas */}
-      <NotesSection order={order} onAddNote={onAddNote} />
+        {/* Items box */}
+        <div style={{ padding:'10px 12px', background:'var(--bg2)', borderRadius:8, marginBottom:10 }}>
+          {order.items.map((it, j) => (
+            <div key={j} style={{ fontSize:12.5, color:'var(--text)', fontWeight:500, padding:'2px 0', lineHeight:1.5 }}>
+              · {it.qty}× {it.name}{it.size ? ` (${it.size})` : ''}
+            </div>
+          ))}
+        </div>
+
+        {/* Note from client (first internal note, if any) */}
+        {notes.length > 0 && (
+          <div style={{ padding:'8px 10px', borderLeft:'3px solid var(--orange)', background:'rgba(242,100,25,0.05)', fontSize:12, color:'var(--text-muted)', marginBottom:8, borderRadius:'0 6px 6px 0', lineHeight:1.4 }}>
+            📝 {notes[0].text}
+          </div>
+        )}
+
+        {/* Discount badge */}
+        {order.discountCode && (
+          <div style={{ display:'inline-flex', alignItems:'center', gap:4, fontSize:10, fontWeight:800, color:'#16a34a', background:'rgba(22,163,74,0.1)', padding:'2px 8px', borderRadius:4, marginBottom:8, letterSpacing:.5 }}>
+            🏷️ {order.discountCode} (−{fmt(order.discountAmount ?? 0)})
+          </div>
+        )}
+
+        {/* Bottom row: total + actions */}
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', paddingTop:10, borderTop:'1px dashed var(--border)' }}>
+          <div style={{ fontSize:11, color:'var(--text-muted)' }}>
+            {order.itemCount} ítem{order.itemCount !== 1 ? 's' : ''}
+            {order.deliveryFee != null && <span> · 🛵 {fmt(order.deliveryFee)}</span>}
+          </div>
+          <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:22, color:'var(--text)', letterSpacing:-.3 }}>{fmt(order.total)}</span>
+        </div>
+
+        {/* Action buttons */}
+        <div style={{ display:'flex', gap:6, marginTop:10 }}>
+          <button onClick={() => printComanda(order)}
+            style={{ flex:1, padding:'7px 10px', borderRadius:6, border:'1px solid var(--border)', background:'transparent', color:'var(--text-muted)', fontSize:11, fontWeight:700, cursor:'pointer' }}>
+            🖨️ Comanda
+          </button>
+          <button onClick={() => { const win = window.open('', '_blank'); if(win) win.location.href = `https://wa.me/?text=${encodeURIComponent(`Pedido ${order.orderId ?? ''} — Total: ${fmt(order.total)}`)}` }}
+            style={{ flex:1, padding:'7px 10px', borderRadius:6, border:'none', background:'#25D366', color:'#fff', fontSize:11, fontWeight:800, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:4 }}>
+            💬 WhatsApp
+          </button>
+        </div>
+
+        {/* Notes section (internal) */}
+        <NotesSection order={order} onAddNote={onAddNote} />
+      </div>
     </div>
   );
 }
@@ -737,16 +714,21 @@ export default function OrdersPage() {
           </button>
         </div>
       ) : showFlat ? (
-        filteredOrders.map(o => <OrderCard key={o.id} order={o} onStatus={handleStatus} onAddNote={handleAddNote}/>)
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(340px,1fr))', gap:12 }}>
+          {filteredOrders.map(o => <OrderCard key={o.id} order={o} onStatus={handleStatus} onAddNote={handleAddNote}/>)}
+        </div>
       ) : (
         Object.entries(grouped).map(([s, list]) => {
           const cfg = STATUS_CFG[s as OrderStatus];
           return (
-            <div key={s} style={{ marginBottom:20 }}>
-              <div style={{ fontSize:12, fontWeight:700, color:cfg.color, letterSpacing:1, textTransform:'uppercase', marginBottom:8 }}>
+            <div key={s} style={{ marginBottom:24 }}>
+              <div style={{ fontSize:12, fontWeight:700, color:cfg.color, letterSpacing:1, textTransform:'uppercase', marginBottom:10, display:'flex', alignItems:'center', gap:6 }}>
+                <span style={{ width:8, height:8, borderRadius:'50%', background:cfg.dot, flexShrink:0 }}/>
                 {cfg.emoji} {cfg.label} ({list.length})
               </div>
-              {list.map(o => <OrderCard key={o.id} order={o} onStatus={handleStatus} onAddNote={handleAddNote}/>)}
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(340px,1fr))', gap:12 }}>
+                {list.map(o => <OrderCard key={o.id} order={o} onStatus={handleStatus} onAddNote={handleAddNote}/>)}
+              </div>
             </div>
           );
         })

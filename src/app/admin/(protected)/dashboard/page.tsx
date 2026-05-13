@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { useLiveMetrics } from '@/hooks/useLiveMetrics';
+import { useLiveMetrics, PaymentBreakdown } from '@/hooks/useLiveMetrics';
 import { DayBucket, RecentOrder } from '@/lib/firestore/metrics';
 
 function fmt(n: number) {
@@ -73,8 +73,40 @@ function OrdersTable({ orders, newIds }: { orders: RecentOrder[]; newIds: Set<st
   );
 }
 
+function PaymentBreakdownPanel({ breakdown }: { breakdown: PaymentBreakdown[] }) {
+  const fmt = (n: number) => n.toLocaleString('es-CL', { style:'currency', currency:'CLP', maximumFractionDigits:0 });
+  const COLORS: Record<string, string> = { efectivo:'#16a34a', transferencia:'#2563eb', debito:'#7c3aed', none:'#9ca3af' };
+  const grandTotal = breakdown.reduce((s, p) => s + p.total, 0);
+  return (
+    <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:'var(--radius)', padding:'18px 20px', boxShadow:'var(--shadow,none)', display:'flex', flexDirection:'column' }}>
+      <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:18, color:'var(--text)', marginBottom:16 }}>Desglose de ingresos</div>
+      {breakdown.length === 0
+        ? <p style={{ fontSize:13, color:'var(--text-muted)' }}>Sin datos aún.</p>
+        : breakdown.map(p => (
+            <div key={p.method} style={{ marginBottom:14 }}>
+              <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
+                <span style={{ fontSize:13, fontWeight:700, color:'var(--text-muted)' }}>{p.label}</span>
+                <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:14, color:'var(--text)' }}>{fmt(p.total)}</span>
+              </div>
+              <div style={{ height:6, background:'var(--bg2)', borderRadius:3, overflow:'hidden' }}>
+                <div style={{ width:`${p.pct}%`, height:'100%', background:COLORS[p.method] ?? 'var(--orange)', borderRadius:3, transition:'width .4s' }}/>
+              </div>
+              <div style={{ fontSize:11, color:'var(--text-muted)', marginTop:2 }}>{p.pct}% · {p.count} pedido{p.count !== 1 ? 's' : ''}</div>
+            </div>
+          ))
+      }
+      {grandTotal > 0 && (
+        <div style={{ marginTop:'auto', paddingTop:10, borderTop:'1px dashed var(--border)', display:'flex', justifyContent:'space-between', alignItems:'baseline' }}>
+          <span style={{ fontSize:11, fontWeight:800, color:'var(--text-muted)', letterSpacing:.8, textTransform:'uppercase' }}>TOTAL</span>
+          <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:22, color:'var(--orange)' }}>{fmt(grandTotal)}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function DashboardPage() {
-  const { metrics, loading, error } = useLiveMetrics();
+  const { metrics, payment, loading, error } = useLiveMetrics();
 
   // Track which order IDs are new since last snapshot
   const prevIdsRef = useRef<Set<string>>(new Set());
@@ -165,13 +197,18 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      {/* Bar chart */}
+      {/* Bar chart + payment breakdown side by side */}
       {metrics && metrics.last14Days.length > 0 && (
-        <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: 20, marginBottom: 20 }}>
-          <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 18, color: 'var(--text)', marginBottom: 16 }}>
-            Recaudación — últimos 14 días
+        <div style={{ display:'grid', gridTemplateColumns:'1fr auto', gap:12, marginBottom:20, alignItems:'stretch' }}>
+          <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: 20 }}>
+            <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 18, color: 'var(--text)', marginBottom: 16 }}>
+              Pedidos — últimos 14 días
+            </div>
+            <BarChart days={metrics.last14Days} />
           </div>
-          <BarChart days={metrics.last14Days} />
+          <div style={{ minWidth:220, maxWidth:280 }}>
+            <PaymentBreakdownPanel breakdown={payment}/>
+          </div>
         </div>
       )}
 

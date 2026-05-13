@@ -6,6 +6,8 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { getClientFirestore, getClientAuth } from '@/lib/firebase/client';
 import { Metrics, DayBucket, RecentOrder, TopProduct } from '@/lib/firestore/metrics';
 
+export type PaymentBreakdown = { method: string; label: string; total: number; count: number; pct: number };
+
 function dateKey(ts: { toDate(): Date }): string {
   const d = ts.toDate();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -71,9 +73,10 @@ function computeMetrics(docs: QueryDocumentSnapshot[]): Metrics {
 }
 
 export function useLiveMetrics() {
-  const [metrics, setMetrics] = useState<Metrics | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError]   = useState(false);
+  const [metrics, setMetrics]   = useState<Metrics | null>(null);
+  const [payment, setPayment]   = useState<PaymentBreakdown[]>([]);
+  const [loading, setLoading]   = useState(true);
+  const [error, setError]       = useState(false);
 
   useEffect(() => {
     let unsubSnap: (() => void) | undefined;
@@ -85,7 +88,26 @@ export function useLiveMetrics() {
       const q = query(collection(getClientFirestore(), 'orders'), orderBy('createdAt', 'desc'));
       unsubSnap = onSnapshot(
         q,
-        (snap) => { setMetrics(computeMetrics(snap.docs)); setLoading(false); setError(false); },
+        (snap) => {
+          setMetrics(computeMetrics(snap.docs));
+          // Payment breakdown from all docs
+          const pmMap: Record<string, { total: number; count: number }> = {};
+          let pmGrand = 0;
+          for (const doc of snap.docs) {
+            const d = doc.data();
+            const pm: string = d.paymentMethod ?? 'none';
+            if (!pmMap[pm]) pmMap[pm] = { total: 0, count: 0 };
+            pmMap[pm].total += d.total ?? 0;
+            pmMap[pm].count++;
+            pmGrand += d.total ?? 0;
+          }
+          const PM_LABEL: Record<string, string> = { efectivo:'💵 Efectivo', transferencia:'🏦 Transferencia', debito:'💳 Débito/Crédito', none:'Sin especificar' };
+          const breakdown: PaymentBreakdown[] = Object.entries(pmMap)
+            .map(([m, v]) => ({ method: m, label: PM_LABEL[m] ?? m, total: v.total, count: v.count, pct: pmGrand > 0 ? Math.round((v.total / pmGrand) * 100) : 0 }))
+            .sort((a, b) => b.total - a.total);
+          setPayment(breakdown);
+          setLoading(false); setError(false);
+        },
         ()     => { setError(true); setLoading(false); },
       );
     });
@@ -93,5 +115,5 @@ export function useLiveMetrics() {
     return () => { unsubAuth(); if (unsubSnap) unsubSnap(); };
   }, []);
 
-  return { metrics, loading, error };
+  return { metrics, payment, loading, error };
 }
