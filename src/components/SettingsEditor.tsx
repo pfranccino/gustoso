@@ -16,6 +16,65 @@ const LABEL: React.CSSProperties = {
   textTransform: 'uppercase', marginBottom: 6,
 };
 
+/* ── Panel independiente: PIN de un solo uso ──── */
+function MostradorPinPanel() {
+  const [pin,     setPin]     = useState('');
+  const [loading, setLoading] = useState(false);
+  const [copied,  setCopied]  = useState(false);
+
+  async function generate() {
+    setLoading(true); setPin(''); setCopied(false);
+    try {
+      const r = await fetch('/api/admin/mostrador/generate-pin', { method:'POST' });
+      const { pin: p } = await r.json();
+      setPin(p);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function copy() {
+    navigator.clipboard.writeText(pin);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  return (
+    <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:'var(--radius)', padding:20, marginBottom:16 }}>
+      <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:18, color:'var(--text)', marginBottom:4 }}>
+        🏪 Mostrador
+      </div>
+      <div style={{ fontSize:12, color:'var(--text-muted)', marginBottom:14 }}>
+        Genera un PIN de un solo uso para que el empleado acceda a{' '}
+        <a href="/mostrador" target="_blank" style={{ color:'var(--orange)' }}>/mostrador</a>.
+        El código se invalida al primer uso.
+      </div>
+
+      <div style={{ display:'flex', alignItems:'center', gap:10, flexWrap:'wrap' }}>
+        <button onClick={generate} disabled={loading}
+          style={{ padding:'10px 18px', borderRadius:999, border:'none', background:'var(--orange)', color:'#fff', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:15, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.6 : 1 }}>
+          {loading ? 'Generando…' : '🎲 Generar PIN'}
+        </button>
+
+        {pin && (
+          <>
+            <div style={{ fontFamily:'monospace', fontSize:28, fontWeight:900, letterSpacing:6, color:'var(--text)', background:'var(--bg2)', border:'2px solid var(--orange)', borderRadius:10, padding:'8px 20px' }}>
+              {pin}
+            </div>
+            <button onClick={copy}
+              style={{ padding:'8px 14px', borderRadius:999, border:'1px solid var(--border)', background:'transparent', color:'var(--text-muted)', fontSize:13, fontWeight:600, cursor:'pointer' }}>
+              {copied ? '✓ Copiado' : '📋 Copiar'}
+            </button>
+            <div style={{ fontSize:11, color:'#dc2626', fontWeight:600, width:'100%', marginTop:2 }}>
+              ⚠ Muéstraselo al empleado ahora — este PIN desaparece al usarse.
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function SettingsEditor({ initial }: { initial: Settings }) {
   const [form, setForm] = useState<Settings>(initial);
   const [saved, setSaved] = useState(false);
@@ -157,23 +216,7 @@ ${form.waGreeting}
       </div>
 
       {/* PIN Mostrador */}
-      <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '20px', marginBottom: 16 }}>
-        <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 18, color: 'var(--text)', marginBottom: 4 }}>
-          🏪 Mostrador
-        </div>
-        <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12 }}>
-          PIN numérico para acceder a la pantalla de toma de pedidos en local (<a href="/mostrador" target="_blank" style={{ color:'var(--orange)' }}>/mostrador</a>).
-        </div>
-        <label style={LABEL}>PIN de acceso</label>
-        <input
-          style={{ ...INPUT, maxWidth: 160, letterSpacing: 4, fontFamily: 'monospace', fontSize: 18 }}
-          value={form.mostradorPin ?? '1234'}
-          onChange={e => set('mostradorPin', e.target.value.replace(/\D/g,'').slice(0,6))}
-          placeholder="1234"
-          inputMode="numeric"
-          maxLength={6}
-        />
-      </div>
+      <MostradorPinPanel/>
 
       {/* Delivery */}
       <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '20px', marginBottom: 16 }}>
