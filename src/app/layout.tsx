@@ -3,9 +3,9 @@ import './globals.css';
 import RestaurantJsonLd from '@/components/RestaurantJsonLd';
 
 const SITE_URL  = 'https://gustosolosandes.cl';
-const SITE_NAME = "Gustoso's";
+const SITE_NAME = "Gustoso's Los Andes";
 const TITLE     = "Gustoso's Los Andes — Vienesas, Sándwiches & Burritos";
-const DESC      = "El mejor local de vienesas, sándwiches mechada, burritos y papas en Los Andes. Pide directo por WhatsApp con delivery o retiro. Abierto de lunes a domingo.";
+const DESC      = "Gustoso's en Los Andes: vienesas, sándwiches mechada, burritos y papas. Pide por WhatsApp con delivery o retiro. El sabor de Los Andes, abierto todos los días.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -15,10 +15,11 @@ export const metadata: Metadata = {
   },
   description: DESC,
   keywords: [
-    'gustosos los andes', 'comida los andes', 'vienesas los andes',
-    'sándwiches los andes', 'mechada los andes', 'burrito los andes',
-    'papas fritas los andes', 'delivery los andes', 'comida rápida los andes',
-    'restaurant los andes chile', 'pedido whatsapp los andes',
+    'Gustoso Los Andes', "Gustoso's Los Andes", 'gustosolosandes',
+    'vienesas los andes', 'sándwiches los andes', 'mechada los andes',
+    'burrito los andes', 'papas fritas los andes', 'comida rápida los andes',
+    'delivery los andes', 'restaurant los andes chile', 'pedido whatsapp los andes',
+    'comida los andes', 'local de comida los andes', 'gustoso',
   ],
   authors: [{ name: SITE_NAME }],
   creator: SITE_NAME,

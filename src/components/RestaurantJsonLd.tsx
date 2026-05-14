@@ -2,15 +2,17 @@ export default function RestaurantJsonLd() {
   const schema = {
     '@context': 'https://schema.org',
     '@type': 'Restaurant',
-    name: "Gustoso's",
-    description: 'Vienesas, sándwiches mechada, burritos y papas en Los Andes. Pedidos por WhatsApp.',
-    url: 'https://gustoso-dun.vercel.app',
+    name: "Gustoso's Los Andes",
+    alternateName: ["Gustoso's", 'Gustoso Los Andes', 'Gustoso'],
+    description: 'Vienesas, sándwiches mechada, burritos y papas en Los Andes, Chile. Pedidos por WhatsApp con delivery o retiro en local.',
+    url: 'https://gustosolosandes.cl',
     telephone: '+56985219094',
     address: {
       '@type': 'PostalAddress',
       streetAddress: 'Marino José Manuel Ramírez #1641',
       addressLocality: 'Los Andes',
       addressRegion: 'Región de Valparaíso',
+      postalCode: '1700000',
       addressCountry: 'CL',
     },
     geo: {
@@ -26,10 +28,17 @@ export default function RestaurantJsonLd() {
         closes: '22:00',
       },
     ],
-    servesCuisine: ['Chilena', 'Comida rápida', 'Sándwiches', 'Burritos'],
+    servesCuisine: ['Chilena', 'Comida rápida', 'Sándwiches', 'Burritos', 'Vienesas'],
     priceRange: '$$',
-    hasMenu: 'https://gustoso-dun.vercel.app/#menu',
+    hasMenu: 'https://gustosolosandes.cl/#menu',
     acceptsReservations: false,
+    currenciesAccepted: 'CLP',
+    paymentAccepted: 'Efectivo, Transferencia, Débito, Crédito',
+    areaServed: {
+      '@type': 'City',
+      name: 'Los Andes',
+      sameAs: 'https://es.wikipedia.org/wiki/Los_Andes_(Chile)',
+    },
     potentialAction: {
       '@type': 'OrderAction',
       target: {

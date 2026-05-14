@@ -9,6 +9,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ['/admin/', '/mostrador', '/api/'],
       },
     ],
-    sitemap: 'https://gustoso-dun.vercel.app/sitemap.xml',
+    sitemap: 'https://gustosolosandes.cl/sitemap.xml',
   };
 }
