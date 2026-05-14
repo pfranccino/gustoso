@@ -1,5 +1,6 @@
 export function StagingBanner() {
-  if (process.env.NEXT_PUBLIC_ENVIRONMENT !== 'staging') return null;
+  const project = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ?? '';
+  if (!project.includes('dev')) return null;
   return (
     <div style={{
       background: '#f59e0b',
@@ -10,7 +11,7 @@ export function StagingBanner() {
       fontWeight: 600,
       letterSpacing: '0.05em',
     }}>
-      AMBIENTE DE PRUEBA
+      AMBIENTE DE PRUEBA — {project}
     </div>
   );
 }
