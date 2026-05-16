@@ -91,6 +91,7 @@ Optimización de rutas de delivery sin APIs externas:
 gustoso/
 ├── src/
 │   ├── app/
+│   │   ├── layout.tsx                  ← layout raíz (StagingBanner, RestaurantJsonLd)
 │   │   ├── page.tsx                    ← menú público (ISR revalidate=60)
 │   │   ├── admin/
 │   │   │   ├── login/
@@ -102,19 +103,33 @@ gustoso/
 │   │   │       ├── orders/
 │   │   │       ├── routes/
 │   │   │       ├── discounts/
-│   │   │       └── settings/
+│   │   │       ├── aderezos/
+│   │   │       ├── ingredients/
+│   │   │       ├── costs/
+│   │   │       ├── gallery/
+│   │   │       ├── reviews/
+│   │   │       ├── settings/
+│   │   │       └── seed/
+│   │   ├── mostrador/                  ← interfaz punto de venta (POS)
+│   │   ├── pedido/[orderId]/           ← seguimiento de pedido (público)
 │   │   └── api/
 │   │       ├── auth/session · logout
+│   │       ├── geocode                 ← reverse geocoding vía Google Maps API
 │   │       ├── menu/[id]
 │   │       ├── orders/[id]
 │   │       ├── settings
 │   │       ├── discounts/validate
+│   │       ├── upload
 │   │       └── admin/
+│   │           ├── menu/
+│   │           ├── orders/
 │   │           ├── discounts/[id]
 │   │           ├── promotions/[id]
-│   │           ├── start-day
+│   │           ├── burrito/
+│   │           ├── start-day/
 │   │           └── ...
 │   ├── components/
+│   │   ├── StagingBanner.tsx           ← banner de ambiente de prueba
 │   │   ├── CartDrawer.tsx              ← carrito, delivery, descuentos, geolocalización
 │   │   ├── AppShell.tsx
 │   │   ├── BurritoBuilder.tsx
@@ -124,7 +139,8 @@ gustoso/
 │   │   └── PromotionsEditor.tsx
 │   ├── contexts/
 │   │   ├── CartContext.tsx
-│   │   └── SettingsContext.tsx
+│   │   ├── SettingsContext.tsx
+│   │   └── ZoneContext.tsx
 │   ├── hooks/
 │   │   ├── useGeolocation.ts
 │   │   ├── useLiveOrders.ts
@@ -133,14 +149,18 @@ gustoso/
 │       ├── firebase/
 │       │   ├── client.ts               ← SDK cliente (NEXT_PUBLIC_* vars)
 │       │   └── admin.ts                ← Admin SDK (SERVICE_ACCOUNT, server-only)
-│       └── firestore/
-│           ├── settingsTypes.ts        ← tipos sin imports de servidor (safe para client)
-│           ├── settings.ts             ← server-only
-│           ├── menuItems.ts
-│           ├── orders.ts
-│           ├── discountCodes.ts
-│           ├── metrics.ts
-│           └── ...
+│       ├── firestore/
+│       │   ├── settingsTypes.ts        ← tipos sin imports de servidor (safe para client)
+│       │   ├── settings.ts
+│       │   ├── menuItems.ts
+│       │   ├── orders.ts
+│       │   ├── discountCodes.ts
+│       │   ├── metrics.ts
+│       │   └── ...
+│       ├── auth/
+│       │   └── verifySession.ts
+│       ├── geo.ts                      ← Haversine + cálculo de tarifa de delivery
+│       └── cloudinary.ts
 └── middleware.ts                       ← protege /admin/* en Edge Runtime
 ```
 
@@ -155,15 +175,26 @@ gustoso/
 | `promotions` | Promos activas |
 | `discount_codes` | Códigos de descuento |
 
-### Seguridad de credenciales
+---
 
-| Credencial | Dónde vive |
-|---|---|
-| Firebase client config | `.env.local` → Vercel env vars |
-| Firebase Admin SDK (service account) | `.env.local` → Vercel env vars (nunca en cliente) |
-| Cloudinary API Key + Secret | `.env.local` → Vercel env vars (nunca en cliente) |
+## Ambientes y despliegue
 
-Los tipos compartidos entre servidor y cliente viven en `settingsTypes.ts` (sin imports de `firebase-admin`) para evitar que el bundler incluya módulos Node.js (`http2`, `fs`) en el bundle del browser.
+El proyecto corre en dos ambientes completamente separados, cada uno con su propio proyecto Firebase.
+
+| Ambiente | Dominio | Rama | Firebase | Vercel env |
+|---|---|---|---|---|
+| **Producción** | [gustosolosandes.cl](https://gustosolosandes.cl) | `main` | `gustoso-menu` | Production |
+| **Staging** | [gustoso-dun.vercel.app](https://gustoso-dun.vercel.app) | `develop` | `gustoso-menu-dev` | Preview |
+
+### Flujo de trabajo
+
+```
+feature branch → develop (staging) → main (producción)
+```
+
+- Los cambios se prueban en `develop` contra datos de prueba en `gustoso-menu-dev`
+- Al estar conformes se mergea a `main` y se despliega en producción
+- El ambiente de staging muestra un banner amarillo **"AMBIENTE DE PRUEBA"** en la parte superior de todas las páginas (controlado por `NEXT_PUBLIC_ENVIRONMENT=staging`)
 
 ---
 
@@ -172,24 +203,64 @@ Los tipos compartidos entre servidor y cliente viven en `settingsTypes.ts` (sin 
 Copiar `.env.example` a `.env.local` y completar:
 
 ```bash
-# Firebase Client
+# Firebase Client SDK (seguro exponer en browser — protegido por Security Rules)
 NEXT_PUBLIC_FIREBASE_API_KEY=
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
 NEXT_PUBLIC_FIREBASE_APP_ID=
 
-# Firebase Admin (servidor únicamente)
-FIREBASE_SERVICE_ACCOUNT_JSON=
+# Ambiente (solo en staging — omitir en producción)
+NEXT_PUBLIC_ENVIRONMENT=staging
 
-# Cloudinary (servidor únicamente)
+# Firebase Admin SDK (servidor únicamente — NUNCA exponer al browser)
+# Descargar desde Firebase Console → Project Settings → Service Accounts → Generate new private key
+# Pegar el JSON completo como string en UNA SOLA LÍNEA
+FIREBASE_SERVICE_ACCOUNT_JSON={"type":"service_account",...}
+
+# Secret para firmar session cookies (mínimo 32 caracteres, string aleatorio)
+SESSION_COOKIE_SECRET=
+
+# Google Maps (servidor únicamente — para geocodificación de direcciones)
+GOOGLE_MAPS_API_KEY=
+
+# Cloudinary (servidor únicamente — NUNCA exponer al browser)
 CLOUDINARY_CLOUD_NAME=
 CLOUDINARY_API_KEY=
 CLOUDINARY_API_SECRET=
-
-# Sesión
-SESSION_COOKIE_SECRET=
 ```
+
+### Configuración en Vercel
+
+| Variable | Production | Preview (develop) |
+|---|---|---|
+| `NEXT_PUBLIC_FIREBASE_*` | proyecto `gustoso-menu` | proyecto `gustoso-menu-dev` |
+| `FIREBASE_SERVICE_ACCOUNT_JSON` | service account de prod | service account de dev |
+| `NEXT_PUBLIC_ENVIRONMENT` | *(no agregar)* | `staging` |
+| `GOOGLE_MAPS_API_KEY` | ✓ | ✓ |
+| `CLOUDINARY_*` | ✓ | ✓ |
+| `SESSION_COOKIE_SECRET` | ✓ | ✓ |
+
+---
+
+## Seguridad de credenciales
+
+| Credencial | Dónde vive |
+|---|---|
+| Firebase client config (`NEXT_PUBLIC_*`) | Expuesto en browser — protegido por Firestore Security Rules |
+| Firebase Admin SDK (service account) | Servidor únicamente, nunca en bundle cliente |
+| Cloudinary API Key + Secret | Servidor únicamente |
+| Google Maps API Key | Servidor únicamente (API route `/api/geocode`) |
+| Session Cookie Secret | Servidor únicamente |
+
+Los tipos compartidos entre servidor y cliente viven en `settingsTypes.ts` (sin imports de `firebase-admin`) para evitar que el bundler incluya módulos Node.js (`http2`, `fs`) en el bundle del browser.
+
+**Headers de seguridad (`next.config.mjs`):**
+- `Strict-Transport-Security` con preload
+- `X-Frame-Options: DENY`
+- `X-Content-Type-Options: nosniff`
+- `Content-Security-Policy` con allowlist para Firebase, Google APIs y Cloudinary
+- `Permissions-Policy`: geolocation restringida a `self`
 
 ---
 
@@ -200,4 +271,7 @@ npm install
 npm run dev
 ```
 
-Abre [http://localhost:3000](http://localhost:3000) para el menú público y [http://localhost:3000/admin](http://localhost:3000/admin) para el panel.
+- Menú público: [http://localhost:3000](http://localhost:3000)
+- Panel admin: [http://localhost:3000/admin](http://localhost:3000/admin)
+
+En desarrollo local el `.env.local` apunta a `gustoso-menu-dev` (staging), por lo que los cambios nunca afectan datos de producción.

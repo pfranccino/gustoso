@@ -18,7 +18,8 @@ export default function TipSection() {
   };
 
   return (
-    <section style={{ padding:'60px 20px', maxWidth:'var(--max)', margin:'0 auto', textAlign:'center' }}>
+    <section className="tip-section" style={{ padding:'60px 20px', maxWidth:'var(--max)', margin:'0 auto', textAlign:'center' }}>
+      <div className="tip-section-card">
       <span style={{ fontSize:11, fontWeight:700, letterSpacing:3, color:'var(--orange)', textTransform:'uppercase' }}>Propina</span>
       <h2 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:32, color:'var(--text)', margin:'8px 0 8px' }}>¿Te gustó la atención?</h2>
       <p style={{ fontSize:14, color:'var(--text-muted)', marginBottom:24 }}>100% opcional, siempre agradecida.</p>
@@ -39,6 +40,7 @@ export default function TipSection() {
           </button>
         </div>
       )}
+      </div>
     </section>
   );
 }

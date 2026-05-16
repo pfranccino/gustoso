@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import RestaurantJsonLd from '@/components/RestaurantJsonLd';
+import { StagingBanner } from '@/components/StagingBanner';
 
 const SITE_URL  = 'https://gustosolosandes.cl';
 const SITE_NAME = "Gustoso's Los Andes";
@@ -53,6 +54,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;900&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet" />
       </head>
       <body>
+        <StagingBanner />
         <RestaurantJsonLd/>
         {children}
       </body>
