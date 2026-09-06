@@ -1,0 +1,43 @@
+name: CI
+
+# Corre en cada PR y push a develop (staging) y main (producción).
+# SOLO valida — nunca mergea ni despliega nada. El merge develop → main
+# lo decides tú manualmente; Vercel despliega cada rama por su cuenta.
+on:
+  pull_request:
+    branches: [develop, main]
+  push:
+    branches: [develop, main]
+
+# Cancela runs viejos de la misma rama/PR si llega un push nuevo.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Typecheck & tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Tests
+        run: npm test
+
+# Nota: no se corre `next build` ni `next lint` aquí.
+#   - `next build` necesita credenciales de Firebase/Cloudinary para prerender
+#     de la página ISR; agregarlo requiere cargar esos valores como GitHub
+#     Secrets. Se puede sumar un job aparte cuando se quiera.
+#   - `next lint` no está configurado (no hay ESLint en el repo todavía).
