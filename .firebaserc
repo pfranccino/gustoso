@@ -1,0 +1,7 @@
+{
+  "projects": {
+    "default": "gustoso-menu-dev",
+    "staging": "gustoso-menu-dev",
+    "production": "gustoso-menu"
+  }
+}
