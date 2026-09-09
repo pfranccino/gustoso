@@ -1,0 +1,40 @@
+rules_version = '2';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Reglas de seguridad de Firestore — Gustoso's
+//
+// PRINCIPIO: deny-by-default. El SDK de cliente (browser) NUNCA escribe en
+// Firestore y solo LEE la colección `orders` estando autenticado (dashboard y
+// lista de pedidos en vivo). TODO lo demás — menú, settings, promos, descuentos,
+// costos, reviews, gallery, categorías, aderezos, stock — se lee y escribe
+// exclusivamente desde el servidor con el Admin SDK, que IGNORA estas reglas.
+//
+// Por eso aquí solo se abre lo mínimo que el cliente realmente usa. Si en el
+// futuro algún componente pasa a leer una colección directamente desde el
+// browser (p.ej. el menú público con client SDK en vez de ISR), hay que
+// abrir esa colección explícitamente más abajo.
+//
+// Auth: la restaurante tiene una única cuenta de admin. El login usa
+// signInWithEmailAndPassword (Firebase Auth) client-side, así que
+// `request.auth != null` equivale a "admin autenticado".
+// ─────────────────────────────────────────────────────────────────────────────
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Pedidos: el dashboard y la lista en vivo los leen desde el cliente
+    // (onSnapshot) solo con sesión de admin. La CREACIÓN de pedidos ocurre
+    // en el servidor vía /api/orders (Admin SDK), por eso el cliente no
+    // necesita —ni debe— escribir aquí.
+    match /orders/{orderId} {
+      allow read:  if request.auth != null;
+      allow write: if false;
+    }
+
+    // Resto de colecciones: acceso de cliente denegado por completo.
+    // El servidor (Admin SDK) las gestiona y no pasa por estas reglas.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

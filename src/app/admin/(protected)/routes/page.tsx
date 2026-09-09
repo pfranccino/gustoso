@@ -7,69 +7,15 @@ import { useSettings } from '@/contexts/SettingsContext';
 import AdminHeader from '@/components/admin/AdminHeader';
 import AdminButton from '@/components/admin/AdminButton';
 import AdminCard from '@/components/admin/AdminCard';
+import { parseLatLng, nearestNeighbor, buildMapsUrl, totalDistance, type LatLng } from '@/lib/routeOptimizer';
+import { haversineKm } from '@/lib/geo';
 
 const fmt = (n: number) =>
   n.toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 });
 
 /* ── helpers ─────────────────────────────────────── */
 
-function parseLatLng(url: string): { lat: number; lng: number } | null {
-  const m = url.match(/q=([-\d.]+),([-\d.]+)/);
-  if (!m) return null;
-  return { lat: parseFloat(m[1]), lng: parseFloat(m[2]) };
-}
-
-function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const R = 6371;
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a = Math.sin(dLat / 2) ** 2 +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
-
-type Stop = { order: Order; lat: number; lng: number };
-
-/** Nearest-neighbor TSP starting from `origin`. */
-function nearestNeighbor(origin: { lat: number; lng: number }, stops: Stop[]): Stop[] {
-  const remaining = [...stops];
-  const route: Stop[] = [];
-  let current = origin;
-
-  while (remaining.length > 0) {
-    let nearestIdx = 0;
-    let nearestDist = haversineKm(current.lat, current.lng, remaining[0].lat, remaining[0].lng);
-    for (let i = 1; i < remaining.length; i++) {
-      const d = haversineKm(current.lat, current.lng, remaining[i].lat, remaining[i].lng);
-      if (d < nearestDist) { nearestDist = d; nearestIdx = i; }
-    }
-    const next = remaining.splice(nearestIdx, 1)[0];
-    route.push(next);
-    current = next;
-  }
-  return route;
-}
-
-function buildMapsUrl(origin: { lat: number; lng: number }, route: Stop[]): string {
-  /* Formato explícito: origin + waypoints + destination
-     Evita que Maps reordene o ponga el local al final */
-  const coords   = route.map(s => `${s.lat},${s.lng}`);
-  const originS  = `${origin.lat},${origin.lng}`;
-  const dest     = coords[coords.length - 1];
-  const wps      = coords.slice(0, -1).join('|');
-  const base     = `https://www.google.com/maps/dir/?api=1&origin=${originS}&destination=${dest}&travelmode=driving`;
-  return wps ? `${base}&waypoints=${wps}` : base;
-}
-
-function totalDistance(origin: { lat: number; lng: number }, route: Stop[]): number {
-  let dist = 0;
-  let prev = origin;
-  for (const stop of route) {
-    dist += haversineKm(prev.lat, prev.lng, stop.lat, stop.lng);
-    prev = stop;
-  }
-  return dist;
-}
+type Stop = { order: Order } & LatLng;
 
 const FAKE_NAMES = ['Empanada x2', 'AS Italiano', 'Vienesa Alemana', 'Burrito XL', 'Combo familiar'];
 

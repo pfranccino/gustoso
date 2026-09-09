@@ -15,3 +15,6 @@ node_modules/
 # misc
 npm-debug.log*
 *.log
+
+# Claude Code worktrees (git repos anidados)
+.claude/worktrees/

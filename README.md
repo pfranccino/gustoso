@@ -255,6 +255,26 @@ CLOUDINARY_API_SECRET=
 
 Los tipos compartidos entre servidor y cliente viven en `settingsTypes.ts` (sin imports de `firebase-admin`) para evitar que el bundler incluya módulos Node.js (`http2`, `fs`) en el bundle del browser.
 
+### Firestore Security Rules
+
+Las reglas están versionadas en `firestore.rules` (junto con `firebase.json`, `.firebaserc` y `firestore.indexes.json`). Filosofía **deny-by-default**:
+
+- El SDK de **cliente** (browser) nunca escribe en Firestore y solo **lee `orders` estando autenticado** (dashboard y lista en vivo).
+- Todo lo demás —menú, settings, promos, descuentos, costos, reviews, gallery— se lee y escribe **solo desde el servidor con el Admin SDK**, que ignora las reglas.
+- La creación de pedidos ocurre en el servidor vía `/api/orders`; por eso el cliente tiene `write: if false` incluso en `orders`.
+
+**Desplegar las reglas** (requiere `firebase login` una vez):
+
+```bash
+# Staging (gustoso-menu-dev)
+firebase deploy --only firestore:rules -P staging
+
+# Producción (gustoso-menu)
+firebase deploy --only firestore:rules -P production
+```
+
+> Si en el futuro un componente pasa a leer una colección directamente desde el browser (p.ej. el menú público con client SDK en vez de ISR), hay que abrir esa colección explícitamente en `firestore.rules`.
+
 **Headers de seguridad (`next.config.mjs`):**
 - `Strict-Transport-Security` con preload
 - `X-Frame-Options: DENY`
