@@ -64,17 +64,13 @@
    --card, --border…) are not touched here, so the current, not-yet-migrated
    screens keep rendering in light and nothing breaks mid-migration. Full
    dark mode turns on for each screen as it moves onto the new tokens. */
-@media(prefers-color-scheme:dark){
-  :root:not([data-theme="light"]){
-    --ink-900:#FDF4EC;--ink-700:#E4CBB4;--ink-500:#C9A588;--ink-400:#A9835F;--ink-300:#7A5C40;
-    --line:rgba(255,255,255,0.10);--line-strong:rgba(255,255,255,0.18);--line-brand:rgba(255,140,66,0.42);
-    --surface-0:#211812;--surface-1:#2A1F17;--surface-2:#332619;--surface-3:#3D2E1F;
-    --brand-400:#FF8C42;--brand-50:#3A2411;--brand-100:#4C2E13;
-    --success-soft:#13271B;--warning-soft:#2F2410;--danger-soft:#2F1614;--info-soft:#10262F;
-    --e-1:0 1px 2px rgba(0,0,0,0.40);--e-2:0 2px 12px rgba(0,0,0,0.50);
-    --e-3:0 12px 30px rgba(0,0,0,0.55);--e-4:0 22px 56px rgba(0,0,0,0.60);
-  }
-}
+/* NOTE: auto dark-mode via @media(prefers-color-scheme:dark) is intentionally
+   NOT enabled yet. While the migration is partial, auto-activating it would
+   render dark, already-migrated components on the still-light, not-yet-migrated
+   sections for system-dark users. Dark mode is opt-in via [data-theme="dark"]
+   for now (usable for testing and a future toggle); switch it to the
+   prefers-color-scheme form once the whole public + admin surface is migrated
+   (see DESIGN.md §2.5). */
 :root[data-theme="dark"]{
   --ink-900:#FDF4EC;--ink-700:#E4CBB4;--ink-500:#C9A588;--ink-400:#A9835F;--ink-300:#7A5C40;
   --line:rgba(255,255,255,0.10);--line-strong:rgba(255,255,255,0.18);--line-brand:rgba(255,140,66,0.42);
