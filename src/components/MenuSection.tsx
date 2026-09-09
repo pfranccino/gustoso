@@ -34,7 +34,7 @@ function CartSidebar() {
 
 
   return (
-    <aside style={{ background:'var(--surface-0)', border:'1px solid var(--line)', borderRadius:'var(--r-md)', boxShadow:'var(--e-2)', overflow:'hidden' }}>
+    <aside className="menu-cart-sidebar-inner" style={{ background:'var(--surface-0)', border:'1px solid var(--line)', borderRadius:'var(--r-md)', boxShadow:'var(--e-2)', overflow:'visible' }}>
       {/* Header */}
       <div style={{ padding:'14px 16px 10px', borderBottom:'1px solid var(--line)', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
         <div>
@@ -50,7 +50,7 @@ function CartSidebar() {
           Agrega productos del menú para empezar tu pedido
         </div>
       ) : (
-        <div style={{ padding:'10px 14px', display:'flex', flexDirection:'column', gap:8, maxHeight:320, overflowY:'auto' }}>
+        <div className="menu-cart-items-list" style={{ padding:'10px 14px', display:'flex', flexDirection:'column', gap:8, maxHeight:320, overflowY:'auto' }}>
           {items.map(it => (
             <div key={it.id} style={{ padding:'10px 12px', background:'var(--surface-2)', borderRadius:8, border:'1px solid var(--line)' }}>
               <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:4 }}>

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createOrder } from '@/lib/firestore/orders';
 import { validateDiscountCode, redeemDiscountCode } from '@/lib/firestore/discountCodes';
+import { computeDiscountAmount, computeFinalTotal } from '@/lib/discounts';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,16 +28,14 @@ export async function POST(request: NextRequest) {
     if (discountCode && typeof discountCode === 'string') {
       const result = await validateDiscountCode(discountCode);
       if (result.valid) {
-        discountAmount = result.type === 'percent'
-          ? Math.round(total * result.value / 100)
-          : result.value;
+        discountAmount = computeDiscountAmount(result.type, result.value, total);
         validatedCode = discountCode.trim().toUpperCase();
         await redeemDiscountCode(validatedCode);
       }
     }
 
     const fee = typeof deliveryFee === 'number' && deliveryFee > 0 ? deliveryFee : 0;
-    const finalTotal = Math.max(0, total - (discountAmount ?? 0)) + fee;
+    const finalTotal = computeFinalTotal(total, discountAmount ?? 0, fee);
 
     const id = await createOrder({
       items:          orderItems,
