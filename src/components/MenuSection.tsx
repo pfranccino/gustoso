@@ -34,38 +34,38 @@ function CartSidebar() {
 
 
   return (
-    <aside style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:'var(--radius)', boxShadow:'0 1px 2px rgba(60,30,10,0.04),0 8px 24px rgba(60,30,10,0.06)', overflow:'hidden' }}>
+    <aside style={{ background:'var(--surface-0)', border:'1px solid var(--line)', borderRadius:'var(--r-md)', boxShadow:'var(--e-2)', overflow:'hidden' }}>
       {/* Header */}
-      <div style={{ padding:'14px 16px 10px', borderBottom:'1px solid var(--border)', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+      <div style={{ padding:'14px 16px 10px', borderBottom:'1px solid var(--line)', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
         <div>
-          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:17, color:'var(--text)' }}>Tu pedido</div>
-          <div style={{ fontSize:11, color:'var(--text-muted)' }}>{count > 0 ? `${count} producto${count !== 1 ? 's' : ''}` : 'Vacío'}</div>
+          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:17, color:'var(--ink-900)' }}>Tu pedido</div>
+          <div style={{ fontSize:11, color:'var(--ink-500)' }}>{count > 0 ? `${count} producto${count !== 1 ? 's' : ''}` : 'Vacío'}</div>
         </div>
         <span style={{ fontSize:18 }}>🛒</span>
       </div>
 
       {/* Items */}
       {items.length === 0 ? (
-        <div style={{ padding:'24px 16px', textAlign:'center', color:'var(--text-muted)', fontSize:13, fontWeight:500 }}>
+        <div style={{ padding:'24px 16px', textAlign:'center', color:'var(--ink-500)', fontSize:13, fontWeight:500 }}>
           Agrega productos del menú para empezar tu pedido
         </div>
       ) : (
         <div style={{ padding:'10px 14px', display:'flex', flexDirection:'column', gap:8, maxHeight:320, overflowY:'auto' }}>
           {items.map(it => (
-            <div key={it.id} style={{ padding:'10px 12px', background:'var(--bg2)', borderRadius:8, border:'1px solid var(--border)' }}>
+            <div key={it.id} style={{ padding:'10px 12px', background:'var(--surface-2)', borderRadius:8, border:'1px solid var(--line)' }}>
               <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:4 }}>
-                <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:13, color:'var(--text)', lineHeight:1.3, flex:1, marginRight:8 }}>{it.name}{it.size ? ` (${it.size})` : ''}</span>
-                <button onClick={() => updateQty(it.id, -it.qty)} style={{ background:'transparent', border:'none', cursor:'pointer', color:'var(--text-muted)', fontSize:14, lineHeight:1, padding:0, flexShrink:0 }}>🗑</button>
+                <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:13, color:'var(--ink-900)', lineHeight:1.3, flex:1, marginRight:8 }}>{it.name}{it.size ? ` (${it.size})` : ''}</span>
+                <button onClick={() => updateQty(it.id, -it.qty)} style={{ background:'transparent', border:'none', cursor:'pointer', color:'var(--ink-500)', fontSize:14, lineHeight:1, padding:0, flexShrink:0 }}>🗑</button>
               </div>
-              {it.note && <div style={{ fontSize:10, color:'var(--orange)', fontStyle:'italic', marginBottom:4 }}>📝 {it.note}</div>}
+              {it.note && <div style={{ fontSize:10, color:'var(--brand-500)', fontStyle:'italic', marginBottom:4 }}>📝 {it.note}</div>}
               <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
                 {/* Qty controls */}
-                <div style={{ display:'inline-flex', alignItems:'center', border:'1px solid var(--border)', borderRadius:999, overflow:'hidden', background:'var(--card)' }}>
-                  <button onClick={() => updateQty(it.id, -1)} style={{ width:24, height:24, display:'flex', alignItems:'center', justifyContent:'center', background:'transparent', border:'none', cursor:'pointer', fontSize:14, color:'var(--text)' }}>−</button>
-                  <span style={{ padding:'0 8px', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:12, color:'var(--text)' }}>{it.qty}</span>
-                  <button onClick={() => updateQty(it.id, 1)} style={{ width:24, height:24, display:'flex', alignItems:'center', justifyContent:'center', background:'transparent', border:'none', cursor:'pointer', fontSize:14, color:'var(--orange)' }}>+</button>
+                <div style={{ display:'inline-flex', alignItems:'center', border:'1px solid var(--line)', borderRadius:999, overflow:'hidden', background:'var(--surface-0)' }}>
+                  <button onClick={() => updateQty(it.id, -1)} style={{ width:24, height:24, display:'flex', alignItems:'center', justifyContent:'center', background:'transparent', border:'none', cursor:'pointer', fontSize:14, color:'var(--ink-900)' }}>−</button>
+                  <span style={{ padding:'0 8px', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:12, color:'var(--ink-900)' }}>{it.qty}</span>
+                  <button onClick={() => updateQty(it.id, 1)} style={{ width:24, height:24, display:'flex', alignItems:'center', justifyContent:'center', background:'transparent', border:'none', cursor:'pointer', fontSize:14, color:'var(--brand-500)' }}>+</button>
                 </div>
-                <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:14, color:'var(--yellow)' }}>{fmt(it.price * it.qty)}</span>
+                <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:14, color:'var(--ink-900)' }}>{fmt(it.price * it.qty)}</span>
               </div>
             </div>
           ))}
@@ -75,12 +75,12 @@ function CartSidebar() {
       {/* Totals */}
       {items.length > 0 && (
         <>
-          <div style={{ padding:'10px 14px', borderTop:'1px dashed var(--border)', display:'flex', flexDirection:'column', gap:5 }}>
+          <div style={{ padding:'10px 14px', borderTop:'1px dashed var(--line)', display:'flex', flexDirection:'column', gap:5 }}>
             <div style={{ display:'flex', justifyContent:'space-between', alignItems:'baseline' }}>
-              <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:12, color:'var(--text-muted)', letterSpacing:.8, textTransform:'uppercase' }}>SUBTOTAL</span>
-              <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:24, color:'var(--text)' }}>{fmt(total)}</span>
+              <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:12, color:'var(--ink-500)', letterSpacing:.8, textTransform:'uppercase' }}>SUBTOTAL</span>
+              <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:24, color:'var(--ink-900)' }}>{fmt(total)}</span>
             </div>
-            <div style={{ fontSize:11, color:'var(--text-muted)' }}>+ Delivery calculado al confirmar por ubicación</div>
+            <div style={{ fontSize:11, color:'var(--ink-500)' }}>+ Delivery calculado al confirmar por ubicación</div>
           </div>
         </>
       )}
@@ -88,7 +88,7 @@ function CartSidebar() {
       {/* Open full drawer */}
       {items.length > 0 && (
         <div style={{ padding:'0 14px 14px' }}>
-          <button onClick={() => setIsOpen(true)} style={{ width:'100%', padding:'9px', borderRadius:8, border:'1px solid var(--border)', background:'transparent', color:'var(--text-muted)', fontSize:12, fontWeight:700, cursor:'pointer' }}>
+          <button onClick={() => setIsOpen(true)} style={{ width:'100%', padding:'9px', borderRadius:8, border:'1px solid var(--line)', background:'transparent', color:'var(--ink-500)', fontSize:12, fontWeight:700, cursor:'pointer' }}>
             Ver detalles del pedido →
           </button>
         </div>
@@ -101,9 +101,9 @@ function CartSidebar() {
 function NumDivider({ num, label }: { num: number; label: string }) {
   return (
     <div style={{ display:'flex', alignItems:'center', gap:14, padding:'32px 0 16px' }}>
-      <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:72, color:'var(--orange)', lineHeight:.8, letterSpacing:-2 }}>{String(num).padStart(2,'0')}</span>
-      <div style={{ flex:1, height:1, background:'var(--border)' }}></div>
-      <span style={{ fontSize:10, fontWeight:800, color:'var(--text-muted)', letterSpacing:2, textTransform:'uppercase' }}>{label}</span>
+      <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:72, color:'var(--brand-500)', lineHeight:.8, letterSpacing:-2 }}>{String(num).padStart(2,'0')}</span>
+      <div style={{ flex:1, height:1, background:'var(--line)' }}></div>
+      <span style={{ fontSize:10, fontWeight:800, color:'var(--ink-500)', letterSpacing:2, textTransform:'uppercase' }}>{label}</span>
     </div>
   );
 }
@@ -197,18 +197,18 @@ export default function MenuSection({ items, burritoConfig, promotions, aderezos
   return (
     <section id="menu" style={{ paddingBottom:100 }}>
       {/* ── Sticky header (search + mobile tabs) ── */}
-      <div className="menu-sticky-header" style={{ position:'sticky', top:52, zIndex:30, background:'rgba(255,249,245,0.96)', backdropFilter:'blur(12px)', borderBottom:'1px solid var(--border)', padding:'10px 20px' }}>
+      <div className="menu-sticky-header" style={{ position:'sticky', top:52, zIndex:30, background:'color-mix(in srgb, var(--surface-0) 94%, transparent)', backdropFilter:'blur(12px)', borderBottom:'1px solid var(--line)', padding:'10px 20px' }}>
         {/* Search bar — hidden on desktop (navigation via category rail) */}
         <div className="search-wrapper" style={{ position:'relative', marginBottom:8 }}>
-          <span style={{ position:'absolute', left:12, top:'50%', transform:'translateY(-50%)', fontSize:14, color:'var(--text-muted)', pointerEvents:'none' }}>🔍</span>
+          <span style={{ position:'absolute', left:12, top:'50%', transform:'translateY(-50%)', fontSize:14, color:'var(--ink-500)', pointerEvents:'none' }}>🔍</span>
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Buscar producto o ingrediente…"
-            style={{ width:'100%', padding:'8px 32px 8px 34px', borderRadius:999, border:'1px solid var(--border)', background:'var(--card)', color:'var(--text)', fontSize:13, fontFamily:"'Barlow',sans-serif", outline:'none', boxSizing:'border-box' }}
+            style={{ width:'100%', padding:'8px 32px 8px 34px', borderRadius:999, border:'1px solid var(--line)', background:'var(--surface-0)', color:'var(--ink-900)', fontSize:13, fontFamily:"'Barlow',sans-serif", outline:'none', boxSizing:'border-box' }}
           />
           {search && (
-            <button onClick={() => setSearch('')} style={{ position:'absolute', right:10, top:'50%', transform:'translateY(-50%)', background:'transparent', border:'none', cursor:'pointer', fontSize:16, color:'var(--text-muted)', lineHeight:1 }}>×</button>
+            <button onClick={() => setSearch('')} style={{ position:'absolute', right:10, top:'50%', transform:'translateY(-50%)', background:'transparent', border:'none', cursor:'pointer', fontSize:16, color:'var(--ink-500)', lineHeight:1 }}>×</button>
           )}
         </div>
 
@@ -221,9 +221,9 @@ export default function MenuSection({ items, burritoConfig, promotions, aderezos
                 <button key={tab.id} data-tab={tab.id} onClick={() => switchTab(tab.id)} style={{
                   display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
                   gap:3, padding:'8px 4px', borderRadius:10,
-                  border: on ? '2px solid var(--orange)' : '2px solid transparent',
-                  background: on ? 'var(--orange)' : 'var(--bg3)',
-                  color: on ? '#fff' : 'var(--text-muted)',
+                  border: on ? '2px solid var(--brand-500)' : '2px solid transparent',
+                  background: on ? 'var(--brand-500)' : 'var(--surface-3)',
+                  color: on ? '#fff' : 'var(--ink-500)',
                   fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:11,
                   cursor:'pointer', transition:'all .2s', letterSpacing:.3,
                 }}>
@@ -249,13 +249,13 @@ export default function MenuSection({ items, burritoConfig, promotions, aderezos
         {q ? (
           /* Search results */
           searchResults.length === 0 ? (
-            <div style={{ textAlign:'center', padding:'40px 0', color:'var(--text-muted)' }}>
+            <div style={{ textAlign:'center', padding:'40px 0', color:'var(--ink-500)' }}>
               <div style={{ fontSize:32, marginBottom:12 }}>🔍</div>
               <div style={{ fontSize:14 }}>Sin resultados para <strong>"{search}"</strong></div>
             </div>
           ) : (
             <div>
-              <div style={{ fontSize:12, fontWeight:700, color:'var(--text-muted)', letterSpacing:1, textTransform:'uppercase', marginBottom:12 }}>
+              <div style={{ fontSize:12, fontWeight:700, color:'var(--ink-500)', letterSpacing:1, textTransform:'uppercase', marginBottom:12 }}>
                 {searchResults.length} resultado{searchResults.length !== 1 ? 's' : ''} para "{search}"
               </div>
               <div style={listStyle}>
@@ -269,23 +269,23 @@ export default function MenuSection({ items, burritoConfig, promotions, aderezos
 
             {/* Left column: category rail — desktop only */}
             <div className="menu-cat-rail" style={{ display:'none' }}>
-              <div style={{ fontSize:10, fontWeight:800, color:'var(--text-muted)', letterSpacing:1.5, textTransform:'uppercase', marginBottom:10 }}>Categorías</div>
+              <div style={{ fontSize:10, fontWeight:800, color:'var(--ink-500)', letterSpacing:1.5, textTransform:'uppercase', marginBottom:10 }}>Categorías</div>
               {visibleTabs.map(tab => {
                 const on = activeTab === tab.id;
                 return (
                   <button key={tab.id} onClick={() => switchTab(tab.id)} style={{
                     display:'flex', alignItems:'center', gap:10,
                     padding:'10px 12px', borderRadius:10,
-                    border: on ? `1px solid rgba(242,100,25,0.3)` : '1px solid transparent',
-                    background: on ? 'rgba(242,100,25,0.08)' : 'transparent',
-                    color: on ? 'var(--orange)' : 'var(--text-muted)',
+                    border: on ? '1px solid var(--line-brand)' : '1px solid transparent',
+                    background: on ? 'var(--brand-50)' : 'transparent',
+                    color: on ? 'var(--brand-500)' : 'var(--ink-500)',
                     cursor:'pointer', textAlign:'left',
                     fontFamily:"'Barlow Condensed',sans-serif", fontWeight: on ? 900 : 700, fontSize:14, letterSpacing:.4,
                     transition:'all .15s', width:'100%',
                   }}>
                     <span style={{ fontSize:18 }}>{tab.emoji}</span>
                     <span style={{ flex:1 }}>{tab.label}</span>
-                    {on && <span style={{ fontSize:10, color:'var(--orange)' }}>→</span>}
+                    {on && <span style={{ fontSize:10, color:'var(--brand-500)' }}>→</span>}
                   </button>
                 );
               })}
@@ -296,9 +296,9 @@ export default function MenuSection({ items, burritoConfig, promotions, aderezos
               {/* Category heading */}
               <div className="menu-section-head" style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14, padding:'0 0 0' }}>
                 <span style={{ fontSize:24 }}>{activeTabData?.emoji}</span>
-                <h2 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:26, color:'var(--text)', letterSpacing:.3, lineHeight:1 }}>{tabLabel}</h2>
+                <h2 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:26, color:'var(--ink-900)', letterSpacing:.3, lineHeight:1 }}>{tabLabel}</h2>
               </div>
-              {activeTab === 'burrito' && <p style={{ fontSize:13, color:'var(--text-muted)', marginBottom:14, fontWeight:500 }}>Arma tu Burrito o Bowl personalizado paso a paso</p>}
+              {activeTab === 'burrito' && <p style={{ fontSize:13, color:'var(--ink-500)', marginBottom:14, fontWeight:500 }}>Arma tu Burrito o Bowl personalizado paso a paso</p>}
               {renderContent()}
             </div>
 
