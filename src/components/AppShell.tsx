@@ -22,9 +22,10 @@ import Footer from './Footer';
 import FloatingWA from './FloatingWA';
 import CartBar from './CartBar';
 import CartDrawer from './CartDrawer';
+import CartToast from './CartToast';
 import { ZoneProvider } from '@/contexts/ZoneContext';
 
-export default function AppShell({ settings, menuItems, burritoConfig, promotions, aderezos, disabledIngredients = [], galleryItems = [], reviewItems = [], mostrador = false }: { settings: PublicSettings; menuItems: MenuItem[]; burritoConfig: BurritoConfig; promotions: Promotion[]; aderezos: Aderezo[]; disabledIngredients?: string[]; galleryItems?: GalleryItem[]; reviewItems?: Review[]; mostrador?: boolean }) {
+export default function AppShell({ settings, menuItems, burritoConfig, promotions, aderezos, disabledIngredients = [], galleryItems = [], reviewItems = [], mostrador = false, loadError = false }: { settings: PublicSettings; menuItems: MenuItem[]; burritoConfig: BurritoConfig; promotions: Promotion[]; aderezos: Aderezo[]; disabledIngredients?: string[]; galleryItems?: GalleryItem[]; reviewItems?: Review[]; mostrador?: boolean; loadError?: boolean }) {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -39,21 +40,27 @@ export default function AppShell({ settings, menuItems, burritoConfig, promotion
     <CartProvider>
       <div className="pub-outer" style={{ maxWidth:'var(--max)', margin:'0 auto', position:'relative' }}>
         <Nav scrolled={scrolled}/>
+        {loadError && (
+          <div role="alert" style={{ background:'var(--warning-soft, #fff3cd)', border:'1px solid var(--warning, #f0ad4e)', borderRadius:'var(--r-md)', padding:'12px 16px', margin:'80px 16px 0', fontSize:14, fontWeight:600, color:'var(--ink-900)', textAlign:'center' }}>
+            No pudimos cargar el menú. Intenta recargar la página.
+          </div>
+        )}
         <Hero menuItems={menuItems}/>
         <div className="section-divider"></div>
         <MenuSection items={menuItems} burritoConfig={burritoConfig} promotions={promotions} aderezos={aderezos} disabledIngredients={disabledIngredients}/>
-        <SectionDivider num={2} label="GALERÍA"/>
+        <SectionDivider label="GALERÍA"/>
         <Gallery items={galleryItems}/>
         <div className="section-divider"></div>
         <About/>
         <div className="section-divider"></div>
         <Reviews items={reviewItems}/>
-        <SectionDivider num={3} label="PROPINA"/>
+        <SectionDivider label="PROPINA"/>
         <TipSection/>
-        <SectionDivider num={4} label="ENCUÉNTRANOS"/>
+        <SectionDivider label="ENCUÉNTRANOS"/>
         <Contact/>
         <Footer/>
         <FloatingWA/>
+        <CartToast/>
         <CartBar/>
         <CartDrawer mostrador={mostrador}/>
       </div>

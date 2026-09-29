@@ -37,7 +37,7 @@ export default function SimpleCard({ item, aderezos = [], disabledIngredients = 
             {item.extras.length > 0 && <span style={{ fontSize:11, color:'var(--brand-600)', fontWeight:700, background:'var(--brand-50)', padding:'1px 6px', borderRadius:'var(--r-sm)' }}>+ opcionales</span>}
           </div>
         </div>
-        <button onClick={() => setModal(true)} style={{ width:36, height:36, borderRadius:'50%', border:'none', background:'var(--brand-500)', color:'#fff', fontSize:20, fontWeight:300, cursor:'pointer', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'var(--e-1)', transition:'transform .15s' }}>+</button>
+        <button className="btn-add" onClick={() => setModal(true)} aria-label={`Agregar ${item.name}`} style={{ width:36, height:36, borderRadius:'50%', border:'none', background:'var(--brand-500)', color:'#fff', fontSize:20, fontWeight:300, cursor:'pointer', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'var(--e-1)', transition:'transform .15s' }}>+</button>
       </div>
       {modal && <AddToCartModal item={item} aderezos={aderezos} disabledIngredients={disabledIngredients} onClose={() => setModal(false)} />}
     </>

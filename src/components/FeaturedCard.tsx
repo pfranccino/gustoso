@@ -59,7 +59,7 @@ export default function FeaturedCard({ item, aderezos = [], disabledIngredients 
         </div>
 
         {/* Add button — 36×36 circle */}
-        <button onClick={() => setModal(true)}
+        <button className="btn-add" onClick={() => setModal(true)} aria-label={`Agregar ${item.name}`}
           style={{ width:36, height:36, borderRadius:'50%', border:'none', background:'var(--brand-500)', color:'#fff', fontSize:20, fontWeight:300, cursor:'pointer', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'var(--glow-brand)', transition:'transform .15s' }}>+</button>
       </div>
       {modal && <AddToCartModal item={item} aderezos={aderezos} disabledIngredients={disabledIngredients} onClose={() => setModal(false)}/>}

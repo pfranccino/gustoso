@@ -20,23 +20,22 @@ export default function TipSection() {
   return (
     <section className="tip-section" style={{ padding:'60px 20px', maxWidth:'var(--max)', margin:'0 auto', textAlign:'center' }}>
       <div className="tip-section-card">
-      <span style={{ fontSize:11, fontWeight:700, letterSpacing:3, color:'var(--orange)', textTransform:'uppercase' }}>Propina</span>
-      <h2 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:32, color:'var(--text)', margin:'8px 0 8px' }}>¿Te gustó la atención?</h2>
-      <p style={{ fontSize:14, color:'var(--text-muted)', marginBottom:24 }}>100% opcional, siempre agradecida.</p>
+      <h2 style={{ fontFamily:'var(--font-display)', fontWeight:900, fontSize:32, color:'var(--ink-900)', margin:'0 0 8px' }}>¿Te gustó la atención?</h2>
+      <p style={{ fontSize:14, color:'var(--ink-500)', marginBottom:24 }}>100% opcional, siempre agradecida.</p>
       {sent ? (
-        <div style={{ background:'rgba(37,211,102,0.08)', border:'1px solid rgba(37,211,102,0.25)', borderRadius:'var(--radius)', padding:'24px' }}>
+        <div style={{ background:'rgba(37,211,102,0.08)', border:'1px solid rgba(37,211,102,0.25)', borderRadius:'var(--r-md)', padding:'24px' }}>
           <div style={{ fontSize:32, marginBottom:6 }}>🙏</div>
-          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:22, color:'#1a8a3e' }}>¡Muchas gracias!</div>
+          <div style={{ fontFamily:'var(--font-display)', fontWeight:900, fontSize:22, color:'#1a8a3e' }}>¡Muchas gracias!</div>
         </div>
       ) : (
         <div>
           <div style={{ display:'flex', gap:8, justifyContent:'center', marginBottom:18, flexWrap:'wrap' }}>
             {amounts.map(a => (
-              <button key={a} onClick={() => setSelected(a)} style={{ padding:'10px 18px', borderRadius:999, border:`2px solid ${selected===a?'var(--orange)':'var(--border)'}`, background: selected===a?'rgba(242,100,25,0.1)':'var(--card)', color: selected===a?'var(--orange)':'var(--text)', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:17, cursor:'pointer', transition:'all .2s' }}>{fmt(a)}</button>
+              <button key={a} onClick={() => setSelected(a)} style={{ padding:'10px 18px', borderRadius:'var(--r-pill)', border:`2px solid ${selected===a?'var(--brand-500)':'var(--line)'}`, background: selected===a?'rgba(242,100,25,0.1)':'var(--surface-0)', color: selected===a?'var(--brand-500)':'var(--ink-900)', fontFamily:'var(--font-display)', fontWeight:900, fontSize:17, cursor:'pointer', transition:'all .2s' }}>{fmt(a)}</button>
             ))}
           </div>
-          <button onClick={sendTip} disabled={!selected} style={{ display:'inline-flex', alignItems:'center', gap:8, background: selected?'#25D366':'var(--bg3)', color: selected?'#fff':'var(--text-muted)', padding:'13px 26px', borderRadius:999, border:'none', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:17, cursor: selected?'pointer':'not-allowed', transition:'all .2s' }}>
-            <WAIcon size={17} color={selected?'#fff':'var(--text-muted)'}/> Enviar propina
+          <button onClick={sendTip} disabled={!selected} style={{ display:'inline-flex', alignItems:'center', gap:8, background: selected?'#25D366':'var(--surface-3)', color: selected?'#fff':'var(--ink-500)', padding:'13px 26px', borderRadius:'var(--r-pill)', border:'none', fontFamily:'var(--font-display)', fontWeight:900, fontSize:17, cursor: selected?'pointer':'not-allowed', transition:'all .2s' }}>
+            <WAIcon size={17} color={selected?'#fff':'var(--ink-500)'}/> Enviar propina
           </button>
         </div>
       )}

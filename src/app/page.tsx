@@ -50,10 +50,13 @@ export default async function Home() {
   let disabledIngredients: string[] = [];
   let galleryItems: GalleryItem[]   = [];
   let reviewItems:  Review[]        = [];
+  let loadError = false;
   try {
     [settings, menuItems, burritoConfig, promotions, aderezos, disabledIngredients, galleryItems, reviewItems] = await Promise.all([
       getSettings(), getMenuItems(), getBurritoConfig(), getPromotions(), getAderezos(), getDisabledIngredients(), getGalleryItems(), getReviews(),
     ]);
-  } catch {}
-  return <AppShell settings={toPublicSettings(settings)} menuItems={menuItems} burritoConfig={burritoConfig} promotions={promotions} aderezos={aderezos} disabledIngredients={disabledIngredients} galleryItems={galleryItems} reviewItems={reviewItems} />;
+  } catch {
+    loadError = true;
+  }
+  return <AppShell settings={toPublicSettings(settings)} menuItems={menuItems} burritoConfig={burritoConfig} promotions={promotions} aderezos={aderezos} disabledIngredients={disabledIngredients} galleryItems={galleryItems} reviewItems={reviewItems} loadError={loadError} />;
 }
