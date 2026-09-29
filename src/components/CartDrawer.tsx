@@ -147,6 +147,7 @@ export default function CartDrawer({ mostrador = false }: { mostrador?: boolean 
   const [addrCoords,    setAddrCoords]    = useState<{ lat: number; lng: number; display: string } | null>(null);
   const [mode, setMode] = useState<'auto' | 'manual'>('auto');
   const [mostradorSending, setMostradorSending] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
 
   // Reset stepper and pre-fill zone when drawer opens
   useEffect(() => {
@@ -315,15 +316,19 @@ export default function CartDrawer({ mostrador = false }: { mostrador?: boolean 
 
   const handleSend = async () => {
     setSending(true);
+    setSendError(null);
     try {
       const orderId = await generateOrderId();
-      // Persist waNumber so confirmation page can build WA link
       try { localStorage.setItem('gustoso_wa', waNumber); } catch {}
       await logOrder(items, finalTotal, orderId, finalLocationUrl, paymentMethod ?? undefined, appliedDiscount?.code, deliveryFee ?? undefined);
-      window.open(buildWAMsg(orderId), '_blank');
+      const waUrl = buildWAMsg(orderId);
+      const w = window.open(waUrl, '_blank');
+      if (!w) window.location.href = waUrl;
       clearCart();
       setIsOpen(false);
       router.push(`/pedido/${orderId}`);
+    } catch {
+      setSendError('No se pudo enviar el pedido. Revisa tu conexión e intenta de nuevo.');
     } finally {
       setSending(false);
     }
@@ -331,6 +336,7 @@ export default function CartDrawer({ mostrador = false }: { mostrador?: boolean 
 
   const handleMostradorSend = async () => {
     setMostradorSending(true);
+    setSendError(null);
     try {
       const orderId = await generateOrderId();
       const apiItems = items.map(item => ({
@@ -353,15 +359,14 @@ export default function CartDrawer({ mostrador = false }: { mostrador?: boolean 
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        alert(`Error al guardar el pedido: ${err.error ?? res.status}`);
+        setSendError(`Error al guardar el pedido: ${err.error ?? res.status}`);
         return;
       }
       printComanda(orderId, items, finalTotal, paymentMethod);
       clearCart();
       setIsOpen(false);
-    } catch (e) {
-      alert('Error de red al guardar el pedido. Revisa la conexión.');
-      console.error(e);
+    } catch {
+      setSendError('Error de red al guardar el pedido. Revisa la conexión.');
     } finally {
       setMostradorSending(false);
     }
@@ -371,8 +376,8 @@ export default function CartDrawer({ mostrador = false }: { mostrador?: boolean 
 
   /* ── Delivery section (reused in step 2) ─── */
   const deliverySection = (
-    <div style={{ background:'var(--bg2)', borderRadius:'var(--radius-sm)', border:'1px solid var(--border)', padding:'12px 14px' }}>
-      <div style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', letterSpacing:.5, textTransform:'uppercase', marginBottom:10 }}>Tipo de entrega</div>
+    <div style={{ background:'var(--surface-2)', borderRadius:'var(--r-sm)', border:'1px solid var(--line)', padding:'12px 14px' }}>
+      <div style={{ fontSize:11, fontWeight:700, color:'var(--ink-500)', letterSpacing:.5, textTransform:'uppercase', marginBottom:10 }}>Tipo de entrega</div>
 
       {!activeCoords && (
         <>
@@ -380,18 +385,18 @@ export default function CartDrawer({ mostrador = false }: { mostrador?: boolean 
             <>
               {geo.status === 'idle' && (
                 <button onClick={requestGeo}
-                  style={{ width:'100%', padding:'10px', borderRadius:'var(--radius-sm)', border:'2px solid var(--orange)', background:'rgba(242,100,25,0.07)', color:'var(--orange)', fontSize:13, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:6, marginBottom:8 }}>
+                  style={{ width:'100%', padding:'10px', borderRadius:'var(--r-sm)', border:'2px solid var(--brand-500)', background:'rgba(242,100,25,0.07)', color:'var(--brand-500)', fontSize:13, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:6, marginBottom:8 }}>
                   📍 Detectar mi ubicación
                 </button>
               )}
               {geo.status === 'loading' && (
-                <div style={{ textAlign:'center', fontSize:13, color:'var(--text-muted)', padding:'10px 0', marginBottom:8 }}>📍 Detectando…</div>
+                <div style={{ textAlign:'center', fontSize:13, color:'var(--ink-500)', padding:'10px 0', marginBottom:8 }}>📍 Detectando…</div>
               )}
               {geo.status === 'error' && (
                 <div style={{ fontSize:12, color:'#dc2626', fontWeight:600, marginBottom:8, textAlign:'center' }}>No se pudo obtener la ubicación automáticamente</div>
               )}
               <button onClick={() => setMode('manual')}
-                style={{ width:'100%', padding:'8px', borderRadius:'var(--radius-sm)', border:'1px dashed var(--border)', background:'transparent', color:'var(--text-muted)', fontSize:12, fontWeight:600, cursor:'pointer' }}>
+                style={{ width:'100%', padding:'8px', borderRadius:'var(--r-sm)', border:'1px dashed var(--line)', background:'transparent', color:'var(--ink-500)', fontSize:12, fontWeight:600, cursor:'pointer' }}>
                 ✏️ Ingresar dirección manualmente
               </button>
             </>
@@ -399,17 +404,17 @@ export default function CartDrawer({ mostrador = false }: { mostrador?: boolean 
 
           {mode === 'manual' && (
             <>
-              <div style={{ fontSize:12, color:'var(--text-muted)', marginBottom:7 }}>Ingresa tu dirección:</div>
+              <div style={{ fontSize:12, color:'var(--ink-500)', marginBottom:7 }}>Ingresa tu dirección:</div>
               <div style={{ display:'flex', gap:6, marginBottom: addrStatus === 'error' ? 4 : 8 }}>
                 <input
                   value={addrInput}
                   onChange={e => { setAddrInput(e.target.value); setAddrStatus('idle'); }}
                   onKeyDown={e => e.key === 'Enter' && geocodeAddress()}
                   placeholder="Ej: Calle Los Héroes 123"
-                  style={{ flex:1, padding:'9px 11px', borderRadius:8, border:'1.5px solid var(--border)', background:'var(--card)', color:'var(--text)', fontSize:13, fontFamily:"'Barlow',sans-serif", outline:'none' }}
+                  style={{ flex:1, padding:'9px 11px', borderRadius:8, border:'1.5px solid var(--line)', background:'var(--surface-0)', color:'var(--ink-900)', fontSize:13, fontFamily:"'Barlow',sans-serif", outline:'none' }}
                 />
                 <button onClick={geocodeAddress} disabled={!addrInput.trim() || addrStatus === 'loading'}
-                  style={{ padding:'9px 14px', borderRadius:8, border:'none', background: addrStatus === 'loading' ? '#d1bfb8' : 'var(--orange)', color:'#fff', fontSize:13, fontWeight:700, cursor: addrStatus === 'loading' ? 'not-allowed' : 'pointer', whiteSpace:'nowrap' }}>
+                  style={{ padding:'9px 14px', borderRadius:8, border:'none', background: addrStatus === 'loading' ? '#d1bfb8' : 'var(--brand-500)', color:'#fff', fontSize:13, fontWeight:700, cursor: addrStatus === 'loading' ? 'not-allowed' : 'pointer', whiteSpace:'nowrap' }}>
                   {addrStatus === 'loading' ? '…' : 'Buscar'}
                 </button>
               </div>
@@ -417,7 +422,7 @@ export default function CartDrawer({ mostrador = false }: { mostrador?: boolean 
                 <div style={{ fontSize:11, color:'#dc2626', fontWeight:600, marginBottom:8 }}>Dirección no encontrada. Intenta con más detalle.</div>
               )}
               <button onClick={() => setMode('auto')}
-                style={{ background:'transparent', border:'none', color:'var(--text-muted)', fontSize:11, cursor:'pointer', textDecoration:'underline', padding:0 }}>
+                style={{ background:'transparent', border:'none', color:'var(--ink-500)', fontSize:11, cursor:'pointer', textDecoration:'underline', padding:0 }}>
                 ← Volver a detectar automáticamente
               </button>
             </>
@@ -435,23 +440,23 @@ export default function CartDrawer({ mostrador = false }: { mostrador?: boolean 
               {addrCoords && <div style={{ fontSize:11, color:'#1a8a3e', opacity:.8, marginTop:1 }}>{addrInput}</div>}
             </div>
             <button onClick={resetLocation}
-              style={{ fontSize:11, color:'var(--text-muted)', background:'transparent', border:'none', cursor:'pointer', fontWeight:600, flexShrink:0 }}>Cambiar</button>
+              style={{ fontSize:11, color:'var(--ink-500)', background:'transparent', border:'none', cursor:'pointer', fontWeight:600, flexShrink:0 }}>Cambiar</button>
           </div>
 
           <div style={{ display:'flex', gap:8 }}>
             <button onClick={() => setSelectedZone('delivery')}
-              style={{ flex:1, padding:'9px 13px', borderRadius:999, border:`2px solid ${selectedZone === 'delivery' ? 'var(--orange)' : 'var(--border)'}`, background: selectedZone === 'delivery' ? 'rgba(242,100,25,0.08)' : 'var(--card)', cursor:'pointer', transition:'all .15s', textAlign:'left' }}>
+              style={{ flex:1, padding:'9px 13px', borderRadius:999, border:`2px solid ${selectedZone === 'delivery' ? 'var(--brand-500)' : 'var(--line)'}`, background: selectedZone === 'delivery' ? 'rgba(242,100,25,0.08)' : 'var(--surface-0)', cursor:'pointer', transition:'all .15s', textAlign:'left' }}>
               {deliveryFee !== null ? (
-                <span style={{ fontSize:12, fontWeight:700, color:'var(--orange)' }}>🛵 Delivery: {fmt(deliveryFee)}</span>
+                <span style={{ fontSize:12, fontWeight:700, color:'var(--brand-500)' }}>🛵 Delivery: {fmt(deliveryFee)}</span>
               ) : distKm !== null ? (
                 <span style={{ fontSize:12, fontWeight:700, color:'#dc2626' }}>🛵 Fuera de cobertura</span>
               ) : (
-                <span style={{ fontSize:12, fontWeight:700, color:'var(--text)' }}>🛵 Delivery</span>
+                <span style={{ fontSize:12, fontWeight:700, color:'var(--ink-900)' }}>🛵 Delivery</span>
               )}
             </button>
             <button onClick={() => setSelectedZone('retiro')}
-              style={{ flex:1, padding:'9px 13px', borderRadius:999, border:`2px solid ${selectedZone === 'retiro' ? '#16a34a' : 'var(--border)'}`, background: selectedZone === 'retiro' ? 'rgba(22,163,74,0.08)' : 'var(--card)', cursor:'pointer', transition:'all .15s', textAlign:'left' }}>
-              <span style={{ fontSize:12, fontWeight:700, color: selectedZone === 'retiro' ? '#16a34a' : 'var(--text)' }}>🏠 Retiro · Gratis</span>
+              style={{ flex:1, padding:'9px 13px', borderRadius:999, border:`2px solid ${selectedZone === 'retiro' ? '#16a34a' : 'var(--line)'}`, background: selectedZone === 'retiro' ? 'rgba(22,163,74,0.08)' : 'var(--surface-0)', cursor:'pointer', transition:'all .15s', textAlign:'left' }}>
+              <span style={{ fontSize:12, fontWeight:700, color: selectedZone === 'retiro' ? '#16a34a' : 'var(--ink-900)' }}>🏠 Retiro · Gratis</span>
             </button>
           </div>
 
@@ -464,10 +469,10 @@ export default function CartDrawer({ mostrador = false }: { mostrador?: boolean 
       )}
 
       {!activeCoords && (
-        <div style={{ marginTop:8, paddingTop:8, borderTop:'1px solid var(--border)' }}>
+        <div style={{ marginTop:8, paddingTop:8, borderTop:'1px solid var(--line)' }}>
           <button onClick={() => setSelectedZone('retiro')}
-            style={{ padding:'7px 13px', borderRadius:999, border:`2px solid ${selectedZone === 'retiro' ? '#16a34a' : 'var(--border)'}`, background: selectedZone === 'retiro' ? 'rgba(22,163,74,0.08)' : 'var(--card)', cursor:'pointer', transition:'all .15s' }}>
-            <span style={{ fontSize:12, fontWeight:700, color: selectedZone === 'retiro' ? '#16a34a' : 'var(--text)' }}>🏠 Retiro en local · Gratis</span>
+            style={{ padding:'7px 13px', borderRadius:999, border:`2px solid ${selectedZone === 'retiro' ? '#16a34a' : 'var(--line)'}`, background: selectedZone === 'retiro' ? 'rgba(22,163,74,0.08)' : 'var(--surface-0)', cursor:'pointer', transition:'all .15s' }}>
+            <span style={{ fontSize:12, fontWeight:700, color: selectedZone === 'retiro' ? '#16a34a' : 'var(--ink-900)' }}>🏠 Retiro en local · Gratis</span>
           </button>
         </div>
       )}
@@ -476,12 +481,12 @@ export default function CartDrawer({ mostrador = false }: { mostrador?: boolean 
 
   /* ── Step label helper ── */
   const stepNum   = step === 'review' ? 1 : step === 'delivery' ? 2 : 3;
-  const stepTitle = step === 'review' ? 'Revisá tu pedido' : step === 'delivery' ? '¿Cómo lo recibís?' : 'Pago y confirmar';
+  const stepTitle = step === 'review' ? 'Revisa tu pedido' : step === 'delivery' ? '¿Cómo lo recibes?' : 'Pago y confirmar';
 
   return (
     <div style={{ position:'fixed', inset:0, zIndex:600, display:'flex', flexDirection:'column', justifyContent:'flex-end', alignItems:'center' }}>
       <div onClick={() => setIsOpen(false)} style={{ position:'absolute', inset:0, background:'rgba(0,0,0,0.5)', backdropFilter:'blur(4px)' }}/>
-      <div style={{ position:'relative', zIndex:1, width:'100%', maxWidth:'var(--max)', background:'var(--card)', borderRadius:'var(--radius) var(--radius) 0 0', maxHeight:'85dvh', display:'flex', flexDirection:'column', animation:'slideUp .3s ease', boxShadow:'0 -8px 40px rgba(0,0,0,0.3)' }}>
+      <div style={{ position:'relative', zIndex:1, width:'100%', maxWidth:'var(--max)', background:'var(--surface-0)', borderRadius:'var(--r-md) var(--r-md) 0 0', maxHeight:'85dvh', display:'flex', flexDirection:'column', animation:'slideUp .3s ease', boxShadow:'0 -8px 40px rgba(0,0,0,0.3)' }}>
 
         {/* Mostrador banner */}
         {isMostrador && (
@@ -492,32 +497,32 @@ export default function CartDrawer({ mostrador = false }: { mostrador?: boolean 
 
         {/* Header: stepper for non-mostrador with items, plain otherwise */}
         {!isMostrador && items.length > 0 ? (
-          <div style={{ padding:'14px 20px 12px', borderBottom:'1px solid var(--border)', display:'flex', alignItems:'center', gap:12, flexShrink:0 }}>
+          <div style={{ padding:'14px 20px 12px', borderBottom:'1px solid var(--line)', display:'flex', alignItems:'center', gap:12, flexShrink:0 }}>
             {step !== 'review' && (
               <button
                 onClick={() => setStep(step === 'payment' ? 'delivery' : 'review')}
-                style={{ width:32, height:32, borderRadius:'50%', border:'1px solid var(--border)', background:'var(--bg2)', cursor:'pointer', fontSize:16, color:'var(--text)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}
+                style={{ width:32, height:32, borderRadius:'50%', border:'1px solid var(--line)', background:'var(--surface-2)', cursor:'pointer', fontSize:16, color:'var(--ink-900)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}
               >←</button>
             )}
             <div style={{ flex:1, minWidth:0 }}>
-              <div style={{ fontSize:10, fontWeight:700, color:'var(--text-muted)', letterSpacing:1, textTransform:'uppercase', marginBottom:1 }}>
+              <div style={{ fontSize:10, fontWeight:700, color:'var(--ink-500)', letterSpacing:1, textTransform:'uppercase', marginBottom:1 }}>
                 PASO {stepNum} DE 3
               </div>
-              <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:20, color:'var(--text)', lineHeight:1.1 }}>
+              <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:20, color:'var(--ink-900)', lineHeight:1.1 }}>
                 {stepTitle}
               </div>
             </div>
-            <button onClick={() => setIsOpen(false)} style={{ width:32, height:32, borderRadius:'50%', border:'none', background:'var(--bg2)', cursor:'pointer', fontSize:18, color:'var(--text-muted)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>×</button>
+            <button onClick={() => setIsOpen(false)} style={{ width:32, height:32, borderRadius:'50%', border:'none', background:'var(--surface-2)', cursor:'pointer', fontSize:18, color:'var(--ink-500)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>×</button>
           </div>
         ) : (
-          <div style={{ padding:'16px 20px 12px', borderBottom:'1px solid var(--border)', display:'flex', justifyContent:'space-between', alignItems:'center', flexShrink:0 }}>
+          <div style={{ padding:'16px 20px 12px', borderBottom:'1px solid var(--line)', display:'flex', justifyContent:'space-between', alignItems:'center', flexShrink:0 }}>
             <div>
-              <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:22, color:'var(--text)' }}>Tu pedido</div>
-              <div style={{ fontSize:13, color:'var(--text-muted)' }}>{count} {count === 1 ? 'producto' : 'productos'}</div>
+              <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:22, color:'var(--ink-900)' }}>Tu pedido</div>
+              <div style={{ fontSize:13, color:'var(--ink-500)' }}>{count} {count === 1 ? 'producto' : 'productos'}</div>
             </div>
             <div style={{ display:'flex', gap:8, alignItems:'center' }}>
-              {items.length > 0 && <button onClick={clearCart} style={{ fontSize:12, color:'var(--text-muted)', background:'transparent', border:'1px solid var(--border)', borderRadius:999, padding:'4px 10px', cursor:'pointer', fontWeight:600 }}>Vaciar</button>}
-              <button onClick={() => setIsOpen(false)} style={{ width:32, height:32, borderRadius:'50%', border:'none', background:'var(--bg2)', cursor:'pointer', fontSize:18, color:'var(--text-muted)', display:'flex', alignItems:'center', justifyContent:'center' }}>×</button>
+              {items.length > 0 && <button onClick={clearCart} style={{ fontSize:12, color:'var(--ink-500)', background:'transparent', border:'1px solid var(--line)', borderRadius:999, padding:'4px 10px', cursor:'pointer', fontWeight:600 }}>Vaciar</button>}
+              <button onClick={() => setIsOpen(false)} style={{ width:32, height:32, borderRadius:'50%', border:'none', background:'var(--surface-2)', cursor:'pointer', fontSize:18, color:'var(--ink-500)', display:'flex', alignItems:'center', justifyContent:'center' }}>×</button>
             </div>
           </div>
         )}
@@ -525,7 +530,7 @@ export default function CartDrawer({ mostrador = false }: { mostrador?: boolean 
         {/* ── EMPTY CART ── */}
         {items.length === 0 && (
           <div style={{ overflowY:'auto', flex:1, padding:'12px 20px' }}>
-            <div style={{ textAlign:'center', padding:'40px 0', color:'var(--text-muted)' }}>
+            <div style={{ textAlign:'center', padding:'40px 0', color:'var(--ink-500)' }}>
               <div style={{ fontSize:40, marginBottom:12 }}>🛒</div>
               <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:18 }}>Tu carrito está vacío</div>
               <div style={{ fontSize:13, marginTop:6 }}>Agrega productos desde el menú</div>
@@ -541,23 +546,28 @@ export default function CartDrawer({ mostrador = false }: { mostrador?: boolean 
                 {items.map(item => <CartItem key={item.id} item={item} updateQty={updateQty} removeItem={removeItem} />)}
               </div>
             </div>
-            <div style={{ padding:'16px 20px 32px', borderTop:'1px solid var(--border)', flexShrink:0 }}>
+            <div style={{ padding:'16px 20px 32px', borderTop:'1px solid var(--line)', flexShrink:0 }}>
               <TotalBreakdown total={total} appliedDiscount={appliedDiscount} discountAmount={discountAmount} deliveryFee={deliveryFee} finalTotal={finalTotal} selectedZone={selectedZone} />
               <div style={{ marginBottom:12 }}>
-                <div style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', letterSpacing:.5, textTransform:'uppercase', marginBottom:7 }}>Método de pago</div>
+                <div style={{ fontSize:11, fontWeight:700, color:'var(--ink-500)', letterSpacing:.5, textTransform:'uppercase', marginBottom:7 }}>Método de pago</div>
                 <div style={{ display:'flex', gap:6 }}>
                   {PAYMENT_OPTIONS.map(opt => {
                     const sel = paymentMethod === opt.id;
                     return (
                       <button key={opt.id} onClick={() => setPaymentMethod(sel ? null : opt.id)}
-                        style={{ flex:1, padding:'9px 4px', borderRadius:10, border:`2px solid ${sel ? 'var(--orange)' : 'var(--border)'}`, background: sel ? 'rgba(242,100,25,0.08)' : 'var(--bg2)', cursor:'pointer', transition:'all .15s', display:'flex', flexDirection:'column', alignItems:'center', gap:3 }}>
+                        style={{ flex:1, padding:'9px 4px', borderRadius:10, border:`2px solid ${sel ? 'var(--brand-500)' : 'var(--line)'}`, background: sel ? 'rgba(242,100,25,0.08)' : 'var(--surface-2)', cursor:'pointer', transition:'all .15s', display:'flex', flexDirection:'column', alignItems:'center', gap:3 }}>
                         <span style={{ fontSize:18 }}>{opt.emoji}</span>
-                        <span style={{ fontSize:11, fontWeight:700, color: sel ? 'var(--orange)' : 'var(--text-muted)', lineHeight:1.2, textAlign:'center' }}>{opt.label}</span>
+                        <span style={{ fontSize:11, fontWeight:700, color: sel ? 'var(--brand-500)' : 'var(--ink-500)', lineHeight:1.2, textAlign:'center' }}>{opt.label}</span>
                       </button>
                     );
                   })}
                 </div>
               </div>
+              {sendError && (
+                <div style={{ background:'rgba(220,38,38,0.08)', border:'1px solid rgba(220,38,38,0.25)', borderRadius:'var(--r-sm)', padding:'10px 14px', marginBottom:10, fontSize:13, color:'#dc2626', fontWeight:600 }}>
+                  {sendError}
+                </div>
+              )}
               <button onClick={handleMostradorSend} disabled={mostradorSending}
                 style={{ width:'100%', display:'flex', alignItems:'center', justifyContent:'center', gap:10, background: mostradorSending ? '#555' : '#1e293b', color:'#fff', padding:'15px 24px', borderRadius:999, border:'none', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:20, letterSpacing:.5, cursor: mostradorSending ? 'not-allowed' : 'pointer', boxShadow:'0 4px 16px rgba(0,0,0,0.25)' }}>
                 🖨️ {mostradorSending ? 'Creando pedido…' : 'Crear pedido + imprimir comanda'}
@@ -586,8 +596,8 @@ export default function CartDrawer({ mostrador = false }: { mostrador?: boolean 
                   : (
                     <div style={{ padding:'16px 0' }}>
                       <button onClick={() => setSelectedZone('retiro')}
-                        style={{ padding:'10px 20px', borderRadius:999, border:`2px solid ${selectedZone === 'retiro' ? '#16a34a' : 'var(--border)'}`, background: selectedZone === 'retiro' ? 'rgba(22,163,74,0.08)' : 'var(--card)', cursor:'pointer' }}>
-                        <span style={{ fontSize:13, fontWeight:700, color: selectedZone === 'retiro' ? '#16a34a' : 'var(--text)' }}>🏠 Retiro en local · Gratis</span>
+                        style={{ padding:'10px 20px', borderRadius:999, border:`2px solid ${selectedZone === 'retiro' ? '#16a34a' : 'var(--line)'}`, background: selectedZone === 'retiro' ? 'rgba(22,163,74,0.08)' : 'var(--surface-0)', cursor:'pointer' }}>
+                        <span style={{ fontSize:13, fontWeight:700, color: selectedZone === 'retiro' ? '#16a34a' : 'var(--ink-900)' }}>🏠 Retiro en local · Gratis</span>
                       </button>
                     </div>
                   )}
@@ -607,10 +617,10 @@ export default function CartDrawer({ mostrador = false }: { mostrador?: boolean 
                           onChange={e => { setDiscountInput(e.target.value.toUpperCase()); setDiscountStatus('idle'); setDiscountError(''); }}
                           onKeyDown={e => e.key === 'Enter' && applyDiscount()}
                           placeholder="Código de descuento"
-                          style={{ flex:1, padding:'8px 12px', borderRadius:8, border:`1.5px solid ${discountStatus === 'error' ? '#dc2626' : 'var(--border)'}`, background:'var(--bg2)', color:'var(--text)', fontSize:13, fontFamily:"'Barlow',sans-serif", outline:'none' }}
+                          style={{ flex:1, padding:'8px 12px', borderRadius:8, border:`1.5px solid ${discountStatus === 'error' ? '#dc2626' : 'var(--line)'}`, background:'var(--surface-2)', color:'var(--ink-900)', fontSize:13, fontFamily:"'Barlow',sans-serif", outline:'none' }}
                         />
                         <button onClick={applyDiscount} disabled={discountStatus === 'loading' || !discountInput.trim()}
-                          style={{ padding:'8px 14px', borderRadius:8, border:'none', background:'var(--orange)', color:'#fff', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:14, cursor: (discountStatus === 'loading' || !discountInput.trim()) ? 'not-allowed' : 'pointer', opacity: (discountStatus === 'loading' || !discountInput.trim()) ? 0.6 : 1, whiteSpace:'nowrap' }}>
+                          style={{ padding:'8px 14px', borderRadius:8, border:'none', background:'var(--brand-500)', color:'#fff', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:14, cursor: (discountStatus === 'loading' || !discountInput.trim()) ? 'not-allowed' : 'pointer', opacity: (discountStatus === 'loading' || !discountInput.trim()) ? 0.6 : 1, whiteSpace:'nowrap' }}>
                           {discountStatus === 'loading' ? '…' : 'Aplicar'}
                         </button>
                       </div>
@@ -624,22 +634,22 @@ export default function CartDrawer({ mostrador = false }: { mostrador?: boolean 
                         <span style={{ fontSize:13, color:'#16a34a', fontWeight:700 }}>🏷 {appliedDiscount?.code}</span>
                         <span style={{ fontSize:12, color:'#16a34a', marginLeft:6 }}>{appliedDiscount?.display}</span>
                       </div>
-                      <button onClick={removeDiscount} style={{ fontSize:12, color:'var(--text-muted)', background:'transparent', border:'none', cursor:'pointer', fontWeight:600 }}>Quitar</button>
+                      <button onClick={removeDiscount} style={{ fontSize:12, color:'var(--ink-500)', background:'transparent', border:'none', cursor:'pointer', fontWeight:600 }}>Quitar</button>
                     </div>
                   )}
                 </div>
 
                 {/* Payment */}
                 <div>
-                  <div style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', letterSpacing:.5, textTransform:'uppercase', marginBottom:7 }}>Método de pago</div>
+                  <div style={{ fontSize:11, fontWeight:700, color:'var(--ink-500)', letterSpacing:.5, textTransform:'uppercase', marginBottom:7 }}>Método de pago</div>
                   <div style={{ display:'flex', gap:6 }}>
                     {PAYMENT_OPTIONS.map(opt => {
                       const sel = paymentMethod === opt.id;
                       return (
                         <button key={opt.id} onClick={() => setPaymentMethod(sel ? null : opt.id)}
-                          style={{ flex:1, padding:'9px 4px', borderRadius:10, border:`2px solid ${sel ? 'var(--orange)' : 'var(--border)'}`, background: sel ? 'rgba(242,100,25,0.08)' : 'var(--bg2)', cursor:'pointer', transition:'all .15s', display:'flex', flexDirection:'column', alignItems:'center', gap:3 }}>
+                          style={{ flex:1, padding:'9px 4px', borderRadius:10, border:`2px solid ${sel ? 'var(--brand-500)' : 'var(--line)'}`, background: sel ? 'rgba(242,100,25,0.08)' : 'var(--surface-2)', cursor:'pointer', transition:'all .15s', display:'flex', flexDirection:'column', alignItems:'center', gap:3 }}>
                           <span style={{ fontSize:18 }}>{opt.emoji}</span>
-                          <span style={{ fontSize:11, fontWeight:700, color: sel ? 'var(--orange)' : 'var(--text-muted)', lineHeight:1.2, textAlign:'center' }}>{opt.label}</span>
+                          <span style={{ fontSize:11, fontWeight:700, color: sel ? 'var(--brand-500)' : 'var(--ink-500)', lineHeight:1.2, textAlign:'center' }}>{opt.label}</span>
                         </button>
                       );
                     })}
@@ -649,18 +659,18 @@ export default function CartDrawer({ mostrador = false }: { mostrador?: boolean 
             )}
 
             {/* Step footers */}
-            <div style={{ padding:'14px 20px 32px', borderTop:'1px solid var(--border)', flexShrink:0 }}>
+            <div style={{ padding:'14px 20px 32px', borderTop:'1px solid var(--line)', flexShrink:0 }}>
 
               {/* Step 1 footer: subtotal + continue */}
               {step === 'review' && (
                 <>
                   <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14 }}>
-                    <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:15, color:'var(--text-muted)' }}>SUBTOTAL</span>
-                    <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:26, color:'var(--text)' }}>{fmt(total)}</span>
+                    <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:15, color:'var(--ink-500)' }}>SUBTOTAL</span>
+                    <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:26, color:'var(--ink-900)' }}>{fmt(total)}</span>
                   </div>
                   <button
                     onClick={() => setStep('delivery')}
-                    style={{ width:'100%', background:'var(--orange)', color:'#fff', padding:'15px 24px', borderRadius:999, border:'none', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:20, letterSpacing:.5, cursor:'pointer', boxShadow:'0 4px 16px rgba(242,100,25,0.3)' }}
+                    style={{ width:'100%', background:'var(--brand-500)', color:'#fff', padding:'15px 24px', borderRadius:999, border:'none', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:20, letterSpacing:.5, cursor:'pointer', boxShadow:'0 4px 16px rgba(242,100,25,0.3)' }}
                   >
                     Continuar a entrega →
                   </button>
@@ -672,9 +682,9 @@ export default function CartDrawer({ mostrador = false }: { mostrador?: boolean 
                 <button
                   onClick={goToPayment}
                   disabled={!selectedZone}
-                  style={{ width:'100%', background: selectedZone ? 'var(--orange)' : 'var(--border)', color: selectedZone ? '#fff' : 'var(--text-muted)', padding:'15px 24px', borderRadius:999, border:'none', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:20, letterSpacing:.5, cursor: selectedZone ? 'pointer' : 'not-allowed', boxShadow: selectedZone ? '0 4px 16px rgba(242,100,25,0.3)' : 'none' }}
+                  style={{ width:'100%', background: selectedZone ? 'var(--brand-500)' : 'var(--line)', color: selectedZone ? '#fff' : 'var(--ink-500)', padding:'15px 24px', borderRadius:999, border:'none', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:20, letterSpacing:.5, cursor: selectedZone ? 'pointer' : 'not-allowed', boxShadow: selectedZone ? '0 4px 16px rgba(242,100,25,0.3)' : 'none' }}
                 >
-                  {selectedZone ? 'Continuar a pago →' : 'Elegí cómo recibir tu pedido'}
+                  {selectedZone ? 'Continuar a pago →' : 'Elige cómo recibes tu pedido'}
                 </button>
               )}
 
@@ -682,6 +692,11 @@ export default function CartDrawer({ mostrador = false }: { mostrador?: boolean 
               {step === 'payment' && (
                 <>
                   <TotalBreakdown total={total} appliedDiscount={appliedDiscount} discountAmount={discountAmount} deliveryFee={deliveryFee} finalTotal={finalTotal} selectedZone={selectedZone} />
+                  {sendError && (
+                    <div style={{ background:'rgba(220,38,38,0.08)', border:'1px solid rgba(220,38,38,0.25)', borderRadius:'var(--r-sm)', padding:'10px 14px', marginBottom:10, fontSize:13, color:'#dc2626', fontWeight:600 }}>
+                      {sendError}
+                    </div>
+                  )}
                   <button onClick={handleSend} disabled={sending}
                     style={{ width:'100%', display:'flex', alignItems:'center', justifyContent:'center', gap:10, background: sending ? '#1aaa52' : '#25D366', color:'#fff', padding:'15px 24px', borderRadius:999, border:'none', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:20, letterSpacing:.5, cursor: sending ? 'not-allowed' : 'pointer', boxShadow:'0 4px 16px rgba(37,211,102,0.3)' }}>
                     <WAIcon size={20} color="#fff"/>
@@ -710,29 +725,29 @@ function CartItem({
   removeItem: (id: number) => void;
 }) {
   return (
-    <div style={{ background:'var(--bg2)', borderRadius:'var(--radius-sm)', padding:'12px 14px', border:'1px solid var(--border)' }}>
+    <div style={{ background:'var(--surface-2)', borderRadius:'var(--r-sm)', padding:'12px 14px', border:'1px solid var(--line)' }}>
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:8, marginBottom:6 }}>
         <div style={{ flex:1, minWidth:0 }}>
-          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:16, color:'var(--text)', lineHeight:1.2 }}>
+          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:16, color:'var(--ink-900)', lineHeight:1.2 }}>
             {item.name}
-            {item.size && <span style={{ fontSize:12, color:'var(--orange)', fontWeight:900, marginLeft:6, background:'rgba(242,100,25,0.1)', padding:'1px 5px', borderRadius:4 }}>{item.size.toUpperCase()}</span>}
+            {item.size && <span style={{ fontSize:12, color:'var(--brand-500)', fontWeight:900, marginLeft:6, background:'rgba(242,100,25,0.1)', padding:'1px 5px', borderRadius:4 }}>{item.size.toUpperCase()}</span>}
           </div>
-          {item.desc && <div style={{ fontSize:12, color:'var(--text-muted)', marginTop:2, lineHeight:1.4 }}>{item.desc}</div>}
-          {item.choices?.map(c => <div key={c.label} style={{ fontSize:12, color:'var(--text)', marginTop:2, lineHeight:1.5, fontWeight:600 }}>🔀 {c.label}: <span style={{ color:'var(--orange)' }}>{c.selected}</span></div>)}
+          {item.desc && <div style={{ fontSize:12, color:'var(--ink-500)', marginTop:2, lineHeight:1.4 }}>{item.desc}</div>}
+          {item.choices?.map(c => <div key={c.label} style={{ fontSize:12, color:'var(--ink-900)', marginTop:2, lineHeight:1.5, fontWeight:600 }}>🔀 {c.label}: <span style={{ color:'var(--brand-500)' }}>{c.selected}</span></div>)}
           {item.removedIngredients?.length ? <div style={{ fontSize:12, color:'#ef4444', marginTop:2, lineHeight:1.5 }}>❌ Sin: {item.removedIngredients.join(', ')}</div> : null}
-          {item.extras?.length ? <div style={{ fontSize:12, color:'var(--orange)', marginTop:2, lineHeight:1.5 }}>➕ {item.extras.map(e => e.name).join(', ')}</div> : null}
-          {item.aderezos?.length ? <div style={{ fontSize:12, color:'var(--text-muted)', marginTop:2, lineHeight:1.5 }}>🥫 {item.aderezos.map(a => a.price > 0 ? `${a.name} (+${fmt(a.price)})` : a.name).join(', ')}</div> : null}
-          {item.note && <div style={{ fontSize:12, color:'var(--orange)', marginTop:3, fontStyle:'italic' }}>📝 {item.note}</div>}
+          {item.extras?.length ? <div style={{ fontSize:12, color:'var(--brand-500)', marginTop:2, lineHeight:1.5 }}>➕ {item.extras.map(e => e.name).join(', ')}</div> : null}
+          {item.aderezos?.length ? <div style={{ fontSize:12, color:'var(--ink-500)', marginTop:2, lineHeight:1.5 }}>🥫 {item.aderezos.map(a => a.price > 0 ? `${a.name} (+${fmt(a.price)})` : a.name).join(', ')}</div> : null}
+          {item.note && <div style={{ fontSize:12, color:'var(--brand-500)', marginTop:3, fontStyle:'italic' }}>📝 {item.note}</div>}
         </div>
-        <button onClick={() => removeItem(item.id)} style={{ color:'var(--text-muted)', background:'transparent', border:'none', cursor:'pointer', padding:4, flexShrink:0, opacity:.6 }}><TrashIcon size={14}/></button>
+        <button onClick={() => removeItem(item.id)} style={{ color:'var(--ink-500)', background:'transparent', border:'none', cursor:'pointer', padding:4, flexShrink:0, opacity:.6 }}><TrashIcon size={14}/></button>
       </div>
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-        <div style={{ display:'flex', alignItems:'center', border:'1px solid var(--border)', borderRadius:999, overflow:'hidden', background:'var(--card)' }}>
-          <button onClick={() => updateQty(item.id, -1)} style={{ width:32, height:32, border:'none', background:'transparent', cursor:'pointer', fontSize:16, color:'var(--text)', display:'flex', alignItems:'center', justifyContent:'center' }}>−</button>
-          <span style={{ padding:'0 10px', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:16, color:'var(--text)' }}>{item.qty}</span>
-          <button onClick={() => updateQty(item.id, 1)} style={{ width:32, height:32, border:'none', background:'transparent', cursor:'pointer', fontSize:16, color:'var(--orange)', display:'flex', alignItems:'center', justifyContent:'center' }}>+</button>
+        <div style={{ display:'flex', alignItems:'center', border:'1px solid var(--line)', borderRadius:999, overflow:'hidden', background:'var(--surface-0)' }}>
+          <button onClick={() => updateQty(item.id, -1)} style={{ width:32, height:32, border:'none', background:'transparent', cursor:'pointer', fontSize:16, color:'var(--ink-900)', display:'flex', alignItems:'center', justifyContent:'center' }}>−</button>
+          <span style={{ padding:'0 10px', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:16, color:'var(--ink-900)' }}>{item.qty}</span>
+          <button onClick={() => updateQty(item.id, 1)} style={{ width:32, height:32, border:'none', background:'transparent', cursor:'pointer', fontSize:16, color:'var(--brand-500)', display:'flex', alignItems:'center', justifyContent:'center' }}>+</button>
         </div>
-        <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:18, color:'var(--yellow)' }}>{fmt((item.price + (item.extras ?? []).reduce((s, e) => s + e.price, 0)) * item.qty)}</div>
+        <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:18, color:'var(--warning)' }}>{fmt((item.price + (item.extras ?? []).reduce((s, e) => s + e.price, 0)) * item.qty)}</div>
       </div>
     </div>
   );
@@ -752,8 +767,8 @@ function TotalBreakdown({
     <div style={{ marginBottom:14 }}>
       {appliedDiscount && (
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:4 }}>
-          <span style={{ fontSize:13, color:'var(--text-muted)' }}>Subtotal</span>
-          <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:16, color:'var(--text-muted)' }}>{fmt(total)}</span>
+          <span style={{ fontSize:13, color:'var(--ink-500)' }}>Subtotal</span>
+          <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:16, color:'var(--ink-500)' }}>{fmt(total)}</span>
         </div>
       )}
       {appliedDiscount && (
@@ -764,16 +779,16 @@ function TotalBreakdown({
       )}
       {deliveryFee !== null && deliveryFee > 0 && (
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:4 }}>
-          <span style={{ fontSize:13, color:'var(--text-muted)', fontWeight:600 }}>🛵 Delivery</span>
-          <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:16, color:'var(--text)' }}>{fmt(deliveryFee)}</span>
+          <span style={{ fontSize:13, color:'var(--ink-500)', fontWeight:600 }}>🛵 Delivery</span>
+          <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:16, color:'var(--ink-900)' }}>{fmt(deliveryFee)}</span>
         </div>
       )}
       {selectedZone === 'retiro' && (
         <div style={{ fontSize:12, color:'#16a34a', fontWeight:600, marginBottom:4 }}>🏠 Retiro en local · Gratis</div>
       )}
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-        <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:16, color:'var(--text-muted)' }}>TOTAL</span>
-        <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:28, color:'var(--text)' }}>{fmt(finalTotal)}</span>
+        <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:16, color:'var(--ink-500)' }}>TOTAL</span>
+        <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:28, color:'var(--ink-900)' }}>{fmt(finalTotal)}</span>
       </div>
     </div>
   );

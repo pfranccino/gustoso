@@ -97,13 +97,13 @@ function CartSidebar() {
   );
 }
 
-/* ── Section number divider (desktop) ─────────────────────────── */
-function NumDivider({ num, label }: { num: number; label: string }) {
+/* ── Section divider (desktop) ─────────────────────────── */
+function NumDivider({ label }: { label: string }) {
   return (
     <div style={{ display:'flex', alignItems:'center', gap:14, padding:'32px 0 16px' }}>
-      <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:72, color:'var(--brand-500)', lineHeight:.8, letterSpacing:-2 }}>{String(num).padStart(2,'0')}</span>
       <div style={{ flex:1, height:1, background:'var(--line)' }}></div>
       <span style={{ fontSize:10, fontWeight:800, color:'var(--ink-500)', letterSpacing:2, textTransform:'uppercase' }}>{label}</span>
+      <div style={{ flex:1, height:1, background:'var(--line)' }}></div>
     </div>
   );
 }
@@ -243,7 +243,7 @@ export default function MenuSection({ items, burritoConfig, promotions, aderezos
       <div className="menu-content-wrap" style={{ maxWidth:'var(--max)', margin:'0 auto', padding:'20px 16px 0' }}>
         {/* Desktop section header */}
         <div style={{ display:'none' }} className="menu-num-divider">
-          <NumDivider num={1} label="NUESTRA CARTA"/>
+          <NumDivider label="NUESTRA CARTA"/>
         </div>
 
         {q ? (

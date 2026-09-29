@@ -1,7 +1,9 @@
 'use client';
 
-import { createContext, useCallback, useContext, useRef, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { Extra } from '@/lib/firestore/menuItems';
+
+const STORAGE_KEY = 'gustoso_cart';
 
 export type CartItem = {
   id: number;
@@ -28,14 +30,52 @@ type CartContextValue = {
   count: number;
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
+  lastAdded: string | null;
 };
 
 const CartCtx = createContext<CartContextValue | null>(null);
 
+function loadCart(): CartItem[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return [];
+}
+
+function saveCart(items: CartItem[]) {
+  try {
+    if (items.length === 0) localStorage.removeItem(STORAGE_KEY);
+    else localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+  } catch {}
+}
+
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems]   = useState<CartItem[]>([]);
   const [isOpen, setIsOpen] = useState(false);
+  const [lastAdded, setLastAdded] = useState<string | null>(null);
   const idRef = useRef(0);
+  const hydrated = useRef(false);
+
+  useEffect(() => {
+    const saved = loadCart();
+    if (saved.length > 0) {
+      const maxId = saved.reduce((m, i) => Math.max(m, i.id), 0);
+      idRef.current = maxId;
+      setItems(saved);
+    }
+    hydrated.current = true;
+  }, []);
+
+  useEffect(() => {
+    if (hydrated.current) saveCart(items);
+  }, [items]);
+
+  useEffect(() => {
+    if (!lastAdded) return;
+    const t = setTimeout(() => setLastAdded(null), 2500);
+    return () => clearTimeout(t);
+  }, [lastAdded]);
 
   const addItem = useCallback((item: Omit<CartItem, 'id' | 'qty'>) => {
     setItems(prev => {
@@ -58,6 +98,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       }
       return [...prev, { ...item, id: ++idRef.current, qty: 1 }];
     });
+    setLastAdded(item.name);
   }, []);
 
   const removeItem = useCallback((id: number) => setItems(prev => prev.filter(p => p.id !== id)), []);
@@ -67,13 +108,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const total = items.reduce((s, i) => {
     const extrasTotal = (i.extras ?? []).reduce((e, x) => e + x.price, 0);
-    // item.price ya incluye el precio de aderezos (se suma al agregar al carrito)
     return s + (i.price + extrasTotal) * i.qty;
   }, 0);
   const count = items.reduce((s, i) => s + i.qty, 0);
 
   return (
-    <CartCtx.Provider value={{ items, addItem, removeItem, updateQty, clearCart, total, count, isOpen, setIsOpen }}>
+    <CartCtx.Provider value={{ items, addItem, removeItem, updateQty, clearCart, total, count, isOpen, setIsOpen, lastAdded }}>
       {children}
     </CartCtx.Provider>
   );

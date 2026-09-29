@@ -32,8 +32,8 @@ export default function Nav({ scrolled }: { scrolled: boolean }) {
       <div className="nav-zone-left" style={{ display:'flex', alignItems:'center', gap:12 }}>
         <Logo size={24}/>
         <div className="nav-status-pill" style={{ display:'none', alignItems:'center', gap:6, padding:'4px 10px', borderRadius:999, background: isOpen ? 'rgba(21,128,61,0.12)' : 'rgba(160,84,26,0.12)', border: `1px solid ${isOpen ? 'rgba(21,128,61,0.3)' : 'rgba(160,84,26,0.3)'}` }}>
-          <span style={{ width:6, height:6, borderRadius:'50%', background: isOpen ? 'var(--green)' : 'var(--text-muted)', flexShrink:0, display:'block' }}/>
-          <span style={{ fontSize:11, fontWeight:700, color: isOpen ? 'var(--green)' : 'var(--text-muted)', letterSpacing:.5, textTransform:'uppercase' }}>{isOpen ? 'Abierto' : 'Cerrado'}</span>
+          <span style={{ width:6, height:6, borderRadius:'50%', background: isOpen ? 'var(--green)' : 'var(--ink-500)', flexShrink:0, display:'block' }}/>
+          <span style={{ fontSize:11, fontWeight:700, color: isOpen ? 'var(--green)' : 'var(--ink-500)', letterSpacing:.5, textTransform:'uppercase' }}>{isOpen ? 'Abierto' : 'Cerrado'}</span>
         </div>
       </div>
 
@@ -41,16 +41,17 @@ export default function Nav({ scrolled }: { scrolled: boolean }) {
       <div className="nav-zone-center" style={{ display:'none', alignItems:'center', gap:4 }}>
         <div className="nav-desktop-links" style={{ display:'flex', gap:2, alignItems:'center' }}>
           {([['menu','Menú'],['nosotros','Nosotros'],['contacto','Contacto']] as const).map(([id,label]) => (
-            <button key={id} onClick={() => scrollTo(id)}
-              style={{ background:'transparent', border:'none', color:'var(--ink-500)', fontSize:14, fontWeight:600, cursor:'pointer', padding:'7px 12px', borderRadius:'var(--r-sm)', transition:'color .2s' }}
-              onMouseEnter={e => (e.target as HTMLButtonElement).style.color='var(--ink-900)'}
-              onMouseLeave={e => (e.target as HTMLButtonElement).style.color='var(--ink-500)'}
-            >{label}</button>
+            <a key={id} href={`#${id}`}
+              onClick={e => { e.preventDefault(); scrollTo(id); }}
+              style={{ background:'transparent', border:'none', color:'var(--ink-500)', fontSize:14, fontWeight:600, cursor:'pointer', padding:'7px 12px', borderRadius:'var(--r-sm)', transition:'color .2s', textDecoration:'none' }}
+              onMouseEnter={e => (e.target as HTMLAnchorElement).style.color='var(--ink-900)'}
+              onMouseLeave={e => (e.target as HTMLAnchorElement).style.color='var(--ink-500)'}
+            >{label}</a>
           ))}
         </div>
         <button
           onClick={() => scrollTo('menu')}
-          style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 14px', borderRadius:999, border:'1px solid var(--border)', background:'var(--bg2)', color:'var(--text-muted)', fontSize:13, fontFamily:"'Barlow',sans-serif", cursor:'pointer' }}
+          style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 14px', borderRadius:999, border:'1px solid var(--line)', background:'var(--surface-2)', color:'var(--ink-500)', fontSize:13, fontFamily:"'Barlow',sans-serif", cursor:'pointer' }}
         >
           🔍 <span style={{ fontSize:13 }}>Buscar…</span>
         </button>
@@ -66,6 +67,7 @@ export default function Nav({ scrolled }: { scrolled: boolean }) {
         </a>
         <button
           onClick={() => setIsOpen(true)}
+          aria-label={count > 0 ? `Ver carrito (${count} ${count === 1 ? 'producto' : 'productos'})` : 'Ver carrito'}
           style={{ position:'relative', background:'var(--brand-500)', color:'#fff', border:'none', borderRadius:'var(--r-pill)', padding:'8px 16px', display:'flex', alignItems:'center', gap:8, fontSize:13, fontWeight:700, cursor:'pointer', boxShadow: count > 0 ? 'var(--glow-brand)' : 'none', transition:'box-shadow .2s' }}
         >
           🛒
@@ -74,7 +76,7 @@ export default function Nav({ scrolled }: { scrolled: boolean }) {
               <span className="nav-cart-label" style={{ display:'none', fontFamily:'var(--font-display)', fontWeight:900, fontSize:14 }}>
                 {count} {count === 1 ? 'item' : 'items'} · {fmt(total)}
               </span>
-              <span style={{ position:'absolute', top:-6, right:-6, background:'var(--yellow)', color:'var(--ink-900)', width:18, height:18, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'var(--font-display)', fontWeight:900, fontSize:11 }}>{count}</span>
+              <span style={{ position:'absolute', top:-6, right:-6, background:'var(--warning)', color:'var(--ink-900)', width:18, height:18, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'var(--font-display)', fontWeight:900, fontSize:11 }}>{count}</span>
             </>
           )}
         </button>

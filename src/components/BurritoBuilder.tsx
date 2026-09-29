@@ -111,7 +111,7 @@ export default function BurritoBuilder({ config }: { config: BurritoConfig }) {
     const extras = Math.max(0, selected - libre);
     return (
       <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap', marginBottom:12 }}>
-        <span style={{ fontSize:12, color:'var(--text-muted)', fontWeight:600 }}>
+        <span style={{ fontSize:12, color:'var(--ink-500)', fontWeight:600 }}>
           {selected}/{max} {label}
         </span>
         {xtraPrecio > 0 && libre > 0 && (
@@ -133,8 +133,8 @@ export default function BurritoBuilder({ config }: { config: BurritoConfig }) {
   if (done) return (
     <div style={{ textAlign:'center', padding:'24px 0' }}>
       <div style={{ fontSize:40, marginBottom:10 }}>🌯</div>
-      <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:26, color:'var(--orange)', marginBottom:6 }}>¡Listo tu burrito!</div>
-      <div style={{ background:'var(--bg2)', border:'1px solid var(--border)', borderRadius:'var(--radius)', padding:'16px', textAlign:'left', marginBottom:16 }}>
+      <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:26, color:'var(--brand-500)', marginBottom:6 }}>¡Listo tu burrito!</div>
+      <div style={{ background:'var(--surface-2)', border:'1px solid var(--line)', borderRadius:'var(--r-md)', padding:'16px', textAlign:'left', marginBottom:16 }}>
         {[
           ['Formato',  format === 'bowl' ? 'Bowl' : 'Burrito'],
           ['Relleno',  relleno?.name],
@@ -146,38 +146,38 @@ export default function BurritoBuilder({ config }: { config: BurritoConfig }) {
           ['Salsas',   salsas.length   ? salsas.map(s => s.name).join(', ')   : '—'],
           ...(adicionales.length ? [['Adicionales', adicionales.map(a => `${a.name} (+${fmt(a.price)})`).join(', ')]] : []),
         ].map(([k, v]) => (
-          <div key={k} style={{ fontSize:13, color:'var(--text-muted)', marginBottom:4 }}>
+          <div key={k} style={{ fontSize:13, color:'var(--ink-500)', marginBottom:4 }}>
             <span style={{ fontWeight:700 }}>{k}:</span> {v}
           </div>
         ))}
         {toppingsExtraQty > 0 && tXtra > 0 && (
-          <div style={{ fontSize:12, color:'var(--orange)', fontWeight:600, marginTop:6 }}>
+          <div style={{ fontSize:12, color:'var(--brand-500)', fontWeight:600, marginTop:6 }}>
             ➕ {toppingsExtraQty} topping{toppingsExtraQty > 1 ? 's' : ''} extra: +{fmt(toppingsExtraCost)}
           </div>
         )}
         {salsasExtraQty > 0 && sXtra > 0 && (
-          <div style={{ fontSize:12, color:'var(--orange)', fontWeight:600, marginTop:4 }}>
+          <div style={{ fontSize:12, color:'var(--brand-500)', fontWeight:600, marginTop:4 }}>
             ➕ {salsasExtraQty} salsa{salsasExtraQty > 1 ? 's' : ''} extra: +{fmt(salsasExtraCost)}
           </div>
         )}
         {adicionalesCost > 0 && (
-          <div style={{ fontSize:12, color:'var(--orange)', fontWeight:600, marginTop:4 }}>
+          <div style={{ fontSize:12, color:'var(--brand-500)', fontWeight:600, marginTop:4 }}>
             ➕ Adicionales: +{fmt(adicionalesCost)}
           </div>
         )}
       </div>
       <div style={{ marginBottom:16 }}>
-        <div style={{ fontSize:12, fontWeight:700, color:'var(--text-muted)', letterSpacing:1, textTransform:'uppercase', marginBottom:6 }}>Nota (opcional)</div>
+        <div style={{ fontSize:12, fontWeight:700, color:'var(--ink-500)', letterSpacing:1, textTransform:'uppercase', marginBottom:6 }}>Nota (opcional)</div>
         <input value={note} onChange={e => setNote(e.target.value)} placeholder="Ej: extra picante, sin jalapeño..."
-          style={{ width:'100%', padding:'10px 14px', borderRadius:'var(--radius-sm)', border:'1px solid var(--border)', background:'var(--bg2)', color:'var(--text)', fontSize:14, fontFamily:'Barlow,sans-serif', outline:'none' }} />
+          style={{ width:'100%', padding:'10px 14px', borderRadius:'var(--r-sm)', border:'1px solid var(--line)', background:'var(--surface-2)', color:'var(--ink-900)', fontSize:14, fontFamily:'Barlow,sans-serif', outline:'none' }} />
       </div>
       <div style={{ display:'flex', gap:8 }}>
         <button onClick={reset}
-          style={{ flex:1, padding:'12px', borderRadius:999, border:'2px solid var(--border)', background:'transparent', color:'var(--text-muted)', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:15, cursor:'pointer' }}>
+          style={{ flex:1, padding:'12px', borderRadius:999, border:'2px solid var(--line)', background:'transparent', color:'var(--ink-500)', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:15, cursor:'pointer' }}>
           ← Editar
         </button>
         <button onClick={addToCart}
-          style={{ flex:2, padding:'12px', borderRadius:999, border:'none', background:'var(--orange)', color:'#fff', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:18, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
+          style={{ flex:2, padding:'12px', borderRadius:999, border:'none', background:'var(--brand-500)', color:'#fff', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:18, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
           🛒 Agregar {fmt(price)}
         </button>
       </div>
@@ -192,8 +192,8 @@ export default function BurritoBuilder({ config }: { config: BurritoConfig }) {
       <div style={{ display:'flex', gap:4, marginBottom:18 }}>
         {steps.map((s, i) => (
           <div key={s} style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', gap:3 }}>
-            <div style={{ width:'100%', height:3, borderRadius:2, background: i <= step ? 'var(--orange)' : 'var(--border)', transition:'background .3s' }}/>
-            <span style={{ fontSize:9, fontWeight:700, letterSpacing:.5, color: i <= step ? 'var(--orange)' : 'var(--text-muted)' }}>{s.toUpperCase()}</span>
+            <div style={{ width:'100%', height:3, borderRadius:2, background: i <= step ? 'var(--brand-500)' : 'var(--line)', transition:'background .3s' }}/>
+            <span style={{ fontSize:9, fontWeight:700, letterSpacing:.5, color: i <= step ? 'var(--brand-500)' : 'var(--ink-500)' }}>{s.toUpperCase()}</span>
           </div>
         ))}
       </div>
@@ -201,13 +201,13 @@ export default function BurritoBuilder({ config }: { config: BurritoConfig }) {
       {/* Step 0 — Formato */}
       {step === 0 && (
         <div>
-          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:22, marginBottom:14, color:'var(--text)' }}>¿Burrito o Bowl?</div>
+          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:22, marginBottom:14, color:'var(--ink-900)' }}>¿Burrito o Bowl?</div>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
             {(['burrito','bowl'] as const).map(f => (
               <button key={f} onClick={() => setFormat(f)}
-                style={{ background: format===f?'var(--orange)':'var(--card)', border:`2px solid ${format===f?'var(--orange)':'var(--border)'}`, borderRadius:'var(--radius)', padding:'20px 16px', cursor:'pointer', transition:'all .2s', display:'flex', flexDirection:'column', alignItems:'center', gap:6 }}>
+                style={{ background: format===f?'var(--brand-500)':'var(--surface-0)', border:`2px solid ${format===f?'var(--brand-500)':'var(--line)'}`, borderRadius:'var(--r-md)', padding:'20px 16px', cursor:'pointer', transition:'all .2s', display:'flex', flexDirection:'column', alignItems:'center', gap:6 }}>
                 <span style={{ fontSize:30 }}>{f==='burrito'?'🌯':'🥣'}</span>
-                <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:17, color: format===f?'#fff':'var(--text)', textTransform:'uppercase' }}>{f}</span>
+                <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:17, color: format===f?'#fff':'var(--ink-900)', textTransform:'uppercase' }}>{f}</span>
               </button>
             ))}
           </div>
@@ -217,12 +217,12 @@ export default function BurritoBuilder({ config }: { config: BurritoConfig }) {
       {/* Step 1 — Relleno */}
       {step === 1 && (
         <div>
-          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:22, marginBottom:4, color:'var(--text)' }}>Relleno</div>
-          <div style={{ fontSize:12, color:'var(--text-muted)', marginBottom:12 }}>Elige 1</div>
+          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:22, marginBottom:4, color:'var(--ink-900)' }}>Relleno</div>
+          <div style={{ fontSize:12, color:'var(--ink-500)', marginBottom:12 }}>Elige 1</div>
           <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
             {visRellenos.map(r => (
               <button key={r.name} onClick={() => setRelleno(r)}
-                style={{ background: relleno?.name===r.name?'rgba(242,100,25,0.1)':'var(--card)', border:`2px solid ${relleno?.name===r.name?'var(--orange)':'var(--border)'}`, borderRadius:'var(--radius-sm)', padding:'12px 16px', textAlign:'left', cursor:'pointer', transition:'all .2s', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:16, color: relleno?.name===r.name?'var(--orange)':'var(--text)' }}>
+                style={{ background: relleno?.name===r.name?'rgba(242,100,25,0.1)':'var(--surface-0)', border:`2px solid ${relleno?.name===r.name?'var(--brand-500)':'var(--line)'}`, borderRadius:'var(--r-sm)', padding:'12px 16px', textAlign:'left', cursor:'pointer', transition:'all .2s', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:16, color: relleno?.name===r.name?'var(--brand-500)':'var(--ink-900)' }}>
                 {r.name}
               </button>
             ))}
@@ -239,13 +239,13 @@ export default function BurritoBuilder({ config }: { config: BurritoConfig }) {
 
         return (
           <div>
-            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:22, marginBottom:4, color:'var(--text)' }}>Proteína</div>
+            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:22, marginBottom:4, color:'var(--ink-900)' }}>Proteína</div>
 
             {/* Tamaño */}
             <div style={{ display:'flex', gap:8, margin:'8px 0 12px' }}>
               {(['normal','xl'] as const).map(s => (
                 <button key={s} onClick={() => { setSize(s); setExtraProteina(null); }}
-                  style={{ flex:1, padding:'7px', borderRadius:999, border:`2px solid ${size===s?'var(--orange)':'var(--border)'}`, background: size===s?'rgba(242,100,25,0.1)':'var(--card)', color: size===s?'var(--orange)':'var(--text-muted)', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:13, cursor:'pointer', textTransform:'uppercase', transition:'all .2s' }}>
+                  style={{ flex:1, padding:'7px', borderRadius:999, border:`2px solid ${size===s?'var(--brand-500)':'var(--line)'}`, background: size===s?'rgba(242,100,25,0.1)':'var(--surface-0)', color: size===s?'var(--brand-500)':'var(--ink-500)', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:13, cursor:'pointer', textTransform:'uppercase', transition:'all .2s' }}>
                   {s==='xl'?'XL':'Normal'}
                 </button>
               ))}
@@ -255,22 +255,22 @@ export default function BurritoBuilder({ config }: { config: BurritoConfig }) {
             <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
               {visProteinas.map(p => (
                 <button key={p.name} onClick={() => setProteina(p)}
-                  style={{ background: proteina?.name===p.name?'rgba(242,100,25,0.1)':'var(--card)', border:`2px solid ${proteina?.name===p.name?'var(--orange)':'var(--border)'}`, borderRadius:'var(--radius-sm)', padding:'12px 16px', cursor:'pointer', transition:'all .2s', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                  <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:16, color: proteina?.name===p.name?'var(--orange)':'var(--text)' }}>{p.name}</span>
-                  <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:17, color:'var(--yellow)' }}>{fmt(size==='normal'?p.normal:p.xl)}</span>
+                  style={{ background: proteina?.name===p.name?'rgba(242,100,25,0.1)':'var(--surface-0)', border:`2px solid ${proteina?.name===p.name?'var(--brand-500)':'var(--line)'}`, borderRadius:'var(--r-sm)', padding:'12px 16px', cursor:'pointer', transition:'all .2s', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                  <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:16, color: proteina?.name===p.name?'var(--brand-500)':'var(--ink-900)' }}>{p.name}</span>
+                  <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:17, color:'var(--warning)' }}>{fmt(size==='normal'?p.normal:p.xl)}</span>
                 </button>
               ))}
             </div>
 
             {/* Extra proteína — selección libre */}
             {showExtra && (
-              <div style={{ marginTop:16, borderTop:'1px solid var(--border)', paddingTop:14 }}>
+              <div style={{ marginTop:16, borderTop:'1px solid var(--line)', paddingTop:14 }}>
                 <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
                   <div>
-                    <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:800, fontSize:16, color:'var(--text)' }}>
+                    <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:800, fontSize:16, color:'var(--ink-900)' }}>
                       🍗 Agregar proteína extra
                     </div>
-                    <div style={{ fontSize:11, color:'var(--text-muted)', marginTop:2 }}>
+                    <div style={{ fontSize:11, color:'var(--ink-500)', marginTop:2 }}>
                       Puede ser la misma u otra · +{fmt(xPrecio)} c/u
                     </div>
                   </div>
@@ -287,14 +287,14 @@ export default function BurritoBuilder({ config }: { config: BurritoConfig }) {
                     const sel = extraProteina?.name === p.name;
                     return (
                       <button key={p.name} onClick={() => setExtraProteina(sel ? null : p)}
-                        style={{ background: sel?'rgba(242,100,25,0.08)':'var(--bg2)', border:`1.5px solid ${sel?'var(--orange)':'var(--border)'}`, borderRadius:'var(--radius-sm)', padding:'10px 14px', cursor:'pointer', transition:'all .2s', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                        style={{ background: sel?'rgba(242,100,25,0.08)':'var(--surface-2)', border:`1.5px solid ${sel?'var(--brand-500)':'var(--line)'}`, borderRadius:'var(--r-sm)', padding:'10px 14px', cursor:'pointer', transition:'all .2s', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
                         <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-                          <div style={{ width:18, height:18, borderRadius:'50%', border:`2px solid ${sel?'var(--orange)':'var(--border)'}`, background: sel?'var(--orange)':'transparent', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, fontSize:10, color:'#fff', fontWeight:900 }}>
+                          <div style={{ width:18, height:18, borderRadius:'50%', border:`2px solid ${sel?'var(--brand-500)':'var(--line)'}`, background: sel?'var(--brand-500)':'transparent', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, fontSize:10, color:'#fff', fontWeight:900 }}>
                             {sel ? '✓' : ''}
                           </div>
-                          <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:15, color: sel?'var(--orange)':'var(--text)' }}>{p.name}</span>
+                          <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:15, color: sel?'var(--brand-500)':'var(--ink-900)' }}>{p.name}</span>
                         </div>
-                        <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:14, color: sel?'var(--orange)':'var(--text-muted)' }}>
+                        <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:14, color: sel?'var(--brand-500)':'var(--ink-500)' }}>
                           +{fmt(xPrecio)}
                         </span>
                       </button>
@@ -310,7 +310,7 @@ export default function BurritoBuilder({ config }: { config: BurritoConfig }) {
       {/* Step 3 — Toppings */}
       {step === 3 && (
         <div>
-          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:22, marginBottom:4, color:'var(--text)' }}>Toppings</div>
+          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:22, marginBottom:4, color:'var(--ink-900)' }}>Toppings</div>
           <LimitBadge selected={toppings.length} libre={tLib} max={tMax} xtraPrecio={tXtra} label="toppings" />
           <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
             {visToppings.map(t => {
@@ -319,7 +319,7 @@ export default function BurritoBuilder({ config }: { config: BurritoConfig }) {
               const esExtra = !sel && toppings.length >= tLib;
               return (
                 <button key={t.name} onClick={() => !maxed && toggleArr(toppings, setToppings, t, tMax)}
-                  style={{ padding:'7px 13px', borderRadius:999, border:`2px solid ${sel?'var(--orange)':'var(--border)'}`, background: sel?'var(--orange)':'var(--card)', color: sel?'#fff':maxed?'var(--border)':'var(--text)', fontWeight:600, fontSize:13, cursor: maxed?'not-allowed':'pointer', opacity: maxed?.35:1, display:'flex', alignItems:'center', gap:5, transition:'all .2s' }}>
+                  style={{ padding:'7px 13px', borderRadius:999, border:`2px solid ${sel?'var(--brand-500)':'var(--line)'}`, background: sel?'var(--brand-500)':'var(--surface-0)', color: sel?'#fff':maxed?'var(--line)':'var(--ink-900)', fontWeight:600, fontSize:13, cursor: maxed?'not-allowed':'pointer', opacity: maxed?.35:1, display:'flex', alignItems:'center', gap:5, transition:'all .2s' }}>
                   {t.name}
                   {esExtra && tXtra > 0 && !sel && (
                     <span style={{ fontSize:10, color:'#F26419', fontWeight:800 }}>+{fmt(tXtra)}</span>
@@ -334,7 +334,7 @@ export default function BurritoBuilder({ config }: { config: BurritoConfig }) {
       {/* Step 4 — Salsas */}
       {step === 4 && (
         <div>
-          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:22, marginBottom:4, color:'var(--text)' }}>Salsas</div>
+          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:22, marginBottom:4, color:'var(--ink-900)' }}>Salsas</div>
           <LimitBadge selected={salsas.length} libre={sLib} max={sMax} xtraPrecio={sXtra} label="salsas" />
           <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
             {visSalsas.map(s => {
@@ -343,7 +343,7 @@ export default function BurritoBuilder({ config }: { config: BurritoConfig }) {
               const esExtra = !sel && salsas.length >= sLib;
               return (
                 <button key={s.name} onClick={() => !maxed && toggleArr(salsas, setSalsas, s, sMax)}
-                  style={{ padding:'7px 13px', borderRadius:999, border:`2px solid ${sel?'var(--yellow)':'var(--border)'}`, background: sel?'rgba(255,214,0,0.12)':'var(--card)', color: sel?'#8a6800':maxed?'var(--border)':'var(--text)', fontWeight:600, fontSize:13, cursor: maxed?'not-allowed':'pointer', opacity: maxed?.35:1, display:'flex', alignItems:'center', gap:5, transition:'all .2s' }}>
+                  style={{ padding:'7px 13px', borderRadius:999, border:`2px solid ${sel?'var(--warning)':'var(--line)'}`, background: sel?'rgba(255,214,0,0.12)':'var(--surface-0)', color: sel?'#8a6800':maxed?'var(--line)':'var(--ink-900)', fontWeight:600, fontSize:13, cursor: maxed?'not-allowed':'pointer', opacity: maxed?.35:1, display:'flex', alignItems:'center', gap:5, transition:'all .2s' }}>
                   {s.name}
                   {esExtra && sXtra > 0 && !sel && (
                     <span style={{ fontSize:10, color:'#F26419', fontWeight:800 }}>+{fmt(sXtra)}</span>
@@ -358,8 +358,8 @@ export default function BurritoBuilder({ config }: { config: BurritoConfig }) {
       {/* Step 5 — Adicionales */}
       {step === 5 && visAdicionales.length > 0 && (
         <div>
-          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:22, marginBottom:4, color:'var(--text)' }}>Adicionales</div>
-          <div style={{ fontSize:12, color:'var(--text-muted)', marginBottom:12 }}>
+          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:22, marginBottom:4, color:'var(--ink-900)' }}>Adicionales</div>
+          <div style={{ fontSize:12, color:'var(--ink-500)', marginBottom:12 }}>
             Extras con costo — doble porción de un ingrediente, extra queso, etc.
           </div>
           <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
@@ -367,9 +367,9 @@ export default function BurritoBuilder({ config }: { config: BurritoConfig }) {
               const sel = adicionales.some(x => x.name === a.name);
               return (
                 <button key={a.name} onClick={() => toggleArr(adicionales, setAdicionales, a, 99)}
-                  style={{ background: sel?'rgba(242,100,25,0.1)':'var(--card)', border:`2px solid ${sel?'var(--orange)':'var(--border)'}`, borderRadius:'var(--radius-sm)', padding:'12px 16px', cursor:'pointer', transition:'all .2s', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                  <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:16, color: sel?'var(--orange)':'var(--text)' }}>{a.name}</span>
-                  <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:16, color:'var(--yellow)' }}>+{fmt(a.price)}</span>
+                  style={{ background: sel?'rgba(242,100,25,0.1)':'var(--surface-0)', border:`2px solid ${sel?'var(--brand-500)':'var(--line)'}`, borderRadius:'var(--r-sm)', padding:'12px 16px', cursor:'pointer', transition:'all .2s', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                  <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:16, color: sel?'var(--brand-500)':'var(--ink-900)' }}>{a.name}</span>
+                  <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:16, color:'var(--warning)' }}>+{fmt(a.price)}</span>
                 </button>
               );
             })}
@@ -381,12 +381,12 @@ export default function BurritoBuilder({ config }: { config: BurritoConfig }) {
       <div style={{ display:'flex', gap:10, marginTop:20 }}>
         {step > 0
           ? <button onClick={() => setStep(s => s - 1)}
-              style={{ flex:1, padding:'11px', borderRadius:999, border:'2px solid var(--border)', background:'transparent', color:'var(--text-muted)', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:15, cursor:'pointer' }}>← Atrás</button>
+              style={{ flex:1, padding:'11px', borderRadius:999, border:'2px solid var(--line)', background:'transparent', color:'var(--ink-500)', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:15, cursor:'pointer' }}>← Atrás</button>
           : <div style={{ flex:1 }}/>
         }
         <button disabled={!canNext[step]}
           onClick={() => { if (step < lastStep) setStep(s => s + 1); else setDone(true); }}
-          style={{ flex:2, padding:'11px', borderRadius:999, border:'none', background: canNext[step]?'var(--orange)':'var(--border)', color: canNext[step]?'#fff':'var(--text-muted)', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:17, cursor: canNext[step]?'pointer':'not-allowed', transition:'all .2s' }}>
+          style={{ flex:2, padding:'11px', borderRadius:999, border:'none', background: canNext[step]?'var(--brand-500)':'var(--line)', color: canNext[step]?'#fff':'var(--ink-500)', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:17, cursor: canNext[step]?'pointer':'not-allowed', transition:'all .2s' }}>
           {step === lastStep ? 'Revisar pedido →' : 'Siguiente →'}
         </button>
       </div>
