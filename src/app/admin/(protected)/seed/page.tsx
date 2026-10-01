@@ -1,13 +1,14 @@
 'use client';
 
 import { useState } from 'react';
+import { Beef, Gift, Droplets, Check, AlertTriangle, RefreshCcw, Sprout, type LucideIcon } from 'lucide-react';
 import AdminHeader from '@/components/admin/AdminHeader';
 
 type SeedStatus = 'idle' | 'loading' | 'success' | 'skipped' | 'error';
 
 type SeedConfig = {
   key:         string;
-  emoji:       string;
+  icon:        LucideIcon;
   title:       string;
   description: string;
   detail:      string;
@@ -18,7 +19,7 @@ type SeedConfig = {
 const SEEDS: SeedConfig[] = [
   {
     key:         'menu',
-    emoji:       '🍔',
+    icon:        Beef,
     title:       'Menú + Burrito',
     description: 'Productos iniciales del menú (vienesas, sándwiches AS, bebidas, etc.) y configuración del burrito builder.',
     detail:      'Solo se ejecuta si menu_items está vacío.',
@@ -27,7 +28,7 @@ const SEEDS: SeedConfig[] = [
   },
   {
     key:         'promotions',
-    emoji:       '🎁',
+    icon:        Gift,
     title:       'Promociones',
     description: '5 combos de ejemplo con opciones por categoría (AS+Bebida, Churrasco+Bebida, etc.).',
     detail:      'Solo se ejecuta si promotions está vacío.',
@@ -36,7 +37,7 @@ const SEEDS: SeedConfig[] = [
   },
   {
     key:         'aderezos',
-    emoji:       '🥫',
+    icon:        Droplets,
     title:       'Aderezos',
     description: '8 aderezos estándar: Ketchup, Mostaza, Mayonesa, BBQ, Tártara, Relish, Alioli, Dijon.',
     detail:      'Solo se ejecuta si aderezos está vacío.',
@@ -83,9 +84,9 @@ export default function SeedPage() {
   }
 
   const STATUS_STYLE: Record<SeedStatus, { color: string; bg: string; label: string }> = {
-    idle:    { color: 'var(--text-muted)', bg: 'transparent',              label: '' },
+    idle:    { color: 'var(--ink-500)', bg: 'transparent',              label: '' },
     loading: { color: '#d97706',           bg: 'rgba(217,119,6,0.08)',     label: 'Ejecutando…' },
-    success: { color: '#16a34a',           bg: 'rgba(22,163,74,0.08)',     label: '✓ Completado' },
+    success: { color: '#16a34a',           bg: 'rgba(22,163,74,0.08)',     label: 'Completado' },
     skipped: { color: '#0891b2',           bg: 'rgba(8,145,178,0.08)',     label: '⟳ Omitido' },
     error:   { color: '#dc2626',           bg: 'rgba(220,38,38,0.08)',     label: '✕ Error' },
   };
@@ -96,12 +97,12 @@ export default function SeedPage() {
     <div>
       <AdminHeader
         title="Seed de datos"
-        subtitle={<>Solo para desarrollo · <span style={{ color:'#dc2626', fontWeight:800 }}>⚠️ DANGER</span></>}
+        subtitle={<>Solo para desarrollo · <span style={{ color:'#dc2626', fontWeight:800 }}><AlertTriangle size={12} style={{display:'inline', verticalAlign:'middle'}}/> DANGER</span></>}
       />
 
       {/* Aviso */}
-      <div style={{ background: 'rgba(217,119,6,0.07)', border: '1px solid rgba(217,119,6,0.25)', borderRadius: 'var(--radius)', padding: '12px 16px', marginBottom: 24, fontSize: 13, color: '#92400e', lineHeight: 1.6 }}>
-        ⚠️ <strong>Úsalo solo si la BD está vacía o perdiste datos.</strong> Los seeds no sobrescriben data existente — si ya hay registros en una colección, ese seed se omite automáticamente.
+      <div style={{ background: 'rgba(217,119,6,0.07)', border: '1px solid rgba(217,119,6,0.25)', borderRadius: 'var(--radius-lg)', padding: '12px 16px', marginBottom: 24, fontSize: 13, color: '#92400e', lineHeight: 1.6 }}>
+        <AlertTriangle size={14} style={{display:'inline', verticalAlign:'middle'}}/> <strong>Úsalo solo si la BD está vacía o perdiste datos.</strong> Los seeds no sobrescriben data existente — si ya hay registros en una colección, ese seed se omite automáticamente.
       </div>
 
       {/* Cards de seeds */}
@@ -112,15 +113,15 @@ export default function SeedPage() {
           const isLoading = st.status === 'loading';
 
           return (
-            <div key={seed.key} style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-              <div style={{ fontSize: 28, flexShrink: 0 }}>{seed.emoji}</div>
+            <div key={seed.key} style={{ background: 'var(--surface-raised)', border: '1px solid var(--line)', borderRadius: 'var(--radius-lg)', padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+              <div style={{ flexShrink: 0 }}><seed.icon size={28} style={{color:'var(--brand)'}}/></div>
 
               <div style={{ flex: 1, minWidth: 200 }}>
-                <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 18, color: 'var(--text)', marginBottom: 2 }}>
+                <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 18, color: 'var(--ink-900)', marginBottom: 2 }}>
                   {seed.title}
                 </div>
-                <div style={{ fontSize: 13, color: 'var(--text)', marginBottom: 2 }}>{seed.description}</div>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', fontStyle: 'italic' }}>{seed.detail}</div>
+                <div style={{ fontSize: 13, color: 'var(--ink-900)', marginBottom: 2 }}>{seed.description}</div>
+                <div style={{ fontSize: 11, color: 'var(--ink-500)', fontStyle: 'italic' }}>{seed.detail}</div>
               </div>
 
               {/* Estado */}
@@ -135,7 +136,7 @@ export default function SeedPage() {
                 <button
                   onClick={() => runSeed(seed)}
                   disabled={anyLoading}
-                  style={{ padding: '9px 18px', borderRadius: 999, border: 'none', background: anyLoading ? '#d1bfb8' : '#F26419', color: '#fff', fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 15, cursor: anyLoading ? 'not-allowed' : 'pointer', opacity: isLoading ? 0.7 : 1 }}>
+                  style={{ padding: '9px 18px', borderRadius: 999, border: 'none', background: anyLoading ? '#d1bfb8' : 'var(--brand-strong)', color: 'var(--on-brand)', fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 15, cursor: anyLoading ? 'not-allowed' : 'pointer', opacity: isLoading ? 0.7 : 1 }}>
                   {isLoading ? 'Ejecutando…' : 'Ejecutar'}
                 </button>
                 <button
@@ -143,7 +144,7 @@ export default function SeedPage() {
                   disabled={anyLoading}
                   title="Borra y reinsertas desde cero"
                   style={{ padding: '9px 14px', borderRadius: 999, border: `2px solid ${anyLoading ? '#d1bfb8' : '#dc2626'}`, background: 'transparent', color: anyLoading ? '#d1bfb8' : '#dc2626', fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 13, cursor: anyLoading ? 'not-allowed' : 'pointer' }}>
-                  ♻️ Force
+                  <RefreshCcw size={13} style={{display:'inline', verticalAlign:'middle'}}/> Force
                 </button>
               </div>
             </div>
@@ -156,15 +157,15 @@ export default function SeedPage() {
         <button
           onClick={() => runAll()}
           disabled={anyLoading}
-          style={{ flex: 1, padding: '13px', borderRadius: 999, border: `2px solid ${anyLoading ? '#d1bfb8' : '#F26419'}`, background: 'transparent', color: anyLoading ? '#d1bfb8' : '#F26419', fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 18, cursor: anyLoading ? 'not-allowed' : 'pointer' }}>
-          {runningAll ? 'Ejecutando todos…' : '🌱 Ejecutar todos los seeds'}
+          style={{ flex: 1, padding: '13px', borderRadius: 999, border: `2px solid ${anyLoading ? '#d1bfb8' : 'var(--brand)'}`, background: 'transparent', color: anyLoading ? '#d1bfb8' : 'var(--brand)', fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 18, cursor: anyLoading ? 'not-allowed' : 'pointer' }}>
+          {runningAll ? 'Ejecutando todos…' : <><Sprout size={16} style={{display:'inline', verticalAlign:'middle'}}/> Ejecutar todos los seeds</>}
         </button>
         <button
           onClick={() => { if (confirm('¿Borrar el menú completo y re-seedar todo desde cero?')) runAll(true); }}
           disabled={anyLoading}
           title="Borra y reinsertas el menú desde cero"
           style={{ padding: '13px 20px', borderRadius: 999, border: `2px solid ${anyLoading ? '#d1bfb8' : '#dc2626'}`, background: 'transparent', color: anyLoading ? '#d1bfb8' : '#dc2626', fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 15, cursor: anyLoading ? 'not-allowed' : 'pointer' }}>
-          ♻️ Force todo
+          <RefreshCcw size={14} style={{display:'inline', verticalAlign:'middle'}}/> Force todo
         </button>
       </div>
     </div>

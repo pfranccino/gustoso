@@ -1,20 +1,21 @@
 'use client';
 
 import { useState, useTransition, useMemo } from 'react';
+import { Package, Clock, Pencil, Plus } from 'lucide-react';
 import { CostEntry, UNITS } from '@/lib/firestore/costsTypes';
 
 const fmt = (n: number) => `$${Math.round(n).toLocaleString('es-CL')}`;
 
 const INPUT: React.CSSProperties = {
   padding: '9px 12px', borderRadius: 8,
-  border: '1.5px solid rgba(242,100,25,0.25)',
-  background: '#FFF9F5', color: '#1A0800',
+  border: '1.5px solid var(--line)',
+  background: 'var(--surface-subtle)', color: 'var(--ink-900)',
   fontSize: 13, fontFamily: "'Barlow',sans-serif",
   outline: 'none', boxSizing: 'border-box', width: '100%',
 };
 const LABEL: React.CSSProperties = {
   display: 'block', fontSize: 11, fontWeight: 700,
-  color: '#A0541A', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 5,
+  color: 'var(--ink-500)', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 5,
 };
 
 type FormState = { name: string; quantity: string; unit: string; totalPrice: string; date: string; notes: string };
@@ -57,16 +58,16 @@ function InsumoCard({ name, entries, onFilter }: {
     : { icon:'→', color:'#f59e0b', label:'Estable' };
 
   return (
-    <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:'var(--radius)', padding:'16px' }}>
+    <div style={{ background:'var(--surface-raised)', border:'1px solid var(--line)', borderRadius:'var(--radius-lg)', padding:'16px' }}>
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:12, marginBottom:12 }}>
         <div>
-          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:18, color:'var(--text)' }}>{name}</div>
-          <div style={{ fontSize:12, color:'var(--text-muted)', marginTop:2 }}>
-            {entries.length} compra{entries.length !== 1 ? 's' : ''} · Total gastado: <strong style={{ color:'var(--orange)' }}>{fmt(totalSpent)}</strong>
+          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:18, color:'var(--ink-900)' }}>{name}</div>
+          <div style={{ fontSize:12, color:'var(--ink-500)', marginTop:2 }}>
+            {entries.length} compra{entries.length !== 1 ? 's' : ''} · Total gastado: <strong style={{ color:'var(--brand)' }}>{fmt(totalSpent)}</strong>
           </div>
         </div>
         <button onClick={() => onFilter(name)}
-          style={{ fontSize:11, color:'var(--orange)', background:'rgba(242,100,25,0.08)', border:'1px solid rgba(242,100,25,0.2)', borderRadius:6, padding:'3px 10px', cursor:'pointer', fontWeight:700, whiteSpace:'nowrap' }}>
+          style={{ fontSize:11, color:'var(--brand)', background:'var(--brand-soft)', border:'1px solid var(--line)', borderRadius:6, padding:'3px 10px', cursor:'pointer', fontWeight:700, whiteSpace:'nowrap' }}>
           Ver historial
         </button>
       </div>
@@ -79,11 +80,11 @@ function InsumoCard({ name, entries, onFilter }: {
         {/* Última compra */}
         <Stat label="Última compra"
           value={ago === 0 ? 'Hoy' : ago === 1 ? 'Ayer' : `Hace ${ago}d`}
-          sub={<span style={{ color:'var(--text-muted)', fontSize:11 }}>{latest.date}</span>}/>
+          sub={<span style={{ color:'var(--ink-500)', fontSize:11 }}>{latest.date}</span>}/>
 
         {/* Frecuencia */}
         {avgDays !== null && (
-          <Stat label="Frecuencia" value={`~${avgDays}d`} sub={<span style={{ color:'var(--text-muted)', fontSize:11 }}>entre compras</span>}/>
+          <Stat label="Frecuencia" value={`~${avgDays}d`} sub={<span style={{ color:'var(--ink-500)', fontSize:11 }}>entre compras</span>}/>
         )}
 
         {/* Próxima estimada */}
@@ -93,7 +94,7 @@ function InsumoCard({ name, entries, onFilter }: {
             next.setDate(next.getDate() + avgDays);
             const diff = Math.ceil((next.getTime() - Date.now()) / 86_400_000);
             return diff <= 0 ? 'Vencida' : `En ${diff}d`;
-          })()} sub={<span style={{ color:'var(--text-muted)', fontSize:11 }}>
+          })()} sub={<span style={{ color:'var(--ink-500)', fontSize:11 }}>
             {(() => {
               const next = new Date(latest.date);
               next.setDate(next.getDate() + avgDays);
@@ -108,9 +109,9 @@ function InsumoCard({ name, entries, onFilter }: {
 
 function Stat({ label, value, sub }: { label: string; value: string; sub?: React.ReactNode }) {
   return (
-    <div style={{ background:'var(--bg2)', borderRadius:8, padding:'10px 12px' }}>
-      <div style={{ fontSize:10, fontWeight:700, color:'var(--text-muted)', letterSpacing:1, textTransform:'uppercase', marginBottom:3 }}>{label}</div>
-      <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:17, color:'var(--text)' }}>{value}</div>
+    <div style={{ background:'var(--surface-sunken)', borderRadius:8, padding:'10px 12px' }}>
+      <div style={{ fontSize:10, fontWeight:700, color:'var(--ink-500)', letterSpacing:1, textTransform:'uppercase', marginBottom:3 }}>{label}</div>
+      <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:17, color:'var(--ink-900)' }}>{value}</div>
       {sub && <div style={{ marginTop:2 }}>{sub}</div>}
     </div>
   );
@@ -205,9 +206,9 @@ export default function CostsEditor({ initial }: { initial: CostEntry[] }) {
     <div>
 
       {/* Formulario */}
-      <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:'var(--radius)', padding:20, marginBottom:16 }}>
-        <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:18, color:'var(--text)', marginBottom:16 }}>
-          {editId ? '✏️ Editar registro' : '➕ Nueva compra de insumo'}
+      <div style={{ background:'var(--surface-raised)', border:'1px solid var(--line)', borderRadius:'var(--radius-lg)', padding:20, marginBottom:16 }}>
+        <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:18, color:'var(--ink-900)', marginBottom:16 }}>
+          {editId ? <><Pencil size={14} style={{display:'inline', verticalAlign:'middle'}}/> Editar registro</> : <><Plus size={14} style={{display:'inline', verticalAlign:'middle'}}/> Nueva compra de insumo</>}
         </div>
 
         <div style={{ display:'grid', gridTemplateColumns:'2fr 1fr', gap:10, marginBottom:10 }}>
@@ -244,7 +245,7 @@ export default function CostsEditor({ initial }: { initial: CostEntry[] }) {
           </div>
           <div>
             <label style={LABEL}>Precio Unitario</label>
-            <div style={{ ...INPUT, background:'rgba(242,100,25,0.05)', border:'1.5px solid rgba(242,100,25,0.15)', display:'flex', alignItems:'center', color: unitPreview != null ? 'var(--orange)' : 'var(--text-muted)', fontWeight:700 }}>
+            <div style={{ ...INPUT, background:'var(--brand-soft)', border:'1.5px solid var(--brand-soft)', display:'flex', alignItems:'center', color: unitPreview != null ? 'var(--brand)' : 'var(--ink-500)', fontWeight:700 }}>
               {unitPreview != null ? fmt(unitPreview) : '—'}
             </div>
           </div>
@@ -260,11 +261,11 @@ export default function CostsEditor({ initial }: { initial: CostEntry[] }) {
 
         <div style={{ display:'flex', gap:8 }}>
           <button onClick={handleSave} disabled={isPending || !form.name.trim()}
-            style={{ flex:1, padding:10, borderRadius:999, border:'none', background:(!form.name.trim()||isPending)?'#d1bfb8':'#F26419', color:'#fff', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:16, cursor:(!form.name.trim()||isPending)?'not-allowed':'pointer' }}>
+            style={{ flex:1, padding:10, borderRadius:999, border:'none', background:(!form.name.trim()||isPending)?'#d1bfb8':'var(--brand-strong)', color:'var(--on-brand)', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:16, cursor:(!form.name.trim()||isPending)?'not-allowed':'pointer' }}>
             {isPending ? 'Guardando…' : editId ? 'Guardar cambios' : 'Agregar'}
           </button>
           {editId && (
-            <button onClick={cancelEdit} style={{ padding:'10px 20px', borderRadius:999, border:'1.5px solid var(--border)', background:'transparent', color:'var(--text)', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:15, cursor:'pointer' }}>
+            <button onClick={cancelEdit} style={{ padding:'10px 20px', borderRadius:999, border:'1.5px solid var(--line)', background:'transparent', color:'var(--ink-900)', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:15, cursor:'pointer' }}>
               Cancelar
             </button>
           )}
@@ -273,32 +274,32 @@ export default function CostsEditor({ initial }: { initial: CostEntry[] }) {
 
       {/* Resumen total */}
       {items.length > 0 && (
-        <div style={{ background:'rgba(242,100,25,0.06)', border:'1px solid rgba(242,100,25,0.2)', borderRadius:'var(--radius)', padding:'14px 20px', marginBottom:16, display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:8 }}>
-          <span style={{ fontSize:14, fontWeight:700, color:'var(--text-muted)' }}>
+        <div style={{ background:'var(--brand-soft)', border:'1px solid var(--line)', borderRadius:'var(--radius-lg)', padding:'14px 20px', marginBottom:16, display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:8 }}>
+          <span style={{ fontSize:14, fontWeight:700, color:'var(--ink-500)' }}>
             {grouped.length} insumo{grouped.length !== 1 ? 's' : ''} · {items.length} compra{items.length !== 1 ? 's' : ''} registrada{items.length !== 1 ? 's' : ''}
           </span>
-          <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:24, color:'var(--orange)' }}>
+          <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:24, color:'var(--brand)' }}>
             {fmt(totalSpent)} en insumos
           </span>
         </div>
       )}
 
       {items.length === 0 ? (
-        <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:'var(--radius)', padding:'40px 20px', textAlign:'center' }}>
-          <div style={{ fontSize:32, marginBottom:10 }}>📦</div>
-          <div style={{ fontSize:14, color:'var(--text-muted)' }}>No hay registros aún. Agrega el primero.</div>
+        <div style={{ background:'var(--surface-raised)', border:'1px solid var(--line)', borderRadius:'var(--radius-lg)', padding:'40px 20px', textAlign:'center' }}>
+          <div style={{ marginBottom:10 }}><Package size={32} style={{color:'var(--ink-500)'}}/></div>
+          <div style={{ fontSize:14, color:'var(--ink-500)' }}>No hay registros aún. Agrega el primero.</div>
         </div>
       ) : (
         <>
           {/* Tabs */}
           <div style={{ display:'flex', gap:6, marginBottom:14 }}>
-            {([['insumos','📦 Por insumo'],['historial','🕐 Historial']] as const).map(([v,label]) => (
+            {([['insumos','Por insumo'],['historial','Historial']] as const).map(([v,label]) => (
               <button key={v} onClick={() => { setView(v); if (v === 'insumos') setFilterName(null); }}
-                style={{ padding:'7px 18px', borderRadius:999, fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:14, cursor:'pointer', transition:'all .15s',
-                  background:   view === v ? 'var(--orange)' : 'var(--card)',
-                  color:        view === v ? '#fff' : 'var(--text-muted)',
-                  border:       view === v ? '1px solid transparent' : '1px solid var(--border)' }}>
-                {label}
+                style={{ padding:'7px 18px', borderRadius:999, fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:14, cursor:'pointer', transition:'all .15s', display:'flex', alignItems:'center', gap:5,
+                  background:   view === v ? 'var(--brand-strong)' : 'var(--surface-raised)',
+                  color:        view === v ? 'var(--on-brand)' : 'var(--ink-500)',
+                  border:       view === v ? '1px solid transparent' : '1px solid var(--line)' }}>
+                {v === 'insumos' ? <Package size={14}/> : <Clock size={14}/>} {label}
               </button>
             ))}
           </div>
@@ -317,24 +318,24 @@ export default function CostsEditor({ initial }: { initial: CostEntry[] }) {
           {view === 'historial' && (
             <>
               {filterName && (
-                <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:12, background:'rgba(242,100,25,0.06)', border:'1px solid rgba(242,100,25,0.2)', borderRadius:8, padding:'8px 14px' }}>
-                  <span style={{ fontSize:13, fontWeight:700, color:'var(--orange)' }}>Filtrando: {filterName}</span>
-                  <button onClick={() => setFilterName(null)} style={{ fontSize:12, color:'var(--text-muted)', background:'transparent', border:'none', cursor:'pointer', fontWeight:700 }}>✕ Ver todo</button>
+                <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:12, background:'var(--brand-soft)', border:'1px solid var(--line)', borderRadius:8, padding:'8px 14px' }}>
+                  <span style={{ fontSize:13, fontWeight:700, color:'var(--brand)' }}>Filtrando: {filterName}</span>
+                  <button onClick={() => setFilterName(null)} style={{ fontSize:12, color:'var(--ink-500)', background:'transparent', border:'none', cursor:'pointer', fontWeight:700 }}>✕ Ver todo</button>
                 </div>
               )}
               <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
                 {historialItems.map(c => (
-                  <div key={c.id} style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:'var(--radius)', padding:'14px 16px' }}>
+                  <div key={c.id} style={{ background:'var(--surface-raised)', border:'1px solid var(--line)', borderRadius:'var(--radius-lg)', padding:'14px 16px' }}>
                     <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:12 }}>
                       <div style={{ flex:1, minWidth:0 }}>
-                        <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:800, fontSize:16, color:'var(--text)' }}>{c.name}</div>
-                        {c.notes && <div style={{ fontSize:12, color:'var(--text-muted)', marginTop:2 }}>{c.notes}</div>}
-                        <div style={{ fontSize:11, color:'var(--text-muted)', marginTop:4 }}>
+                        <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:800, fontSize:16, color:'var(--ink-900)' }}>{c.name}</div>
+                        {c.notes && <div style={{ fontSize:12, color:'var(--ink-500)', marginTop:2 }}>{c.notes}</div>}
+                        <div style={{ fontSize:11, color:'var(--ink-500)', marginTop:4 }}>
                           {c.date} · Hace {daysAgo(c.date)} días
                         </div>
                       </div>
                       <div style={{ display:'flex', gap:6, flexShrink:0 }}>
-                        <button onClick={() => openEdit(c)} style={{ padding:'4px 12px', borderRadius:8, border:'1px solid var(--border)', background:'transparent', color:'var(--text)', fontSize:12, fontWeight:700, cursor:'pointer' }}>Editar</button>
+                        <button onClick={() => openEdit(c)} style={{ padding:'4px 12px', borderRadius:8, border:'1px solid var(--line)', background:'transparent', color:'var(--ink-900)', fontSize:12, fontWeight:700, cursor:'pointer' }}>Editar</button>
                         <button onClick={() => handleDelete(c)} style={{ padding:'4px 10px', borderRadius:8, border:'1px solid rgba(220,38,38,0.3)', background:'transparent', color:'#dc2626', fontSize:13, fontWeight:700, cursor:'pointer' }}>✕</button>
                       </div>
                     </div>
@@ -344,9 +345,9 @@ export default function CostsEditor({ initial }: { initial: CostEntry[] }) {
                         { label:'Total',        value:fmt(c.totalPrice) },
                         { label:`Por ${c.unit}`,value:fmt(c.unitPrice) },
                       ].map(s => (
-                        <div key={s.label} style={{ background:'var(--bg2)', borderRadius:8, padding:'8px 12px', textAlign:'center' }}>
-                          <div style={{ fontSize:10, fontWeight:700, color:'var(--text-muted)', letterSpacing:1, textTransform:'uppercase', marginBottom:3 }}>{s.label}</div>
-                          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:16, color:'var(--text)' }}>{s.value}</div>
+                        <div key={s.label} style={{ background:'var(--surface-sunken)', borderRadius:8, padding:'8px 12px', textAlign:'center' }}>
+                          <div style={{ fontSize:10, fontWeight:700, color:'var(--ink-500)', letterSpacing:1, textTransform:'uppercase', marginBottom:3 }}>{s.label}</div>
+                          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:16, color:'var(--ink-900)' }}>{s.value}</div>
                         </div>
                       ))}
                     </div>

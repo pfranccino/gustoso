@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { AlertTriangle } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { Promotion, PromoChoice } from '@/lib/firestore/promotions';
 import { Aderezo } from '@/lib/firestore/aderezosTypes';
@@ -8,7 +9,7 @@ import { MenuItem } from '@/lib/firestore/menuItems';
 import { fmt } from '@/lib/menuData';
 
 const BADGE_COLOR: Record<string, { bg: string; color: string }> = {
-  PROMO:    { bg: '#F26419', color: '#fff' },
+  PROMO:    { bg: 'var(--brand-strong)', color: 'var(--on-brand)' },
   OFERTA:   { bg: '#dc2626', color: '#fff' },
   NUEVO:    { bg: '#16a34a', color: '#fff' },
   COMBO:    { bg: '#7c3aed', color: '#fff' },
@@ -89,9 +90,9 @@ export default function PromoCard({ promo, aderezos = [], menuItems = [] }: { pr
   return (
     <>
       <div style={{
-        background: 'var(--card)',
-        border: '1.5px solid rgba(242,100,25,0.25)',
-        borderRadius: 'var(--radius)',
+        background: 'var(--surface-raised)',
+        border: '1.5px solid var(--line)',
+        borderRadius: 'var(--radius-lg)',
         padding: '16px',
         display: 'flex',
         flexDirection: 'column',
@@ -100,7 +101,7 @@ export default function PromoCard({ promo, aderezos = [], menuItems = [] }: { pr
         overflow: 'hidden',
       }}>
         {/* Accent stripe */}
-        <div style={{ position:'absolute', top:0, left:0, right:0, height:3, background:'linear-gradient(90deg,#F26419,#ffb347)' }}/>
+        <div style={{ position:'absolute', top:0, left:0, right:0, height:3, background:'var(--brand-strong)' }}/>
 
         {/* Header row */}
         <div style={{ display:'flex', alignItems:'flex-start', gap:8, flexWrap:'wrap' }}>
@@ -115,11 +116,11 @@ export default function PromoCard({ promo, aderezos = [], menuItems = [] }: { pr
             </span>
           )}
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight: 800, fontSize: 18, color: 'var(--text)', lineHeight: 1.15 }}>
+            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight: 800, fontSize: 18, color: 'var(--ink-900)', lineHeight: 1.15 }}>
               {promo.name}
             </div>
             {promo.description && (
-              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2, fontWeight: 500 }}>
+              <div style={{ fontSize: 12, color: 'var(--ink-500)', marginTop: 2, fontWeight: 500 }}>
                 {promo.description}
               </div>
             )}
@@ -128,11 +129,11 @@ export default function PromoCard({ promo, aderezos = [], menuItems = [] }: { pr
 
         {/* Price + Add */}
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginTop:4 }}>
-          <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:26, color:'var(--orange)' }}>
+          <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:26, color:'var(--brand)' }}>
             {fmt(promo.price)}
           </span>
           <button onClick={handleAdd} aria-label="Agregar al carrito"
-            style={{ width:36, height:36, borderRadius:'50%', border:'none', background:'#F26419', color:'#fff', fontSize:20, fontWeight:300, cursor:'pointer', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 2px 8px rgba(242,100,25,0.25)', transition:'transform .15s' }}>
+            style={{ width:36, height:36, borderRadius:'50%', border:'none', background:'var(--brand)', color:'#fff', fontSize:20, fontWeight:300, cursor:'pointer', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'var(--shadow-brand)', transition:'transform .15s' }}>
             +
           </button>
         </div>
@@ -143,13 +144,13 @@ export default function PromoCard({ promo, aderezos = [], menuItems = [] }: { pr
         <div style={{ position:'fixed', inset:0, zIndex:500, display:'flex', alignItems:'flex-end', justifyContent:'center' }}
              onClick={e => { if (e.target === e.currentTarget) setModal(false); }}>
           <div style={{ position:'absolute', inset:0, background:'rgba(0,0,0,0.5)', backdropFilter:'blur(4px)' }} onClick={() => setModal(false)}/>
-          <div style={{ position:'relative', zIndex:1, width:'100%', maxWidth:'var(--max)', background:'var(--card)', borderRadius:'var(--radius) var(--radius) 0 0', padding:'24px 20px 36px', animation:'slideUp .3s ease', boxShadow:'0 -8px 40px rgba(0,0,0,0.3)', maxHeight:'90dvh', overflowY:'auto' }}>
+          <div style={{ position:'relative', zIndex:1, width:'100%', maxWidth:'var(--max)', background:'var(--surface-raised)', borderRadius:'var(--radius-lg) var(--radius-lg) 0 0', padding:'24px 20px 36px', animation:'slideUp .3s ease', boxShadow:'0 -8px 40px rgba(0,0,0,0.3)', maxHeight:'90dvh', overflowY:'auto' }}>
             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:18 }}>
               <div>
-                <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:20, color:'var(--text)' }}>{promo.name}</div>
-                <div style={{ fontSize:12, color:'var(--text-muted)', marginTop:2 }}>{fmt(promo.price)}</div>
+                <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:20, color:'var(--ink-900)' }}>{promo.name}</div>
+                <div style={{ fontSize:12, color:'var(--ink-500)', marginTop:2 }}>{fmt(promo.price)}</div>
               </div>
-              <button onClick={() => setModal(false)} style={{ width:32, height:32, borderRadius:'50%', border:'none', background:'var(--bg2)', cursor:'pointer', fontSize:18, color:'var(--text-muted)', display:'flex', alignItems:'center', justifyContent:'center' }}>×</button>
+              <button onClick={() => setModal(false)} style={{ width:32, height:32, borderRadius:'50%', border:'none', background:'var(--surface-sunken)', cursor:'pointer', fontSize:18, color:'var(--ink-500)', display:'flex', alignItems:'center', justifyContent:'center' }}>×</button>
             </div>
 
             {/* Choices */}
@@ -157,7 +158,7 @@ export default function PromoCard({ promo, aderezos = [], menuItems = [] }: { pr
               const opts = resolveOptions(choice, menuItems);
               return (
                 <div key={choice.label} style={{ marginBottom:18 }}>
-                  <div style={{ fontSize:12, fontWeight:700, color:'var(--text-muted)', letterSpacing:1, textTransform:'uppercase', marginBottom:6 }}>
+                  <div style={{ fontSize:12, fontWeight:700, color:'var(--ink-500)', letterSpacing:1, textTransform:'uppercase', marginBottom:6 }}>
                     {choice.label}{choice.required && <span style={{ color:'#dc2626', marginLeft:4 }}>*</span>}
                   </div>
                   <div style={{ display:'flex', flexWrap:'wrap', gap:7 }}>
@@ -165,12 +166,12 @@ export default function PromoCard({ promo, aderezos = [], menuItems = [] }: { pr
                       const sel = selectedChoices[choice.label] === opt;
                       return (
                         <button key={opt} onClick={() => selectChoice(choice.label, opt)}
-                          style={{ padding:'8px 16px', borderRadius:999, border:`2px solid ${sel ? 'var(--orange)' : 'var(--border)'}`, background: sel ? 'rgba(242,100,25,0.1)' : 'var(--bg2)', cursor:'pointer', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:15, color: sel ? 'var(--orange)' : 'var(--text)', transition:'all .15s' }}>
+                          style={{ padding:'8px 16px', borderRadius:999, border:`2px solid ${sel ? 'var(--brand)' : 'var(--line)'}`, background: sel ? 'var(--brand-soft)' : 'var(--surface-sunken)', cursor:'pointer', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:15, color: sel ? 'var(--brand)' : 'var(--ink-900)', transition:'all .15s' }}>
                           {opt}
                         </button>
                       );
                     })}
-                    {opts.length === 0 && <span style={{ fontSize:12, color:'var(--text-muted)', fontStyle:'italic' }}>Sin opciones disponibles</span>}
+                    {opts.length === 0 && <span style={{ fontSize:12, color:'var(--ink-500)', fontStyle:'italic' }}>Sin opciones disponibles</span>}
                   </div>
                 </div>
               );
@@ -179,15 +180,15 @@ export default function PromoCard({ promo, aderezos = [], menuItems = [] }: { pr
             {/* Aderezos */}
             {availableAderezos.length > 0 && (
               <div style={{ marginBottom:18 }}>
-                <div style={{ fontSize:12, fontWeight:700, color:'var(--text-muted)', letterSpacing:1, textTransform:'uppercase', marginBottom:6 }}>🥫 Aderezos</div>
+                <div style={{ fontSize:12, fontWeight:700, color:'var(--ink-500)', letterSpacing:1, textTransform:'uppercase', marginBottom:6 }}>Aderezos</div>
                 <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
                   {availableAderezos.map(a => {
                     const sel = selectedAderezos.some(x => x.id === a.id);
                     return (
                       <button key={a.id} onClick={() => toggleAderezo(a)}
-                        style={{ padding:'8px 14px', borderRadius:999, border:`1.5px solid ${sel ? 'var(--orange)' : 'var(--border)'}`, background: sel ? 'rgba(242,100,25,0.09)' : 'var(--bg2)', cursor:'pointer', transition:'all .15s', display:'flex', alignItems:'center', gap:5 }}>
-                        <span style={{ fontSize:14, fontWeight:700, color: sel ? 'var(--orange)' : 'var(--text)' }}>{a.name}</span>
-                        {a.price > 0 && <span style={{ fontSize:12, color: sel ? 'var(--orange)' : 'var(--text-muted)' }}>+{fmt(a.price)}</span>}
+                        style={{ padding:'8px 14px', borderRadius:999, border:`1.5px solid ${sel ? 'var(--brand)' : 'var(--line)'}`, background: sel ? 'var(--brand-soft)' : 'var(--surface-sunken)', cursor:'pointer', transition:'all .15s', display:'flex', alignItems:'center', gap:5 }}>
+                        <span style={{ fontSize:14, fontWeight:700, color: sel ? 'var(--brand)' : 'var(--ink-900)' }}>{a.name}</span>
+                        {a.price > 0 && <span style={{ fontSize:12, color: sel ? 'var(--brand)' : 'var(--ink-500)' }}>+{fmt(a.price)}</span>}
                       </button>
                     );
                   })}
@@ -197,12 +198,12 @@ export default function PromoCard({ promo, aderezos = [], menuItems = [] }: { pr
 
             {choiceError && (
               <div style={{ fontSize:13, color:'#dc2626', fontWeight:700, marginBottom:12, padding:'8px 12px', background:'rgba(220,38,38,0.06)', borderRadius:8 }}>
-                ⚠️ {choiceError}
+                <AlertTriangle size={14} style={{display:'inline', verticalAlign:'middle'}}/> {choiceError}
               </div>
             )}
 
             <button onClick={confirm}
-              style={{ width:'100%', padding:'14px', borderRadius:999, border:'none', background:'var(--orange)', color:'#fff', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:18, cursor:'pointer' }}>
+              style={{ width:'100%', padding:'14px', borderRadius:999, border:'none', background:'var(--brand-strong)', color:'var(--on-brand)', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:18, cursor:'pointer' }}>
               Agregar al carrito
             </button>
           </div>

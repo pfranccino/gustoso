@@ -6,9 +6,9 @@ const BASE: React.CSSProperties = {
   width: '100%', boxSizing: 'border-box',
   padding: '9px 11px',
   borderRadius: 8,
-  border: '1.5px solid rgba(242,100,25,0.25)',
-  background: 'var(--bg2)',
-  color: 'var(--text)',
+  border: '1.5px solid var(--line)',
+  background: 'var(--surface-sunken)',
+  color: 'var(--ink-900)',
   fontSize: 13,
   fontFamily: "'Barlow', sans-serif",
   outline: 'none',
@@ -29,7 +29,7 @@ export function AdminLabel({ children, htmlFor, style }: LabelProps) {
       htmlFor={htmlFor}
       style={{
         display: 'block',
-        fontSize: 11, fontWeight: 700, color: 'var(--text-muted)',
+        fontSize: 11, fontWeight: 700, color: 'var(--ink-500)',
         letterSpacing: 1, textTransform: 'uppercase', marginBottom: 5,
         ...style,
       }}
@@ -50,8 +50,8 @@ export default function AdminInput({ style, ...props }: InputProps) {
     <input
       {...props}
       style={{ ...BASE, ...style }}
-      onFocus={e => { e.currentTarget.style.borderColor = 'var(--orange)'; }}
-      onBlur={e => { e.currentTarget.style.borderColor = 'rgba(242,100,25,0.25)'; }}
+      onFocus={e => { e.currentTarget.style.borderColor = 'var(--brand)'; }}
+      onBlur={e => { e.currentTarget.style.borderColor = 'var(--line)'; }}
     />
   );
 }
@@ -67,8 +67,8 @@ export function AdminTextarea({ style, ...props }: TextareaProps) {
     <textarea
       {...props}
       style={{ ...BASE, resize: 'vertical', minHeight: 72, ...style }}
-      onFocus={e => { e.currentTarget.style.borderColor = 'var(--orange)'; }}
-      onBlur={e => { e.currentTarget.style.borderColor = 'rgba(242,100,25,0.25)'; }}
+      onFocus={e => { e.currentTarget.style.borderColor = 'var(--brand)'; }}
+      onBlur={e => { e.currentTarget.style.borderColor = 'var(--line)'; }}
     />
   );
 }

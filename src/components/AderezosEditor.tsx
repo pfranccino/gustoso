@@ -1,14 +1,15 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import { Droplets, Pencil, Plus } from 'lucide-react';
 import { Aderezo } from '@/lib/firestore/aderezosTypes';
 
 const fmt = (n: number) => `$${n.toLocaleString('es-CL')}`;
 
 const INPUT: React.CSSProperties = {
   padding: '8px 11px', borderRadius: 8,
-  border: '1.5px solid rgba(242,100,25,0.25)',
-  background: '#FFF9F5', color: '#1A0800',
+  border: '1.5px solid var(--line)',
+  background: 'var(--surface-subtle)', color: 'var(--ink-900)',
   fontSize: 13, fontFamily: "'Barlow',sans-serif",
   outline: 'none', boxSizing: 'border-box',
 };
@@ -85,14 +86,14 @@ export default function AderezosEditor({ initial }: { initial: Aderezo[] }) {
     <div style={{ maxWidth: 520 }}>
 
       {/* Formulario nuevo / editar */}
-      <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '20px', marginBottom: 16 }}>
-        <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 18, color: 'var(--text)', marginBottom: 16 }}>
-          {editId ? '✏️ Editar aderezo' : '➕ Nuevo aderezo'}
+      <div style={{ background: 'var(--surface-raised)', border: '1px solid var(--line)', borderRadius: 'var(--radius-lg)', padding: '20px', marginBottom: 16 }}>
+        <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 18, color: 'var(--ink-900)', marginBottom: 16 }}>
+          {editId ? <><Pencil size={14} style={{display:'inline', verticalAlign:'middle'}}/> Editar aderezo</> : <><Plus size={14} style={{display:'inline', verticalAlign:'middle'}}/> Nuevo aderezo</>}
         </div>
 
         <div style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
           <div style={{ flex: 2 }}>
-            <label style={{ fontSize: 11, fontWeight: 700, color: '#A0541A', letterSpacing: 1, textTransform: 'uppercase', display: 'block', marginBottom: 5 }}>Nombre</label>
+            <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-500)', letterSpacing: 1, textTransform: 'uppercase', display: 'block', marginBottom: 5 }}>Nombre</label>
             <input
               value={form.name}
               onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
@@ -102,7 +103,7 @@ export default function AderezosEditor({ initial }: { initial: Aderezo[] }) {
             />
           </div>
           <div style={{ flex: 1 }}>
-            <label style={{ fontSize: 11, fontWeight: 700, color: '#A0541A', letterSpacing: 1, textTransform: 'uppercase', display: 'block', marginBottom: 5 }}>Precio ($)</label>
+            <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-500)', letterSpacing: 1, textTransform: 'uppercase', display: 'block', marginBottom: 5 }}>Precio ($)</label>
             <input
               type="number" min="0"
               value={form.price}
@@ -117,12 +118,12 @@ export default function AderezosEditor({ initial }: { initial: Aderezo[] }) {
 
         <div style={{ display: 'flex', gap: 8 }}>
           <button onClick={handleSave} disabled={isPending || !form.name.trim()}
-            style={{ flex: 1, padding: '10px', borderRadius: 999, border: 'none', background: (!form.name.trim() || isPending) ? '#d1bfb8' : '#F26419', color: '#fff', fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 16, cursor: (!form.name.trim() || isPending) ? 'not-allowed' : 'pointer' }}>
+            style={{ flex: 1, padding: '10px', borderRadius: 999, border: 'none', background: (!form.name.trim() || isPending) ? '#d1bfb8' : 'var(--brand-strong)', color: 'var(--on-brand)', fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 16, cursor: (!form.name.trim() || isPending) ? 'not-allowed' : 'pointer' }}>
             {isPending ? 'Guardando…' : editId ? 'Guardar cambios' : 'Agregar'}
           </button>
           {editId && (
             <button onClick={cancelEdit}
-              style={{ padding: '10px 20px', borderRadius: 999, border: '1.5px solid var(--border)', background: 'transparent', color: 'var(--text)', fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, fontSize: 15, cursor: 'pointer' }}>
+              style={{ padding: '10px 20px', borderRadius: 999, border: '1.5px solid var(--line)', background: 'transparent', color: 'var(--ink-900)', fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, fontSize: 15, cursor: 'pointer' }}>
               Cancelar
             </button>
           )}
@@ -131,31 +132,31 @@ export default function AderezosEditor({ initial }: { initial: Aderezo[] }) {
 
       {/* Lista */}
       {items.length === 0 ? (
-        <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '40px 20px', textAlign: 'center' }}>
-          <div style={{ fontSize: 32, marginBottom: 10 }}>🥫</div>
-          <div style={{ fontSize: 14, color: 'var(--text-muted)' }}>No hay aderezos aún. Agrega el primero.</div>
+        <div style={{ background: 'var(--surface-raised)', border: '1px solid var(--line)', borderRadius: 'var(--radius-lg)', padding: '40px 20px', textAlign: 'center' }}>
+          <div style={{ marginBottom: 10 }}><Droplets size={32} style={{color:'var(--ink-500)'}}/></div>
+          <div style={{ fontSize: 14, color: 'var(--ink-500)' }}>No hay aderezos aún. Agrega el primero.</div>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {items.map(a => (
-            <div key={a.id} style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12, opacity: a.available ? 1 : 0.55 }}>
+            <div key={a.id} style={{ background: 'var(--surface-raised)', border: '1px solid var(--line)', borderRadius: 'var(--radius-lg)', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12, opacity: a.available ? 1 : 0.55 }}>
               {/* Toggle disponibilidad */}
               <button onClick={() => handleToggle(a)}
-                style={{ flexShrink: 0, width: 32, height: 18, borderRadius: 999, border: 'none', background: a.available ? '#F26419' : '#d1d5db', cursor: 'pointer', position: 'relative', transition: 'background .2s' }}>
+                style={{ flexShrink: 0, width: 32, height: 18, borderRadius: 999, border: 'none', background: a.available ? 'var(--brand)' : '#d1d5db', cursor: 'pointer', position: 'relative', transition: 'background .2s' }}>
                 <span style={{ position: 'absolute', top: 2, left: a.available ? 15 : 2, width: 14, height: 14, borderRadius: '50%', background: '#fff', transition: 'left .2s' }}/>
               </button>
 
               <div style={{ flex: 1, minWidth: 0 }}>
-                <span style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 800, fontSize: 16, color: 'var(--text)' }}>{a.name}</span>
-                <span style={{ marginLeft: 10, fontSize: 13, fontWeight: 700, color: a.price > 0 ? 'var(--orange)' : '#16a34a' }}>
+                <span style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 800, fontSize: 16, color: 'var(--ink-900)' }}>{a.name}</span>
+                <span style={{ marginLeft: 10, fontSize: 13, fontWeight: 700, color: a.price > 0 ? 'var(--brand)' : '#16a34a' }}>
                   {a.price > 0 ? `+${fmt(a.price)}` : 'Gratis'}
                 </span>
-                {!a.available && <span style={{ marginLeft: 8, fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>Deshabilitado</span>}
+                {!a.available && <span style={{ marginLeft: 8, fontSize: 11, color: 'var(--ink-500)', fontWeight: 600 }}>Deshabilitado</span>}
               </div>
 
               <div style={{ display: 'flex', gap: 6 }}>
                 <button onClick={() => openEdit(a)}
-                  style={{ padding: '4px 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                  style={{ padding: '4px 12px', borderRadius: 8, border: '1px solid var(--line)', background: 'transparent', color: 'var(--ink-900)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
                   Editar
                 </button>
                 <button onClick={() => handleDelete(a)}

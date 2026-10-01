@@ -1,18 +1,19 @@
 'use client';
 
 import { useState, useTransition, useEffect } from 'react';
+import { Store, ClipboardCopy, Check, Smartphone, Clock, QrCode, Dice5, MessageSquare, MapPin, Download, AlertTriangle, Bot, Lightbulb, Bike } from 'lucide-react';
 import { Settings, DeliveryZone, AutoSchedule } from '@/lib/firestore/settingsTypes';
 
 const INPUT: React.CSSProperties = {
   display: 'block', width: '100%', padding: '11px 13px',
-  borderRadius: 8, border: '1.5px solid rgba(242,100,25,0.25)',
-  background: '#FFF9F5', color: '#1A0800', fontSize: 14,
+  borderRadius: 8, border: '1.5px solid var(--line)',
+  background: 'var(--surface-subtle)', color: 'var(--ink-900)', fontSize: 14,
   fontFamily: "'Barlow',sans-serif", boxSizing: 'border-box', outline: 'none',
 };
 
 const LABEL: React.CSSProperties = {
   display: 'block', fontSize: 11, fontWeight: 700,
-  color: '#A0541A', letterSpacing: 1,
+  color: 'var(--ink-500)', letterSpacing: 1,
   textTransform: 'uppercase', marginBottom: 6,
 };
 
@@ -40,33 +41,33 @@ function MostradorPinPanel() {
   }
 
   return (
-    <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:'var(--radius)', padding:20, marginBottom:16 }}>
-      <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:18, color:'var(--text)', marginBottom:4 }}>
-        🏪 Mostrador
+    <div style={{ background:'var(--surface-raised)', border:'1px solid var(--line)', borderRadius:'var(--radius-lg)', padding:20, marginBottom:16 }}>
+      <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:18, color:'var(--ink-900)', marginBottom:4 }}>
+        <Store size={16} style={{display:'inline', verticalAlign:'middle'}}/> Mostrador
       </div>
-      <div style={{ fontSize:12, color:'var(--text-muted)', marginBottom:14 }}>
+      <div style={{ fontSize:12, color:'var(--ink-500)', marginBottom:14 }}>
         Genera un PIN de un solo uso para que el empleado acceda a{' '}
-        <a href="/mostrador" target="_blank" style={{ color:'var(--orange)' }}>/mostrador</a>.
+        <a href="/mostrador" target="_blank" style={{ color:'var(--brand)' }}>/mostrador</a>.
         El código se invalida al primer uso.
       </div>
 
       <div style={{ display:'flex', alignItems:'center', gap:10, flexWrap:'wrap' }}>
         <button onClick={generate} disabled={loading}
-          style={{ padding:'10px 18px', borderRadius:999, border:'none', background:'var(--orange)', color:'#fff', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:15, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.6 : 1 }}>
-          {loading ? 'Generando…' : '🎲 Generar PIN'}
+          style={{ padding:'10px 18px', borderRadius:999, border:'none', background:'var(--brand-strong)', color:'var(--on-brand)', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:15, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.6 : 1 }}>
+          {loading ? 'Generando…' : <><Dice5 size={14} style={{display:'inline', verticalAlign:'middle'}}/> Generar PIN</>}
         </button>
 
         {pin && (
           <>
-            <div style={{ fontFamily:'monospace', fontSize:28, fontWeight:900, letterSpacing:6, color:'var(--text)', background:'var(--bg2)', border:'2px solid var(--orange)', borderRadius:10, padding:'8px 20px' }}>
+            <div style={{ fontFamily:'monospace', fontSize:28, fontWeight:900, letterSpacing:6, color:'var(--ink-900)', background:'var(--surface-sunken)', border:'2px solid var(--brand)', borderRadius:10, padding:'8px 20px' }}>
               {pin}
             </div>
             <button onClick={copy}
-              style={{ padding:'8px 14px', borderRadius:999, border:'1px solid var(--border)', background:'transparent', color:'var(--text-muted)', fontSize:13, fontWeight:600, cursor:'pointer' }}>
-              {copied ? '✓ Copiado' : '📋 Copiar'}
+              style={{ padding:'8px 14px', borderRadius:999, border:'1px solid var(--line)', background:'transparent', color:'var(--ink-500)', fontSize:13, fontWeight:600, cursor:'pointer' }}>
+              {copied ? <><Check size={12}/> Copiado</> : <><ClipboardCopy size={12}/> Copiar</>}
             </button>
             <div style={{ fontSize:11, color:'#dc2626', fontWeight:600, width:'100%', marginTop:2 }}>
-              ⚠ Muéstraselo al empleado ahora — este PIN desaparece al usarse.
+              <AlertTriangle size={12} style={{display:'inline', verticalAlign:'middle'}}/> Muéstraselo al empleado ahora — este PIN desaparece al usarse.
             </div>
           </>
         )}
@@ -84,7 +85,7 @@ function AutoSchedulePanel({ value, onChange }: { value: AutoSchedule; onChange:
   }
 
   return (
-    <div style={{ marginTop: 20, borderTop: '1px dashed var(--border)', paddingTop: 18 }}>
+    <div style={{ marginTop: 20, borderTop: '1px dashed var(--line)', paddingTop: 18 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
         <button
           onClick={() => onChange({ ...value, enabled: !value.enabled })}
@@ -92,10 +93,10 @@ function AutoSchedulePanel({ value, onChange }: { value: AutoSchedule; onChange:
           <span style={{ position: 'absolute', top: 3, left: value.enabled ? 22 : 3, width: 18, height: 18, borderRadius: '50%', background: '#fff', transition: 'left .2s' }}/>
         </button>
         <div>
-          <div style={{ fontSize: 14, fontWeight: 700, color: value.enabled ? '#2563eb' : 'var(--text-muted)' }}>
-            🤖 Horario automático
+          <div style={{ fontSize: 14, fontWeight: 700, color: value.enabled ? '#2563eb' : 'var(--ink-500)' }}>
+            <Bot size={14} style={{display:'inline', verticalAlign:'middle'}}/> Horario automático
           </div>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>
+          <div style={{ fontSize: 11, color: 'var(--ink-500)', marginTop: 1 }}>
             Abre y cierra el local automáticamente según el horario configurado
           </div>
         </div>
@@ -105,13 +106,13 @@ function AutoSchedulePanel({ value, onChange }: { value: AutoSchedule; onChange:
         <div style={{ paddingLeft: 0, display: 'flex', flexDirection: 'column', gap: 14 }}>
           {/* Días */}
           <div>
-            <div style={{ fontSize: 11, fontWeight: 700, color: '#A0541A', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 8 }}>Días activos</div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-500)', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 8 }}>Días activos</div>
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
               {DAY_LABELS.map((label, i) => {
                 const on = value.days.includes(i);
                 return (
                   <button key={i} onClick={() => toggleDay(i)}
-                    style={{ padding: '5px 12px', borderRadius: 999, border: `1.5px solid ${on ? '#2563eb' : 'var(--border)'}`, background: on ? 'rgba(37,99,235,0.1)' : 'transparent', color: on ? '#2563eb' : 'var(--text-muted)', fontWeight: 700, fontSize: 13, cursor: 'pointer', transition: 'all .15s' }}>
+                    style={{ padding: '5px 12px', borderRadius: 999, border: `1.5px solid ${on ? '#2563eb' : 'var(--line)'}`, background: on ? 'rgba(37,99,235,0.1)' : 'transparent', color: on ? '#2563eb' : 'var(--ink-500)', fontWeight: 700, fontSize: 13, cursor: 'pointer', transition: 'all .15s' }}>
                     {label}
                   </button>
                 );
@@ -122,13 +123,13 @@ function AutoSchedulePanel({ value, onChange }: { value: AutoSchedule; onChange:
           {/* Hora apertura / cierre */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <div>
-              <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#A0541A', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 6 }}>Apertura</label>
+              <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--ink-500)', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 6 }}>Apertura</label>
               <input type="time" value={value.openTime}
                 onChange={e => onChange({ ...value, openTime: e.target.value })}
                 style={INPUT} />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#A0541A', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 6 }}>Cierre</label>
+              <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--ink-500)', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 6 }}>Cierre</label>
               <input type="time" value={value.closeTime}
                 onChange={e => onChange({ ...value, closeTime: e.target.value })}
                 style={INPUT} />
@@ -136,7 +137,7 @@ function AutoSchedulePanel({ value, onChange }: { value: AutoSchedule; onChange:
           </div>
 
           <div style={{ fontSize: 12, color: '#2563eb', background: 'rgba(37,99,235,0.07)', border: '1px solid rgba(37,99,235,0.2)', borderRadius: 8, padding: '8px 12px' }}>
-            💡 Cuando el horario automático está activo, anula el toggle manual de arriba. El local se abrirá y cerrará según este horario (hora Santiago).
+            <Lightbulb size={12} style={{display:'inline', verticalAlign:'middle'}}/> Cuando el horario automático está activo, anula el toggle manual de arriba. El local se abrirá y cerrará según este horario (hora Santiago).
           </div>
         </div>
       )}
@@ -179,9 +180,9 @@ export default function SettingsEditor({ initial }: { initial: Settings }) {
   return (
     <div>
       {/* WhatsApp */}
-      <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '20px', marginBottom: 16 }}>
-        <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 18, color: 'var(--text)', marginBottom: 16 }}>
-          📱 WhatsApp
+      <div style={{ background: 'var(--surface-raised)', border: '1px solid var(--line)', borderRadius: 'var(--radius-lg)', padding: '20px', marginBottom: 16 }}>
+        <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 18, color: 'var(--ink-900)', marginBottom: 16 }}>
+          <Smartphone size={16} style={{display:'inline', verticalAlign:'middle'}}/> WhatsApp
         </div>
         <label style={LABEL}>Número (con código de país, sin +)</label>
         <input
@@ -190,17 +191,17 @@ export default function SettingsEditor({ initial }: { initial: Settings }) {
           onChange={e => set('waNumber', e.target.value)}
           placeholder="56912345678"
         />
-        <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>
+        <div style={{ fontSize: 12, color: 'var(--ink-500)', marginTop: 6 }}>
           Los pedidos se envían a este número. Ej: 56985219094
         </div>
       </div>
 
       {/* Mensaje WhatsApp */}
-      <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '20px', marginBottom: 16 }}>
-        <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 18, color: 'var(--text)', marginBottom: 4 }}>
-          💬 Mensaje de pedido
+      <div style={{ background: 'var(--surface-raised)', border: '1px solid var(--line)', borderRadius: 'var(--radius-lg)', padding: '20px', marginBottom: 16 }}>
+        <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 18, color: 'var(--ink-900)', marginBottom: 4 }}>
+          <MessageSquare size={16} style={{display:'inline', verticalAlign:'middle'}}/> Mensaje de pedido
         </div>
-        <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>
+        <div style={{ fontSize: 12, color: 'var(--ink-500)', marginBottom: 16 }}>
           Personaliza el texto que el cliente envía por WhatsApp.
         </div>
 
@@ -221,7 +222,7 @@ export default function SettingsEditor({ initial }: { initial: Settings }) {
         />
 
         {/* Preview */}
-        <div style={{ fontSize: 11, fontWeight: 700, color: '#A0541A', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 8 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-500)', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 8 }}>
           Vista previa
         </div>
         <div style={{ background: '#e9fbe9', border: '1px solid #c3e6c3', borderRadius: 10, padding: '12px 14px', fontFamily: 'monospace', fontSize: 12, color: '#1a3a1a', lineHeight: 1.8, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
@@ -237,9 +238,9 @@ ${form.waGreeting}
       </div>
 
       {/* Dirección */}
-      <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '20px', marginBottom: 16 }}>
-        <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 18, color: 'var(--text)', marginBottom: 16 }}>
-          📍 Dirección
+      <div style={{ background: 'var(--surface-raised)', border: '1px solid var(--line)', borderRadius: 'var(--radius-lg)', padding: '20px', marginBottom: 16 }}>
+        <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 18, color: 'var(--ink-900)', marginBottom: 16 }}>
+          <MapPin size={16} style={{display:'inline', verticalAlign:'middle'}}/> Dirección
         </div>
         <label style={LABEL}>Dirección del local</label>
         <input
@@ -251,9 +252,9 @@ ${form.waGreeting}
       </div>
 
       {/* Horario */}
-      <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '20px', marginBottom: 16 }}>
-        <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 18, color: 'var(--text)', marginBottom: 16 }}>
-          🕐 Horario
+      <div style={{ background: 'var(--surface-raised)', border: '1px solid var(--line)', borderRadius: 'var(--radius-lg)', padding: '20px', marginBottom: 16 }}>
+        <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 18, color: 'var(--ink-900)', marginBottom: 16 }}>
+          <Clock size={16} style={{display:'inline', verticalAlign:'middle'}}/> Horario
         </div>
         <label style={LABEL}>Texto del horario</label>
         <input
@@ -279,7 +280,7 @@ ${form.waGreeting}
             onClick={() => set('isOpen', !form.isOpen)}
             style={{
               width: 44, height: 24, borderRadius: 999, border: 'none',
-              background: form.isOpen ? '#F26419' : '#d1d5db',
+              background: form.isOpen ? 'var(--brand)' : '#d1d5db',
               cursor: 'pointer', position: 'relative', transition: 'background .2s', flexShrink: 0,
             }}
           >
@@ -289,7 +290,7 @@ ${form.waGreeting}
               background: '#fff', transition: 'left .2s',
             }}/>
           </button>
-          <span style={{ fontSize: 14, fontWeight: 600, color: form.isOpen ? 'var(--orange)' : 'var(--text-muted)' }}>
+          <span style={{ fontSize: 14, fontWeight: 600, color: form.isOpen ? 'var(--brand)' : 'var(--ink-500)' }}>
             {form.isOpen ? 'Local abierto' : 'Local cerrado'}
           </span>
         </div>
@@ -305,11 +306,11 @@ ${form.waGreeting}
       <MostradorPinPanel/>
 
       {/* Delivery */}
-      <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '20px', marginBottom: 16 }}>
-        <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 18, color: 'var(--text)', marginBottom: 4 }}>
-          🛵 Delivery
+      <div style={{ background: 'var(--surface-raised)', border: '1px solid var(--line)', borderRadius: 'var(--radius-lg)', padding: '20px', marginBottom: 16 }}>
+        <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 18, color: 'var(--ink-900)', marginBottom: 4 }}>
+          <Bike size={16} style={{display:'inline', verticalAlign:'middle'}}/> Delivery
         </div>
-        <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>
+        <div style={{ fontSize: 12, color: 'var(--ink-500)', marginBottom: 16 }}>
           Calcula el costo según distancia desde el local al cliente (línea recta).
         </div>
 
@@ -317,10 +318,10 @@ ${form.waGreeting}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
           <button
             onClick={() => setForm(f => ({ ...f, delivery: { ...f.delivery, enabled: !f.delivery.enabled } }))}
-            style={{ width: 44, height: 24, borderRadius: 999, border: 'none', background: form.delivery.enabled ? '#F26419' : '#d1d5db', cursor: 'pointer', position: 'relative', transition: 'background .2s', flexShrink: 0 }}>
+            style={{ width: 44, height: 24, borderRadius: 999, border: 'none', background: form.delivery.enabled ? 'var(--brand)' : '#d1d5db', cursor: 'pointer', position: 'relative', transition: 'background .2s', flexShrink: 0 }}>
             <span style={{ position: 'absolute', top: 3, left: form.delivery.enabled ? 22 : 3, width: 18, height: 18, borderRadius: '50%', background: '#fff', transition: 'left .2s' }}/>
           </button>
-          <span style={{ fontSize: 14, fontWeight: 600, color: form.delivery.enabled ? 'var(--orange)' : 'var(--text-muted)' }}>
+          <span style={{ fontSize: 14, fontWeight: 600, color: form.delivery.enabled ? 'var(--brand)' : 'var(--ink-500)' }}>
             {form.delivery.enabled ? 'Delivery habilitado' : 'Delivery deshabilitado'}
           </span>
         </div>
@@ -330,8 +331,8 @@ ${form.waGreeting}
             {/* Coordenadas */}
             <div style={{ marginBottom: 16 }}>
               <label style={{ ...LABEL, marginBottom: 4 }}>Coordenadas del local</label>
-              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>
-                Abre <a href={`https://maps.google.com/?q=${encodeURIComponent(form.address)}`} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--orange)' }}>Google Maps</a>, haz clic derecho sobre el local → &quot;¿Qué hay aquí?&quot; y copia las coordenadas.
+              <div style={{ fontSize: 12, color: 'var(--ink-500)', marginBottom: 8 }}>
+                Abre <a href={`https://maps.google.com/?q=${encodeURIComponent(form.address)}`} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--brand)' }}>Google Maps</a>, haz clic derecho sobre el local → &quot;¿Qué hay aquí?&quot; y copia las coordenadas.
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                 <div>
@@ -356,7 +357,7 @@ ${form.waGreeting}
             {/* Zonas */}
             <div style={{ marginBottom: 16 }}>
               <label style={LABEL}>Zonas de precio</label>
-              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 10 }}>Hasta X km → precio fijo. Ordenadas de menor a mayor distancia.</div>
+              <div style={{ fontSize: 12, color: 'var(--ink-500)', marginBottom: 10 }}>Hasta X km → precio fijo. Ordenadas de menor a mayor distancia.</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {form.delivery.zones.map((zone, i) => (
                   <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -394,7 +395,7 @@ ${form.waGreeting}
                   const newZone: DeliveryZone = { maxKm: last ? last.maxKm + 3 : 2, price: last ? last.price + 500 : 1500 };
                   setForm(f => ({ ...f, delivery: { ...f.delivery, zones: [...f.delivery.zones, newZone] } }));
                 }}
-                style={{ marginTop: 10, padding: '7px 16px', borderRadius: 999, border: '1.5px dashed rgba(242,100,25,0.4)', background: 'transparent', color: '#F26419', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+                style={{ marginTop: 10, padding: '7px 16px', borderRadius: 999, border: '1.5px dashed var(--line)', background: 'transparent', color: 'var(--brand)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
                 + Agregar zona
               </button>
             </div>
@@ -402,7 +403,7 @@ ${form.waGreeting}
             {/* Precio por km extra */}
             <div>
               <label style={LABEL}>Precio por km adicional (más allá de la última zona)</label>
-              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>
+              <div style={{ fontSize: 12, color: 'var(--ink-500)', marginBottom: 8 }}>
                 Pon 0 si no quieres hacer delivery fuera de las zonas definidas.
               </div>
               <input type="number" min="0"
@@ -417,26 +418,26 @@ ${form.waGreeting}
 
       {/* QR de la página */}
       {siteUrl && (
-        <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '20px', marginBottom: 16, textAlign: 'center' }}>
-          <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 18, color: 'var(--text)', marginBottom: 4 }}>
-            📱 QR de tu página
+        <div style={{ background: 'var(--surface-raised)', border: '1px solid var(--line)', borderRadius: 'var(--radius-lg)', padding: '20px', marginBottom: 16, textAlign: 'center' }}>
+          <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 18, color: 'var(--ink-900)', marginBottom: 4 }}>
+            <QrCode size={16} style={{display:'inline', verticalAlign:'middle'}}/> QR de tu página
           </div>
-          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 16 }}>{siteUrl}</div>
+          <div style={{ fontSize: 12, color: 'var(--ink-500)', marginBottom: 16 }}>{siteUrl}</div>
           <img
             src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=10&data=${encodeURIComponent(siteUrl)}`}
             alt="QR código"
             width={200}
             height={200}
-            style={{ borderRadius: 12, border: '1px solid var(--border)', display: 'block', margin: '0 auto 16px' }}
+            style={{ borderRadius: 12, border: '1px solid var(--line)', display: 'block', margin: '0 auto 16px' }}
           />
           <a
             href={`https://api.qrserver.com/v1/create-qr-code/?size=400x400&margin=20&data=${encodeURIComponent(siteUrl)}`}
             download="qr-gustosos.png"
             target="_blank"
             rel="noopener noreferrer"
-            style={{ display: 'inline-block', padding: '10px 24px', borderRadius: 999, background: '#F26419', color: '#fff', fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 16, textDecoration: 'none' }}
+            style={{ display: 'inline-block', padding: '10px 24px', borderRadius: 999, background: 'var(--brand-strong)', color: 'var(--on-brand)', fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 16, textDecoration: 'none' }}
           >
-            ⬇ Descargar QR
+            <Download size={14} style={{display:'inline', verticalAlign:'middle'}}/> Descargar QR
           </a>
         </div>
       )}
@@ -447,7 +448,7 @@ ${form.waGreeting}
       )}
       {saved && (
         <div style={{ fontSize: 13, color: '#16a34a', fontWeight: 600, marginBottom: 12 }}>
-          ✓ Guardado correctamente
+          <Check size={14} style={{display:'inline', verticalAlign:'middle'}}/> Guardado correctamente
         </div>
       )}
       <button
@@ -455,11 +456,11 @@ ${form.waGreeting}
         disabled={isPending}
         style={{
           width: '100%', padding: '13px', borderRadius: 999, border: 'none',
-          background: isPending ? '#d1bfb8' : '#F26419',
-          color: '#fff', fontFamily: "'Barlow Condensed',sans-serif",
+          background: isPending ? '#d1bfb8' : 'var(--brand-strong)',
+          color: 'var(--on-brand)', fontFamily: "'Barlow Condensed',sans-serif",
           fontWeight: 900, fontSize: 20,
           cursor: isPending ? 'not-allowed' : 'pointer',
-          boxShadow: isPending ? 'none' : '0 4px 16px rgba(242,100,25,0.30)',
+          boxShadow: isPending ? 'none' : 'var(--shadow-brand)',
         }}
       >
         {isPending ? 'Guardando…' : 'Guardar cambios'}

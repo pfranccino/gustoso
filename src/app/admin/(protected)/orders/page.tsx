@@ -5,29 +5,35 @@ import { useLiveOrders } from '@/hooks/useLiveOrders';
 import { Order, OrderStatus, PaymentMethod } from '@/lib/firestore/orders';
 import AdminHeader from '@/components/admin/AdminHeader';
 import AdminButton from '@/components/admin/AdminButton';
+import { Clock, CheckCircle, Truck, Package, XCircle, RotateCcw, PhoneOff, FileText, Banknote, Landmark, CreditCard, Store, Smartphone, Search, SlidersHorizontal, ClipboardList, MapPin, StickyNote, Tag, Bike, Download, Moon, Sunrise, AlertTriangle } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 
 const fmt = (n: number) =>
   n.toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 });
 
 /* ── configuración de estados ──────────────────── */
 
-const STATUS_CFG: Record<OrderStatus, { label: string; color: string; bg: string; dot: string; emoji: string }> = {
-  pending:     { label: 'Pendiente',    color: '#d97706', bg: 'rgba(217,119,6,0.1)',   dot: '#f59e0b', emoji: '⏳' },
-  confirmed:   { label: 'Confirmado',   color: '#16a34a', bg: 'rgba(22,163,74,0.1)',   dot: '#22c55e', emoji: '✅' },
-  on_the_way:  { label: 'En camino',    color: '#ea580c', bg: 'rgba(234,88,12,0.1)',   dot: '#f97316', emoji: '🛵' },
-  delivered:   { label: 'Entregado',    color: '#2563eb', bg: 'rgba(37,99,235,0.1)',   dot: '#3b82f6', emoji: '📦' },
-  rejected:    { label: 'Rechazado',    color: '#dc2626', bg: 'rgba(220,38,38,0.1)',   dot: '#ef4444', emoji: '❌' },
-  returned:    { label: 'Devuelto',     color: '#7c3aed', bg: 'rgba(124,58,237,0.1)',  dot: '#8b5cf6', emoji: '🔄' },
-  no_answer:   { label: 'No contestó',  color: '#6b7280', bg: 'rgba(107,114,128,0.1)', dot: '#9ca3af', emoji: '📵' },
-  quote:       { label: 'Cotización',   color: '#0891b2', bg: 'rgba(8,145,178,0.1)',   dot: '#06b6d4', emoji: '📋' },
+const STATUS_CFG: Record<OrderStatus, { label: string; color: string; bg: string; dot: string; icon: LucideIcon }> = {
+  pending:     { label: 'Pendiente',    color: 'var(--st-pending)',   bg: 'var(--st-pending-soft)',   dot: 'var(--st-pending)',   icon: Clock },
+  confirmed:   { label: 'Confirmado',   color: 'var(--st-confirmed)', bg: 'var(--st-confirmed-soft)', dot: 'var(--st-confirmed)', icon: CheckCircle },
+  on_the_way:  { label: 'En camino',    color: 'var(--st-transit)',   bg: 'var(--st-transit-soft)',   dot: 'var(--st-transit)',   icon: Truck },
+  delivered:   { label: 'Entregado',    color: 'var(--st-delivered)', bg: 'var(--st-delivered-soft)', dot: 'var(--st-delivered)', icon: Package },
+  rejected:    { label: 'Rechazado',    color: 'var(--st-rejected)',  bg: 'var(--st-rejected-soft)',  dot: 'var(--st-rejected)',  icon: XCircle },
+  returned:    { label: 'Devuelto',     color: 'var(--st-returned)',  bg: 'var(--st-returned-soft)',  dot: 'var(--st-returned)',  icon: RotateCcw },
+  no_answer:   { label: 'No contestó',  color: 'var(--st-neutral)',   bg: 'var(--st-neutral-soft)',   dot: 'var(--st-neutral)',   icon: PhoneOff },
+  quote:       { label: 'Cotización',   color: 'var(--st-quote)',     bg: 'var(--st-quote-soft)',     dot: 'var(--st-quote)',     icon: FileText },
 };
 
 const ALL_STATUSES = Object.keys(STATUS_CFG) as OrderStatus[];
 
 const PAYMENT_LABEL: Record<PaymentMethod, string> = {
-  efectivo:      '💵 Efectivo',
-  transferencia: '🏦 Transferencia',
-  debito:        '💳 Débito/Crédito',
+  efectivo:      'Efectivo',
+  transferencia: 'Transferencia',
+  debito:        'Débito/Crédito',
+};
+
+const PAYMENT_ICON: Record<PaymentMethod, LucideIcon> = {
+  efectivo: Banknote, transferencia: Landmark, debito: CreditCard,
 };
 
 /* ── tipos de filtros ──────────────────────────── */
@@ -49,16 +55,16 @@ function FilterChips<T extends string>({ label, options, value, onChange }: {
 }) {
   return (
     <div>
-      <div style={{ fontSize:10, fontWeight:800, color:'var(--text-muted)', letterSpacing:1, textTransform:'uppercase', marginBottom:6 }}>{label}</div>
+      <div style={{ fontSize:10, fontWeight:800, color:'var(--ink-500)', letterSpacing:1, textTransform:'uppercase', marginBottom:6 }}>{label}</div>
       <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
         {options.map(opt => {
           const sel = value === opt.id;
           return (
             <button key={opt.id} onClick={() => onChange(opt.id)}
               style={{ padding:'5px 12px', borderRadius:999, border:'1.5px solid', fontSize:12, fontWeight:700, cursor:'pointer', transition:'all .15s',
-                borderColor: sel ? 'var(--orange)' : 'var(--border)',
-                background:  sel ? 'rgba(242,100,25,0.1)' : 'transparent',
-                color:       sel ? 'var(--orange)' : 'var(--text-muted)' }}>
+                borderColor: sel ? 'var(--brand)' : 'var(--line)',
+                background:  sel ? 'var(--brand-soft)' : 'transparent',
+                color:       sel ? 'var(--brand)' : 'var(--ink-500)' }}>
               {opt.label}
             </button>
           );
@@ -129,9 +135,9 @@ function NotesSection({ order, onAddNote }: {
   return (
     <div style={{ marginTop:10 }}>
       <button onClick={() => setOpen(v => !v)}
-        style={{ fontSize:12, color:'var(--text-muted)', background:'transparent', border:'none', cursor:'pointer', padding:0, display:'flex', alignItems:'center', gap:5 }}>
-        💬 {notes.length > 0 ? `${notes.length} nota${notes.length > 1 ? 's' : ''}` : 'Agregar nota'}
-        <span style={{ fontSize:10, color:'var(--text-muted)' }}>{open ? '▲' : '▼'}</span>
+        style={{ fontSize:12, color:'var(--ink-500)', background:'transparent', border:'none', cursor:'pointer', padding:0, display:'flex', alignItems:'center', gap:5 }}>
+        <StickyNote size={12}/> {notes.length > 0 ? `${notes.length} nota${notes.length > 1 ? 's' : ''}` : 'Agregar nota'}
+        <span style={{ fontSize:10, color:'var(--ink-500)' }}>{open ? '▲' : '▼'}</span>
       </button>
 
       {open && (
@@ -139,9 +145,9 @@ function NotesSection({ order, onAddNote }: {
           {notes.length > 0 && (
             <div style={{ display:'flex', flexDirection:'column', gap:6, marginBottom:10 }}>
               {notes.map((n, i) => (
-                <div key={i} style={{ background:'var(--bg2)', border:'1px solid var(--border)', borderRadius:8, padding:'8px 12px' }}>
-                  <div style={{ fontSize:13, color:'var(--text)', lineHeight:1.5 }}>{n.text}</div>
-                  <div style={{ fontSize:11, color:'var(--text-muted)', marginTop:3 }}>{relativeTime(n.createdAt)}</div>
+                <div key={i} style={{ background:'var(--surface-sunken)', border:'1px solid var(--line)', borderRadius:8, padding:'8px 12px' }}>
+                  <div style={{ fontSize:13, color:'var(--ink-900)', lineHeight:1.5 }}>{n.text}</div>
+                  <div style={{ fontSize:11, color:'var(--ink-500)', marginTop:3 }}>{relativeTime(n.createdAt)}</div>
                 </div>
               ))}
             </div>
@@ -151,10 +157,10 @@ function NotesSection({ order, onAddNote }: {
               value={text} onChange={e => setText(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && !e.shiftKey && submit()}
               placeholder="Escribe una nota interna…"
-              style={{ flex:1, padding:'7px 10px', borderRadius:8, border:'1.5px solid var(--border)', background:'var(--card)', color:'var(--text)', fontSize:13, fontFamily:"'Barlow',sans-serif", outline:'none' }}
+              style={{ flex:1, padding:'7px 10px', borderRadius:8, border:'1.5px solid var(--line)', background:'var(--surface-raised)', color:'var(--ink-900)', fontSize:13, fontFamily:"'Barlow',sans-serif", outline:'none' }}
             />
             <button onClick={submit} disabled={saving || !text.trim()}
-              style={{ padding:'7px 14px', borderRadius:8, border:'none', background:'var(--orange)', color:'#fff', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:13, cursor: (saving || !text.trim()) ? 'not-allowed' : 'pointer', opacity: (saving || !text.trim()) ? 0.5 : 1 }}>
+              style={{ padding:'7px 14px', borderRadius:8, border:'none', background:'var(--brand-strong)', color:'var(--on-brand)', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:13, cursor: (saving || !text.trim()) ? 'not-allowed' : 'pointer', opacity: (saving || !text.trim()) ? 0.5 : 1 }}>
               {saving ? '…' : 'Guardar'}
             </button>
           </div>
@@ -179,8 +185,8 @@ function printComanda(order: Order) {
     return `<div class="item"><span class="qty">${it.qty}×</span><span class="name">${it.name}${it.size ? ` (${it.size})` : ''}</span><span class="price">${fmtCLP(it.price * it.qty)}</span></div>${detail}`;
   }).join('');
 
-  const notesList = (order.notes ?? []).map(n => `<div class="note">📝 ${n.text}</div>`).join('');
-  const source = (order as Record<string,unknown>).source === 'local' ? '🏪 Local / Mostrador' : '📱 WhatsApp';
+  const notesList = (order.notes ?? []).map(n => `<div class="note">Nota: ${n.text}</div>`).join('');
+  const source = (order as Record<string,unknown>).source === 'local' ? 'Local / Mostrador' : 'WhatsApp';
 
   const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Comanda ${order.orderId ?? ''}</title>
 <style>
@@ -212,7 +218,7 @@ function printComanda(order: Order) {
 ${itemsHtml}
 <div class="divider"></div>
 ${order.discountCode ? `<div class="row"><span>Descuento ${order.discountCode}</span><span>-${fmtCLP(order.discountAmount??0)}</span></div>` : ''}
-${order.deliveryFee ? `<div class="row"><span>🛵 Delivery</span><span>${fmtCLP(order.deliveryFee)}</span></div>` : ''}
+${order.deliveryFee ? `<div class="row"><span>Delivery</span><span>${fmtCLP(order.deliveryFee)}</span></div>` : ''}
 <div class="row"><span class="label">Total</span><span class="total">${fmtCLP(order.total)}</span></div>
 ${order.paymentMethod ? `<div class="row"><span class="label">Pago</span><span>${PAYMENT_LABEL[order.paymentMethod]}</span></div>` : ''}
 ${notesList ? `<div class="divider"></div>${notesList}` : ''}
@@ -248,10 +254,10 @@ function OrderCard({ order, onStatus, onAddNote }: {
   const isNew = order.status === 'pending';
 
   return (
-    <div style={{ background:'var(--card)', border:`1px solid ${isNew ? 'rgba(242,100,25,0.4)' : 'var(--border)'}`, borderRadius:'var(--radius)', overflow:'hidden', animation:'slideIn 0.3s ease', position:'relative' }}>
+    <div style={{ background:'var(--surface-raised)', border:`1px solid ${isNew ? 'var(--line-strong)' : 'var(--line)'}`, borderRadius:'var(--radius-lg)', overflow:'hidden', animation:'slideIn 0.3s ease', position:'relative' }}>
       {/* Top accent bar for new/pending */}
       {isNew && (
-        <div style={{ height:3, background:'linear-gradient(90deg,var(--orange),var(--yellow))' }}/>
+        <div style={{ height:3, background:'linear-gradient(90deg,var(--brand),var(--gold))' }}/>
       )}
 
       <div style={{ padding:'14px 16px' }}>
@@ -260,33 +266,33 @@ function OrderCard({ order, onStatus, onAddNote }: {
           <div>
             <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap', marginBottom:4 }}>
               {order.orderId && (
-                <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:16, color:'var(--text)', letterSpacing:.5 }}>
+                <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:16, color:'var(--ink-900)', letterSpacing:.5 }}>
                   #{order.orderId}
                 </span>
               )}
               {isNew && (
-                <span style={{ fontSize:9, fontWeight:800, color:'var(--orange)', background:'rgba(242,100,25,0.1)', padding:'2px 6px', borderRadius:4, letterSpacing:.8, textTransform:'uppercase' }}>NUEVO</span>
+                <span style={{ fontSize:9, fontWeight:800, color:'var(--brand)', background:'var(--brand-soft)', padding:'2px 6px', borderRadius:4, letterSpacing:.8, textTransform:'uppercase' }}>NUEVO</span>
               )}
             </div>
-            <div style={{ fontSize:11, color:'var(--text-muted)', fontWeight:600 }}>
+            <div style={{ fontSize:11, color:'var(--ink-500)', fontWeight:600 }}>
               {date} · {time}
               {order.paymentMethod && <span style={{ marginLeft:8 }}>{PAYMENT_LABEL[order.paymentMethod]}</span>}
               {order.locationUrl && (
-                <a href={order.locationUrl} target="_blank" rel="noopener noreferrer" style={{ marginLeft:8, color:'var(--orange)', textDecoration:'none' }}>📍 Ubicación</a>
+                <a href={order.locationUrl} target="_blank" rel="noopener noreferrer" style={{ marginLeft:8, color:'var(--brand)', textDecoration:'none', display:'inline-flex', alignItems:'center', gap:2 }}><MapPin size={10}/> Ubicación</a>
               )}
             </div>
           </div>
           {/* Status pill */}
           <select value={order.status} disabled={busy} onChange={e => change(e.target.value as OrderStatus)}
             style={{ padding:'4px 10px', borderRadius:999, border:`1.5px solid ${cfg.color}55`, background:cfg.bg, color:cfg.color, fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:13, cursor:busy?'not-allowed':'pointer', outline:'none', opacity:busy?0.6:1 }}>
-            {ALL_STATUSES.map(s => <option key={s} value={s}>{STATUS_CFG[s].emoji} {STATUS_CFG[s].label}</option>)}
+            {ALL_STATUSES.map(s => <option key={s} value={s}>{STATUS_CFG[s].label}</option>)}
           </select>
         </div>
 
         {/* Items box */}
-        <div style={{ padding:'10px 12px', background:'var(--bg2)', borderRadius:8, marginBottom:10 }}>
+        <div style={{ padding:'10px 12px', background:'var(--surface-sunken)', borderRadius:8, marginBottom:10 }}>
           {order.items.map((it, j) => (
-            <div key={j} style={{ fontSize:12.5, color:'var(--text)', fontWeight:500, padding:'2px 0', lineHeight:1.5 }}>
+            <div key={j} style={{ fontSize:12.5, color:'var(--ink-900)', fontWeight:500, padding:'2px 0', lineHeight:1.5 }}>
               · {it.qty}× {it.name}{it.size ? ` (${it.size})` : ''}
             </div>
           ))}
@@ -294,25 +300,25 @@ function OrderCard({ order, onStatus, onAddNote }: {
 
         {/* Note from client (first internal note, if any) */}
         {notes.length > 0 && (
-          <div style={{ padding:'8px 10px', borderLeft:'3px solid var(--orange)', background:'rgba(242,100,25,0.05)', fontSize:12, color:'var(--text-muted)', marginBottom:8, borderRadius:'0 6px 6px 0', lineHeight:1.4 }}>
-            📝 {notes[0].text}
+          <div style={{ padding:'8px 10px', borderLeft:'3px solid var(--brand)', background:'var(--brand-soft)', fontSize:12, color:'var(--ink-500)', marginBottom:8, borderRadius:'0 6px 6px 0', lineHeight:1.4 }}>
+            <StickyNote size={12} style={{display:'inline', verticalAlign:'middle'}}/> {notes[0].text}
           </div>
         )}
 
         {/* Discount badge */}
         {order.discountCode && (
-          <div style={{ display:'inline-flex', alignItems:'center', gap:4, fontSize:10, fontWeight:800, color:'#16a34a', background:'rgba(22,163,74,0.1)', padding:'2px 8px', borderRadius:4, marginBottom:8, letterSpacing:.5 }}>
-            🏷️ {order.discountCode} (−{fmt(order.discountAmount ?? 0)})
+          <div style={{ display:'inline-flex', alignItems:'center', gap:4, fontSize:10, fontWeight:800, color:'var(--st-confirmed)', background:'var(--st-confirmed-soft)', padding:'2px 8px', borderRadius:4, marginBottom:8, letterSpacing:.5 }}>
+            <Tag size={10}/> {order.discountCode} (−{fmt(order.discountAmount ?? 0)})
           </div>
         )}
 
         {/* Bottom row: total + actions */}
-        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', paddingTop:10, borderTop:'1px dashed var(--border)' }}>
-          <div style={{ fontSize:11, color:'var(--text-muted)' }}>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', paddingTop:10, borderTop:'1px dashed var(--line)' }}>
+          <div style={{ fontSize:11, color:'var(--ink-500)' }}>
             {order.itemCount} ítem{order.itemCount !== 1 ? 's' : ''}
-            {order.deliveryFee != null && <span> · 🛵 {fmt(order.deliveryFee)}</span>}
+            {order.deliveryFee != null && <span style={{display:'inline-flex', alignItems:'center', gap:2}}> · <Bike size={11}/> {fmt(order.deliveryFee)}</span>}
           </div>
-          <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:22, color:'var(--text)', letterSpacing:-.3 }}>{fmt(order.total)}</span>
+          <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:22, color:'var(--ink-900)', letterSpacing:-.3 }}>{fmt(order.total)}</span>
         </div>
 
         {/* Action buttons */}
@@ -326,22 +332,22 @@ function OrderCard({ order, onStatus, onAddNote }: {
           return (
             <div style={{ display:'flex', gap:6, marginTop:10 }}>
               <button onClick={() => printComanda(order)}
-                style={{ flex:1, padding:'7px 8px', borderRadius:6, border:'1px solid var(--border)', background:'transparent', color:'var(--text-muted)', fontSize:11, fontWeight:700, cursor:'pointer' }}>
-                📋 Detalle
+                style={{ flex:1, padding:'7px 8px', borderRadius:6, border:'1px solid var(--line)', background:'transparent', color:'var(--ink-500)', fontSize:11, fontWeight:700, cursor:'pointer' }}>
+                <ClipboardList size={11}/> Detalle
               </button>
               {order.locationUrl ? (
                 <a href={order.locationUrl} target="_blank" rel="noopener noreferrer"
-                  style={{ flex:1, padding:'7px 8px', borderRadius:6, border:'1px solid var(--border)', background:'transparent', color:'var(--text-muted)', fontSize:11, fontWeight:700, cursor:'pointer', textDecoration:'none', display:'flex', alignItems:'center', justifyContent:'center', gap:3 }}>
-                  📍 Ubicación
+                  style={{ flex:1, padding:'7px 8px', borderRadius:6, border:'1px solid var(--line)', background:'transparent', color:'var(--ink-500)', fontSize:11, fontWeight:700, cursor:'pointer', textDecoration:'none', display:'flex', alignItems:'center', justifyContent:'center', gap:3 }}>
+                  <MapPin size={11}/> Ubicación
                 </a>
               ) : (
-                <button disabled style={{ flex:1, padding:'7px 8px', borderRadius:6, border:'1px solid var(--border)', background:'transparent', color:'var(--text-muted)', fontSize:11, fontWeight:700, cursor:'not-allowed', opacity:0.4 }}>
-                  📍 Ubicación
+                <button disabled style={{ flex:1, padding:'7px 8px', borderRadius:6, border:'1px solid var(--line)', background:'transparent', color:'var(--ink-500)', fontSize:11, fontWeight:700, cursor:'not-allowed', opacity:0.4 }}>
+                  <MapPin size={11}/> Ubicación
                 </button>
               )}
               {nextStatus && (
                 <button onClick={() => change(nextStatus)} disabled={busy}
-                  style={{ flex:1, padding:'7px 8px', borderRadius:6, border:'none', background:'var(--text)', color:'var(--bg)', fontSize:11, fontWeight:800, cursor: busy ? 'not-allowed' : 'pointer', opacity: busy ? 0.6 : 1, display:'flex', alignItems:'center', justifyContent:'center', gap:3, whiteSpace:'nowrap' }}>
+                  style={{ flex:1, padding:'7px 8px', borderRadius:6, border:'none', background:'var(--ink-900)', color:'var(--surface-base)', fontSize:11, fontWeight:800, cursor: busy ? 'not-allowed' : 'pointer', opacity: busy ? 0.6 : 1, display:'flex', alignItems:'center', justifyContent:'center', gap:3, whiteSpace:'nowrap' }}>
                   {STATUS_CFG[nextStatus].label} →
                 </button>
               )}
@@ -389,36 +395,36 @@ function DaySummaryModal({ orders, dayStartedAt, onConfirm, onCancel, closing }:
   return (
     <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.55)', zIndex:200, display:'flex', alignItems:'center', justifyContent:'center', padding:16 }}
       onClick={e => { if (e.target === e.currentTarget) onCancel(); }}>
-      <div style={{ background:'var(--card)', borderRadius:'var(--radius)', border:'1px solid var(--border)', width:'100%', maxWidth:420, maxHeight:'90vh', overflowY:'auto', padding:24 }}>
+      <div style={{ background:'var(--surface-raised)', borderRadius:'var(--radius-lg)', border:'1px solid var(--line)', width:'100%', maxWidth:420, maxHeight:'90vh', overflowY:'auto', padding:24 }}>
 
         <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:20 }}>
-          <span style={{ fontSize:28 }}>🌙</span>
+          <Moon size={28} style={{color:'var(--ink-500)'}}/>
           <div>
-            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:22, color:'var(--text)', lineHeight:1 }}>Resumen del día</div>
-            <div style={{ fontSize:12, color:'var(--text-muted)', marginTop:2 }}>Desde {dayLabel}</div>
+            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:22, color:'var(--ink-900)', lineHeight:1 }}>Resumen del día</div>
+            <div style={{ fontSize:12, color:'var(--ink-500)', marginTop:2 }}>Desde {dayLabel}</div>
           </div>
         </div>
 
         {/* Revenue */}
-        <div style={{ background:'rgba(242,100,25,0.08)', border:'1px solid rgba(242,100,25,0.2)', borderRadius:10, padding:'14px 16px', marginBottom:16, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+        <div style={{ background:'var(--brand-soft)', border:'1px solid var(--line)', borderRadius:10, padding:'14px 16px', marginBottom:16, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
           <div>
-            <div style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:.5 }}>Total recaudado</div>
-            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:30, color:'var(--orange)' }}>{fmt(totalRevenue)}</div>
+            <div style={{ fontSize:11, fontWeight:700, color:'var(--ink-500)', textTransform:'uppercase', letterSpacing:.5 }}>Total recaudado</div>
+            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:30, color:'var(--brand)' }}>{fmt(totalRevenue)}</div>
           </div>
           <div style={{ textAlign:'right' }}>
-            <div style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:.5 }}>Pedidos</div>
-            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:26, color:'var(--text)' }}>{totalOrders}</div>
+            <div style={{ fontSize:11, fontWeight:700, color:'var(--ink-500)', textTransform:'uppercase', letterSpacing:.5 }}>Pedidos</div>
+            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:26, color:'var(--ink-900)' }}>{totalOrders}</div>
           </div>
         </div>
 
         {/* Desglose por método */}
         {payRows.length > 0 && (
           <div style={{ marginBottom:16 }}>
-            <div style={{ fontSize:11, fontWeight:800, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:1, marginBottom:8 }}>Por método de pago</div>
+            <div style={{ fontSize:11, fontWeight:800, color:'var(--ink-500)', textTransform:'uppercase', letterSpacing:1, marginBottom:8 }}>Por método de pago</div>
             {payRows.map(r => (
-              <div key={r.label} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'7px 0', borderBottom:'1px solid var(--border)' }}>
-                <span style={{ fontSize:13, color:'var(--text)' }}>{r.label} <span style={{ fontSize:11, color:'var(--text-muted)' }}>({r.count} ped.)</span></span>
-                <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:800, fontSize:16, color:'var(--orange)' }}>{fmt(r.total)}</span>
+              <div key={r.label} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'7px 0', borderBottom:'1px solid var(--line)' }}>
+                <span style={{ fontSize:13, color:'var(--ink-900)' }}>{r.label} <span style={{ fontSize:11, color:'var(--ink-500)' }}>({r.count} ped.)</span></span>
+                <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:800, fontSize:16, color:'var(--brand)' }}>{fmt(r.total)}</span>
               </div>
             ))}
           </div>
@@ -427,11 +433,11 @@ function DaySummaryModal({ orders, dayStartedAt, onConfirm, onCancel, closing }:
         {/* Top items */}
         {topItems.length > 0 && (
           <div style={{ marginBottom:16 }}>
-            <div style={{ fontSize:11, fontWeight:800, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:1, marginBottom:8 }}>Más vendidos hoy</div>
+            <div style={{ fontSize:11, fontWeight:800, color:'var(--ink-500)', textTransform:'uppercase', letterSpacing:1, marginBottom:8 }}>Más vendidos hoy</div>
             {topItems.map(([name, qty]) => (
-              <div key={name} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'6px 0', borderBottom:'1px solid var(--border)' }}>
-                <span style={{ fontSize:13, color:'var(--text)', flex:1, minWidth:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{name}</span>
-                <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:800, fontSize:15, color:'var(--text-muted)', flexShrink:0, marginLeft:8 }}>{qty}×</span>
+              <div key={name} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'6px 0', borderBottom:'1px solid var(--line)' }}>
+                <span style={{ fontSize:13, color:'var(--ink-900)', flex:1, minWidth:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{name}</span>
+                <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:800, fontSize:15, color:'var(--ink-500)', flexShrink:0, marginLeft:8 }}>{qty}×</span>
               </div>
             ))}
           </div>
@@ -439,18 +445,18 @@ function DaySummaryModal({ orders, dayStartedAt, onConfirm, onCancel, closing }:
 
         {pending > 0 && (
           <div style={{ background:'rgba(217,119,6,0.1)', border:'1px solid rgba(217,119,6,0.3)', borderRadius:8, padding:'10px 14px', marginBottom:16, fontSize:13, color:'#d97706', fontWeight:600 }}>
-            ⚠️ Hay {pending} pedido{pending > 1 ? 's' : ''} pendiente{pending > 1 ? 's' : ''} sin confirmar.
+            <AlertTriangle size={14} style={{display:'inline', verticalAlign:'middle'}}/> Hay {pending} pedido{pending > 1 ? 's' : ''} pendiente{pending > 1 ? 's' : ''} sin confirmar.
           </div>
         )}
 
         <div style={{ display:'flex', gap:8 }}>
           <button onClick={onCancel} disabled={closing}
-            style={{ flex:1, padding:'10px', borderRadius:999, border:'1.5px solid var(--border)', background:'transparent', color:'var(--text-muted)', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:14, cursor:'pointer' }}>
+            style={{ flex:1, padding:'10px', borderRadius:999, border:'1.5px solid var(--line)', background:'transparent', color:'var(--ink-500)', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:14, cursor:'pointer' }}>
             Cancelar
           </button>
           <button onClick={onConfirm} disabled={closing}
             style={{ flex:2, padding:'10px', borderRadius:999, border:'none', background:'#16a34a', color:'#fff', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:14, cursor: closing ? 'not-allowed' : 'pointer', opacity: closing ? 0.6 : 1 }}>
-            {closing ? 'Cerrando…' : '🌙 Confirmar cierre'}
+            {closing ? 'Cerrando…' : <><Moon size={14} style={{display:'inline', verticalAlign:'middle'}}/> Confirmar cierre</>}
           </button>
         </div>
       </div>
@@ -584,9 +590,9 @@ export default function OrdersPage() {
         subtitle={`${orders.length} pedido${orders.length !== 1 ? 's' : ''} · ${orders.filter(o => o.status === 'pending').length} pendientes`}
         isLive={!loading}
         actions={<>
-          <AdminButton variant="primary" size="md" onClick={() => window.open('/mostrador', '_blank')}>🏪 Mostrador</AdminButton>
+          <AdminButton variant="primary" size="md" onClick={() => window.open('/mostrador', '_blank')}><Store size={14}/> Mostrador</AdminButton>
           <AdminButton variant="ghost" size="md" onClick={() => exportCSV(filteredOrders)} disabled={filteredOrders.length === 0}>
-            ⬇ CSV {filteredOrders.length > 0 && `(${filteredOrders.length})`}
+            <Download size={14}/> CSV {filteredOrders.length > 0 && `(${filteredOrders.length})`}
           </AdminButton>
         </>}
       />
@@ -596,23 +602,23 @@ export default function OrdersPage() {
         {/* Controles del día */}
         <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap', marginBottom:10 }}>
           {isClosed
-            ? <span style={{ fontSize:13, fontWeight:700, color:'#16a34a', background:'rgba(22,163,74,0.1)', padding:'3px 10px', borderRadius:999 }}>🌙 Día cerrado</span>
-            : dayLabel ? <span style={{ fontSize:13, color:'var(--text-muted)' }}>🌅 Desde {dayLabel}</span>
-            : <span style={{ fontSize:13, color:'var(--text-muted)' }}>Sin día activo</span>}
+            ? <span style={{ fontSize:13, fontWeight:700, color:'var(--st-confirmed)', background:'var(--st-confirmed-soft)', padding:'3px 10px', borderRadius:999, display:'inline-flex', alignItems:'center', gap:4 }}><Moon size={13}/> Día cerrado</span>
+            : dayLabel ? <span style={{ fontSize:13, color:'var(--ink-500)', display:'inline-flex', alignItems:'center', gap:4 }}><Sunrise size={13}/> Desde {dayLabel}</span>
+            : <span style={{ fontSize:13, color:'var(--ink-500)' }}>Sin día activo</span>}
           {(!dayStartedAt || isClosed) && (
             <button onClick={handleStartDay} disabled={startingDay || loadingDay}
-              style={{ padding:'6px 16px', borderRadius:999, border:'none', background:'var(--orange)', color:'#fff', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:13, cursor: startingDay?'not-allowed':'pointer', opacity: startingDay?0.6:1 }}>
-              {startingDay ? 'Iniciando…' : isClosed ? '🌅 Nuevo día' : '🌅 Iniciar día'}
+              style={{ padding:'6px 16px', borderRadius:999, border:'none', background:'var(--brand-strong)', color:'var(--on-brand)', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:13, cursor: startingDay?'not-allowed':'pointer', opacity: startingDay?0.6:1 }}>
+              <Sunrise size={13}/> {startingDay ? 'Iniciando…' : isClosed ? 'Nuevo día' : 'Iniciar día'}
             </button>
           )}
           {dayStartedAt && !isClosed && (
             <button onClick={handleCloseDay} disabled={closingDay}
-              style={{ padding:'6px 16px', borderRadius:999, border:'1.5px solid #16a34a', background:'transparent', color:'#16a34a', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:13, cursor: closingDay?'not-allowed':'pointer', opacity: closingDay?0.6:1 }}>
-              {closingDay ? 'Cerrando…' : '🌙 Cerrar día'}
+              style={{ padding:'6px 16px', borderRadius:999, border:'1.5px solid var(--st-confirmed)', background:'transparent', color:'var(--st-confirmed)', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:13, cursor: closingDay?'not-allowed':'pointer', opacity: closingDay?0.6:1, display:'inline-flex', alignItems:'center', gap:4 }}>
+              <Moon size={13}/> {closingDay ? 'Cerrando…' : 'Cerrar día'}
             </button>
           )}
           <button onClick={() => setShowAll(v => !v)}
-            style={{ padding:'6px 14px', borderRadius:999, border:'1px solid var(--border)', background:'transparent', color:'var(--text-muted)', fontSize:13, fontWeight:600, cursor:'pointer' }}>
+            style={{ padding:'6px 14px', borderRadius:999, border:'1px solid var(--line)', background:'transparent', color:'var(--ink-500)', fontSize:13, fontWeight:600, cursor:'pointer' }}>
             {showAll ? 'Ver día actual' : 'Ver histórico'}
           </button>
         </div>
@@ -620,30 +626,30 @@ export default function OrdersPage() {
         {/* Buscador + filtros */}
         <div style={{ display:'flex', gap:8 }}>
           <div style={{ position:'relative', flex:1 }}>
-            <span style={{ position:'absolute', left:12, top:'50%', transform:'translateY(-50%)', fontSize:14, color:'var(--text-muted)', pointerEvents:'none' }}>🔍</span>
+            <span style={{ position:'absolute', left:12, top:'50%', transform:'translateY(-50%)', color:'var(--ink-500)', pointerEvents:'none', display:'flex' }}><Search size={14}/></span>
             <input value={search} onChange={e => setSearch(e.target.value)}
               placeholder="Buscar por código o producto…"
-              style={{ width:'100%', padding:'9px 36px 9px 34px', borderRadius:999, border:'1px solid var(--border)', background:'var(--card)', color:'var(--text)', fontSize:13, fontFamily:"'Barlow',sans-serif", outline:'none', boxSizing:'border-box' }} />
+              style={{ width:'100%', padding:'9px 36px 9px 34px', borderRadius:999, border:'1px solid var(--line)', background:'var(--surface-raised)', color:'var(--ink-900)', fontSize:13, fontFamily:"'Barlow',sans-serif", outline:'none', boxSizing:'border-box' }} />
             {search && (
               <button onClick={() => setSearch('')}
-                style={{ position:'absolute', right:12, top:'50%', transform:'translateY(-50%)', background:'transparent', border:'none', cursor:'pointer', fontSize:16, color:'var(--text-muted)', lineHeight:1 }}>×</button>
+                style={{ position:'absolute', right:12, top:'50%', transform:'translateY(-50%)', background:'transparent', border:'none', cursor:'pointer', fontSize:16, color:'var(--ink-500)', lineHeight:1 }}>×</button>
             )}
           </div>
           <button onClick={() => setShowFilters(v => !v)}
-            style={{ flexShrink:0, padding:'9px 16px', borderRadius:999, border:`1.5px solid ${active ? 'var(--orange)' : 'var(--border)'}`, background: active ? 'rgba(242,100,25,0.08)' : 'transparent', color: active ? 'var(--orange)' : 'var(--text-muted)', fontSize:13, fontWeight:700, cursor:'pointer', whiteSpace:'nowrap' }}>
-            ⚙ Filtros{active ? ' •' : ''}
+            style={{ flexShrink:0, padding:'9px 16px', borderRadius:999, border:`1.5px solid ${active ? 'var(--brand)' : 'var(--line)'}`, background: active ? 'var(--brand-soft)' : 'transparent', color: active ? 'var(--brand)' : 'var(--ink-500)', fontSize:13, fontWeight:700, cursor:'pointer', whiteSpace:'nowrap' }}>
+            <SlidersHorizontal size={13}/> Filtros{active ? ' •' : ''}
           </button>
         </div>
 
         {/* Panel filtros */}
         {showFilters && (
-          <div style={{ marginTop:10, background:'var(--card)', border:'1px solid var(--border)', borderRadius:'var(--radius)', padding:'16px' }}>
+          <div style={{ marginTop:10, background:'var(--surface-raised)', border:'1px solid var(--line)', borderRadius:'var(--radius-lg)', padding:'16px' }}>
             <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
               <FilterChips<'all' | OrderStatus>
                 label="Estado"
                 options={[
                   { id:'all', label:'Todos' },
-                  ...ALL_STATUSES.map(s => ({ id: s, label: `${STATUS_CFG[s].emoji} ${STATUS_CFG[s].label}` })),
+                  ...ALL_STATUSES.map(s => ({ id: s, label: STATUS_CFG[s].label })),
                 ]}
                 value={filters.status}
                 onChange={v => setFilters(f => ({ ...f, status: v }))}
@@ -652,28 +658,28 @@ export default function OrdersPage() {
                 label="Método de pago"
                 options={[
                   { id:'all',           label:'Todos' },
-                  { id:'efectivo',      label:'💵 Efectivo' },
-                  { id:'transferencia', label:'🏦 Transferencia' },
-                  { id:'debito',        label:'💳 Débito/Crédito' },
+                  { id:'efectivo',      label:'Efectivo' },
+                  { id:'transferencia', label:'Transferencia' },
+                  { id:'debito',        label:'Débito/Crédito' },
                   { id:'none',          label:'Sin especificar' },
                 ]}
                 value={filters.payment}
                 onChange={v => setFilters(f => ({ ...f, payment: v }))}
               />
               <div>
-                <div style={{ fontSize:10, fontWeight:800, color:'var(--text-muted)', letterSpacing:1, textTransform:'uppercase', marginBottom:6 }}>Rango de fechas</div>
+                <div style={{ fontSize:10, fontWeight:800, color:'var(--ink-500)', letterSpacing:1, textTransform:'uppercase', marginBottom:6 }}>Rango de fechas</div>
                 <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
                   <input type="date" value={filters.dateFrom} onChange={e => setFilters(f => ({ ...f, dateFrom: e.target.value }))}
-                    style={{ padding:'6px 10px', borderRadius:8, border:'1.5px solid var(--border)', background:'var(--card)', color:'var(--text)', fontSize:13 }} />
-                  <span style={{ fontSize:12, color:'var(--text-muted)' }}>hasta</span>
+                    style={{ padding:'6px 10px', borderRadius:8, border:'1.5px solid var(--line)', background:'var(--surface-raised)', color:'var(--ink-900)', fontSize:13 }} />
+                  <span style={{ fontSize:12, color:'var(--ink-500)' }}>hasta</span>
                   <input type="date" value={filters.dateTo} onChange={e => setFilters(f => ({ ...f, dateTo: e.target.value }))}
-                    style={{ padding:'6px 10px', borderRadius:8, border:'1.5px solid var(--border)', background:'var(--card)', color:'var(--text)', fontSize:13 }} />
+                    style={{ padding:'6px 10px', borderRadius:8, border:'1.5px solid var(--line)', background:'var(--surface-raised)', color:'var(--ink-900)', fontSize:13 }} />
                 </div>
               </div>
             </div>
             {active && (
               <button onClick={() => setFilters(EMPTY_FILTERS)}
-                style={{ marginTop:14, fontSize:12, fontWeight:700, color:'#dc2626', background:'transparent', border:'none', cursor:'pointer', padding:0 }}>
+                style={{ marginTop:14, fontSize:12, fontWeight:700, color:'var(--st-rejected)', background:'transparent', border:'none', cursor:'pointer', padding:0 }}>
                 × Limpiar filtros
               </button>
             )}
@@ -686,17 +692,17 @@ export default function OrdersPage() {
         <>
           <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(160px,1fr))', gap:8, marginBottom: paymentBreakdown.length > 0 ? 8 : 16 }}>
             {/* Recaudado (confirmados + entregados) */}
-            <div style={{ gridColumn:'1/-1', background:'rgba(242,100,25,0.08)', border:'1px solid var(--border)', borderRadius:'var(--radius)', padding:'12px 16px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-              <div style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:.5 }}>Recaudado (confirmados + entregados)</div>
-              <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:26, color:'var(--orange)' }}>{fmt(kpiRevenue)}</div>
+            <div style={{ gridColumn:'1/-1', background:'var(--brand-soft)', border:'1px solid var(--line)', borderRadius:'var(--radius-lg)', padding:'12px 16px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+              <div style={{ fontSize:11, fontWeight:700, color:'var(--ink-500)', textTransform:'uppercase', letterSpacing:.5 }}>Recaudado (confirmados + entregados)</div>
+              <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:26, color:'var(--brand)' }}>{fmt(kpiRevenue)}</div>
             </div>
             {/* Contadores por estado */}
             {ALL_STATUSES.filter(s => kpiByStatus[s] > 0).map(s => {
               const cfg = STATUS_CFG[s];
               return (
-                <div key={s} style={{ background:cfg.bg, border:'1px solid var(--border)', borderRadius:'var(--radius)', padding:'10px 14px' }}>
+                <div key={s} style={{ background:cfg.bg, border:'1px solid var(--line)', borderRadius:'var(--radius-lg)', padding:'10px 14px' }}>
                   <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:22, color:cfg.color }}>{kpiByStatus[s]}</div>
-                  <div style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:.5 }}>{cfg.emoji} {cfg.label}</div>
+                  <div style={{ fontSize:11, fontWeight:700, color:'var(--ink-500)', textTransform:'uppercase', letterSpacing:.5 }}>{cfg.label}</div>
                 </div>
               );
             })}
@@ -705,10 +711,10 @@ export default function OrdersPage() {
           {paymentBreakdown.length > 0 && (
             <div style={{ display:'flex', gap:8, marginBottom:16, flexWrap:'wrap' }}>
               {paymentBreakdown.map(p => (
-                <div key={p.method} style={{ flex:1, minWidth:120, background:'var(--card)', border:'1px solid var(--border)', borderRadius:'var(--radius)', padding:'10px 14px' }}>
-                  <div style={{ fontSize:12, fontWeight:700, color:'var(--text-muted)', marginBottom:3 }}>{PAYMENT_LABEL[p.method]}</div>
-                  <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:18, color:'var(--orange)' }}>{fmt(p.total)}</div>
-                  <div style={{ fontSize:11, color:'var(--text-muted)' }}>{p.count} pedido{p.count !== 1 ? 's' : ''}</div>
+                <div key={p.method} style={{ flex:1, minWidth:120, background:'var(--surface-raised)', border:'1px solid var(--line)', borderRadius:'var(--radius-lg)', padding:'10px 14px' }}>
+                  <div style={{ fontSize:12, fontWeight:700, color:'var(--ink-500)', marginBottom:3 }}>{PAYMENT_LABEL[p.method]}</div>
+                  <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:18, color:'var(--brand)' }}>{fmt(p.total)}</div>
+                  <div style={{ fontSize:11, color:'var(--ink-500)' }}>{p.count} pedido{p.count !== 1 ? 's' : ''}</div>
                 </div>
               ))}
             </div>
@@ -718,20 +724,20 @@ export default function OrdersPage() {
 
       {/* Lista */}
       {loading ? (
-        <div style={{ fontSize:14, color:'var(--text-muted)', padding:'32px 0', textAlign:'center' }}>Conectando…</div>
+        <div style={{ fontSize:14, color:'var(--ink-500)', padding:'32px 0', textAlign:'center' }}>Conectando…</div>
       ) : orders.length === 0 ? (
-        <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:'var(--radius)', padding:'40px 20px', textAlign:'center' }}>
-          <div style={{ fontSize:32, marginBottom:12 }}>📋</div>
-          <div style={{ fontSize:14, color:'var(--text-muted)' }}>
+        <div style={{ background:'var(--surface-raised)', border:'1px solid var(--line)', borderRadius:'var(--radius-lg)', padding:'40px 20px', textAlign:'center' }}>
+          <div style={{ marginBottom:12, display:'flex', justifyContent:'center' }}><ClipboardList size={32} style={{color:'var(--ink-500)'}}/></div>
+          <div style={{ fontSize:14, color:'var(--ink-500)' }}>
             {showAll ? 'No hay pedidos registrados.' : dayStartedAt ? 'No hay pedidos desde que se inició el día.' : 'Inicia el día para ver los pedidos de esta jornada.'}
           </div>
         </div>
       ) : filteredOrders.length === 0 ? (
-        <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:'var(--radius)', padding:'40px 20px', textAlign:'center' }}>
-          <div style={{ fontSize:32, marginBottom:12 }}>🔍</div>
-          <div style={{ fontSize:14, color:'var(--text-muted)' }}>Sin resultados para los filtros aplicados.</div>
+        <div style={{ background:'var(--surface-raised)', border:'1px solid var(--line)', borderRadius:'var(--radius-lg)', padding:'40px 20px', textAlign:'center' }}>
+          <div style={{ marginBottom:12, display:'flex', justifyContent:'center' }}><Search size={32} style={{color:'var(--ink-500)'}}/></div>
+          <div style={{ fontSize:14, color:'var(--ink-500)' }}>Sin resultados para los filtros aplicados.</div>
           <button onClick={() => { setFilters(EMPTY_FILTERS); setSearch(''); }}
-            style={{ marginTop:10, fontSize:13, fontWeight:700, color:'var(--orange)', background:'transparent', border:'none', cursor:'pointer', textDecoration:'underline' }}>
+            style={{ marginTop:10, fontSize:13, fontWeight:700, color:'var(--brand)', background:'transparent', border:'none', cursor:'pointer', textDecoration:'underline' }}>
             Limpiar filtros
           </button>
         </div>
@@ -746,7 +752,7 @@ export default function OrdersPage() {
             <div key={s} style={{ marginBottom:24 }}>
               <div style={{ fontSize:12, fontWeight:700, color:cfg.color, letterSpacing:1, textTransform:'uppercase', marginBottom:10, display:'flex', alignItems:'center', gap:6 }}>
                 <span style={{ width:8, height:8, borderRadius:'50%', background:cfg.dot, flexShrink:0 }}/>
-                {cfg.emoji} {cfg.label} ({list.length})
+                {cfg.label} ({list.length})
               </div>
               <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(340px,1fr))', gap:12 }}>
                 {list.map(o => <OrderCard key={o.id} order={o} onStatus={handleStatus} onAddNote={handleAddNote}/>)}

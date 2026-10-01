@@ -20,8 +20,8 @@ export default function CartBar() {
   if (count === 0) return null;
 
   return (
-    <div style={{ position:'fixed', bottom:0, left:0, right:0, zIndex:400, display:'flex', justifyContent:'center', padding:'12px 16px 20px', background:'linear-gradient(0deg, var(--bg) 60%, transparent)', pointerEvents:'none' }}>
-      <button onClick={() => setIsOpen(true)} style={{ pointerEvents:'all', width:'100%', maxWidth:'var(--max)', padding:'14px 20px', borderRadius:999, border:'none', background:'var(--orange)', color:'#fff', display:'flex', alignItems:'center', justifyContent:'space-between', cursor:'pointer', boxShadow:'0 4px 20px rgba(242,100,25,0.4)', transform: popped ? 'scale(1.03)' : 'scale(1)', transition:'transform .15s' }}>
+    <div style={{ position:'fixed', bottom:0, left:0, right:0, zIndex:400, display:'flex', justifyContent:'center', padding:'12px 16px 20px', background:'linear-gradient(0deg, var(--surface-base) 60%, transparent)', pointerEvents:'none' }}>
+      <button onClick={() => setIsOpen(true)} style={{ pointerEvents:'all', width:'100%', maxWidth:'var(--max)', padding:'14px 20px', borderRadius:999, border:'none', background:'var(--brand-strong)', color:'var(--on-brand)', display:'flex', alignItems:'center', justifyContent:'space-between', cursor:'pointer', boxShadow:'var(--shadow-brand)', transform: popped ? 'scale(1.03)' : 'scale(1)', transition:'transform .15s' }}>
         <div style={{ display:'flex', alignItems:'center', gap:10 }}>
           <div style={{ background:'rgba(255,255,255,0.25)', width:28, height:28, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:15, transform: popped ? 'scale(1.3)' : 'scale(1)', transition:'transform .3s' }}>{count}</div>
           <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:18, letterSpacing:.5 }}>Ver pedido</span>

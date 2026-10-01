@@ -16,10 +16,10 @@ export default function EmptyState({ emoji, title, subtitle, action }: EmptyStat
       <span style={{ fontSize: 56, opacity: 0.4, lineHeight: 1 }}>{emoji}</span>
       <div style={{
         fontFamily: "'Barlow Condensed', sans-serif",
-        fontWeight: 900, fontSize: 22, color: 'var(--text)', marginTop: 4,
+        fontWeight: 900, fontSize: 22, color: 'var(--ink-900)', marginTop: 4,
       }}>{title}</div>
       {subtitle && (
-        <div style={{ fontSize: 13, color: 'var(--text-muted)', maxWidth: 320, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 13, color: 'var(--ink-500)', maxWidth: 320, lineHeight: 1.5 }}>
           {subtitle}
         </div>
       )}

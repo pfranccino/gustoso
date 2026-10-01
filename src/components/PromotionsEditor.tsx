@@ -1,18 +1,19 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import { ClipboardList, Tag, Shuffle, Pencil } from 'lucide-react';
 import { Promotion, PromoChoice } from '@/lib/firestore/promotions';
 import { MenuItem } from '@/lib/firestore/menuItems';
 
 const BADGES = ['', 'PROMO', 'OFERTA', 'NUEVO', 'COMBO', 'ESPECIAL'];
 
 const CATEGORY_LABEL: Record<string, string> = {
-  vienesas:  '🌭 Vienesas',
-  as:        '🥪 AS',
-  churrasco: '🥩 Churrasco',
-  mechada:   '🥖 Mechada',
-  papas:     '🍟 Papas & Más',
-  bebidas:   '🥤 Bebidas',
+  vienesas:  'Vienesas',
+  as:        'AS',
+  churrasco: 'Churrasco',
+  mechada:   'Mechada',
+  papas:     'Papas & Más',
+  bebidas:   'Bebidas',
 };
 
 const CHOICE_CATEGORIES = Object.entries(CATEGORY_LABEL).map(([id, label]) => ({ id, label }));
@@ -94,8 +95,8 @@ function ChoicesEditor({ choices, onChange, menuItems }: { choices: PromoChoice[
 
   return (
     <div>
-      <label style={{ fontSize:12, fontWeight:700, color:'var(--text-muted)', letterSpacing:.5, textTransform:'uppercase', display:'block', marginBottom:8 }}>
-        🔀 Opciones del cliente <span style={{ fontWeight:400, textTransform:'none', fontSize:11 }}>(ej: tipo de sándwich, bebida)</span>
+      <label style={{ fontSize:12, fontWeight:700, color:'var(--ink-500)', letterSpacing:.5, textTransform:'uppercase', display:'block', marginBottom:8 }}>
+        <Shuffle size={12} style={{display:'inline', verticalAlign:'middle'}}/> Opciones del cliente <span style={{ fontWeight:400, textTransform:'none', fontSize:11 }}>(ej: tipo de sándwich, bebida)</span>
       </label>
 
       {/* Choices existentes */}
@@ -103,13 +104,13 @@ function ChoicesEditor({ choices, onChange, menuItems }: { choices: PromoChoice[
         const preview = resolvePreview(c, menuItems);
         const isFiltered = c.category && c.options.length > 0;
         return (
-          <div key={i} style={{ background:'rgba(242,100,25,0.05)', border:'1.5px solid rgba(242,100,25,0.2)', borderRadius:8, padding:'10px 12px', marginBottom:8 }}>
+          <div key={i} style={{ background:'var(--brand-soft)', border:'1.5px solid var(--line)', borderRadius:8, padding:'10px 12px', marginBottom:8 }}>
             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:6 }}>
               <div style={{ display:'flex', alignItems:'center', gap:6, flexWrap:'wrap' }}>
-                <span style={{ fontWeight:700, fontSize:13, color:'var(--text)' }}>{c.label}</span>
+                <span style={{ fontWeight:700, fontSize:13, color:'var(--ink-900)' }}>{c.label}</span>
                 {c.category && (
                   <span style={{ fontSize:10, color:'#0891b2', fontWeight:700, background:'rgba(8,145,178,0.1)', padding:'1px 6px', borderRadius:4 }}>
-                    📋 {CATEGORY_LABEL[c.category] ?? c.category}
+                    <ClipboardList size={10} style={{display:'inline', verticalAlign:'middle'}}/> {CATEGORY_LABEL[c.category] ?? c.category}
                     {isFiltered && <span style={{ marginLeft:4, color:'#d97706' }}>• {c.options.length} filtradas</span>}
                   </span>
                 )}
@@ -119,7 +120,7 @@ function ChoicesEditor({ choices, onChange, menuItems }: { choices: PromoChoice[
             </div>
             <div style={{ display:'flex', flexWrap:'wrap', gap:5 }}>
               {preview.map(opt => (
-                <span key={opt} style={{ fontSize:11, background:'rgba(242,100,25,0.1)', color:'#A0541A', padding:'2px 8px', borderRadius:4, fontWeight:600 }}>{opt}</span>
+                <span key={opt} style={{ fontSize:11, background:'var(--brand-soft)', color:'var(--ink-500)', padding:'2px 8px', borderRadius:4, fontWeight:600 }}>{opt}</span>
               ))}
               {preview.length === 0 && <span style={{ fontSize:11, color:'#999', fontStyle:'italic' }}>Sin items visibles en esta categoría</span>}
             </div>
@@ -128,16 +129,16 @@ function ChoicesEditor({ choices, onChange, menuItems }: { choices: PromoChoice[
       })}
 
       {/* Agregar nueva opción */}
-      <div style={{ border:'1.5px dashed rgba(242,100,25,0.3)', borderRadius:8, padding:'12px', display:'flex', flexDirection:'column', gap:10 }}>
-        <div style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', letterSpacing:.5 }}>NUEVA OPCIÓN</div>
+      <div style={{ border:'1.5px dashed var(--line)', borderRadius:8, padding:'12px', display:'flex', flexDirection:'column', gap:10 }}>
+        <div style={{ fontSize:11, fontWeight:700, color:'var(--ink-500)', letterSpacing:.5 }}>NUEVA OPCIÓN</div>
 
         {/* Fuente */}
         <div>
-          <div style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', marginBottom:6 }}>Fuente de opciones</div>
+          <div style={{ fontSize:11, fontWeight:700, color:'var(--ink-500)', marginBottom:6 }}>Fuente de opciones</div>
           <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
             <button onClick={() => { setNewCategory(''); setNewFilter([]); }}
-              style={{ padding:'5px 12px', borderRadius:999, border:`2px solid ${!newCategory ? '#F26419' : 'rgba(242,100,25,0.25)'}`, background: !newCategory ? '#F26419' : 'transparent', color: !newCategory ? '#fff' : '#A0541A', fontSize:12, fontWeight:700, cursor:'pointer' }}>
-              ✏️ Manual
+              style={{ padding:'5px 12px', borderRadius:999, border:`2px solid ${!newCategory ? 'var(--brand)' : 'var(--line)'}`, background: !newCategory ? 'var(--brand-strong)' : 'transparent', color: !newCategory ? 'var(--on-brand)' : 'var(--ink-500)', fontSize:12, fontWeight:700, cursor:'pointer' }}>
+              <Pencil size={12} style={{display:'inline', verticalAlign:'middle'}}/> Manual
             </button>
             {CHOICE_CATEGORIES.map(cat => (
               <button key={cat.id} onClick={() => { setNewCategory(cat.id); setNewFilter([]); setNewLabel(l => l || cat.label.replace(/^[^ ]+ /, '')); }}
@@ -151,7 +152,7 @@ function ChoicesEditor({ choices, onChange, menuItems }: { choices: PromoChoice[
         {/* Checkboxes de items de la categoría */}
         {newCategory && (
           <div>
-            <div style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', marginBottom:6 }}>
+            <div style={{ fontSize:11, fontWeight:700, color:'var(--ink-500)', marginBottom:6 }}>
               Incluir en la opción{' '}
               <span style={{ fontWeight:400, color:'#999' }}>
                 {newFilter.length === 0 ? '(todos — deja sin marcar para mostrar todos)' : `${newFilter.length} seleccionados`}
@@ -165,7 +166,7 @@ function ChoicesEditor({ choices, onChange, menuItems }: { choices: PromoChoice[
                     <label key={name} style={{ display:'flex', alignItems:'center', gap:8, cursor:'pointer', padding:'3px 0' }}>
                       <input type="checkbox" checked={checked} onChange={() => toggleFilter(name)}
                         style={{ accentColor:'#0891b2', width:14, height:14, flexShrink:0 }} />
-                      <span style={{ fontSize:13, fontWeight: checked ? 700 : 500, color: checked ? '#0891b2' : 'var(--text)' }}>{name}</span>
+                      <span style={{ fontSize:13, fontWeight: checked ? 700 : 500, color: checked ? '#0891b2' : 'var(--ink-900)' }}>{name}</span>
                     </label>
                   );
                 })}
@@ -189,13 +190,13 @@ function ChoicesEditor({ choices, onChange, menuItems }: { choices: PromoChoice[
         )}
 
         <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-          <label style={{ display:'flex', alignItems:'center', gap:6, cursor:'pointer', fontSize:13, fontWeight:600, color:'var(--text)' }}>
+          <label style={{ display:'flex', alignItems:'center', gap:6, cursor:'pointer', fontSize:13, fontWeight:600, color:'var(--ink-900)' }}>
             <input type="checkbox" checked={newRequired} onChange={e => setNewRequired(e.target.checked)}
-              style={{ accentColor:'#F26419', width:14, height:14 }} />
+              style={{ accentColor:'var(--brand)', width:14, height:14 }} />
             Requerido
           </label>
           <button onClick={addChoice}
-            style={{ padding:'6px 16px', borderRadius:999, border:'none', background:'#F26419', color:'#fff', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:13, cursor:'pointer' }}>
+            style={{ padding:'6px 16px', borderRadius:999, border:'none', background:'var(--brand-strong)', color:'var(--on-brand)', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:13, cursor:'pointer' }}>
             + Agregar
           </button>
         </div>
@@ -206,8 +207,8 @@ function ChoicesEditor({ choices, onChange, menuItems }: { choices: PromoChoice[
 
 const INPUT: React.CSSProperties = {
   padding: '8px 11px', borderRadius: 8,
-  border: '1.5px solid rgba(242,100,25,0.25)',
-  background: '#FFF9F5', color: '#1A0800',
+  border: '1.5px solid var(--line)',
+  background: 'var(--surface-subtle)', color: 'var(--ink-900)',
   fontSize: 13, fontFamily: "'Barlow',sans-serif",
   outline: 'none', width: '100%', boxSizing: 'border-box' as const,
 };
@@ -228,41 +229,41 @@ function PromoModal({
   return (
     <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.55)', zIndex:9999, display:'flex', alignItems:'flex-end', justifyContent:'center' }}
       onClick={e => { if (e.target === e.currentTarget) onCancel(); }}>
-      <div style={{ background:'var(--card)', borderRadius:'16px 16px 0 0', padding:'24px 20px 32px', width:'100%', maxWidth:480, maxHeight:'90vh', overflowY:'auto' }}>
-        <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:22, color:'var(--text)', marginBottom:20 }}>{title}</div>
+      <div style={{ background:'var(--surface-raised)', borderRadius:'16px 16px 0 0', padding:'24px 20px 32px', width:'100%', maxWidth:480, maxHeight:'90vh', overflowY:'auto' }}>
+        <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:22, color:'var(--ink-900)', marginBottom:20 }}>{title}</div>
 
         <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
           {/* Name */}
           <div>
-            <label style={{ fontSize:12, fontWeight:700, color:'var(--text-muted)', letterSpacing:.5, textTransform:'uppercase', display:'block', marginBottom:5 }}>Nombre</label>
+            <label style={{ fontSize:12, fontWeight:700, color:'var(--ink-500)', letterSpacing:.5, textTransform:'uppercase', display:'block', marginBottom:5 }}>Nombre</label>
             <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
               placeholder="Ej: Combo Completo + Bebida" style={INPUT} />
           </div>
 
           {/* Description */}
           <div>
-            <label style={{ fontSize:12, fontWeight:700, color:'var(--text-muted)', letterSpacing:.5, textTransform:'uppercase', display:'block', marginBottom:5 }}>Descripción corta</label>
+            <label style={{ fontSize:12, fontWeight:700, color:'var(--ink-500)', letterSpacing:.5, textTransform:'uppercase', display:'block', marginBottom:5 }}>Descripción corta</label>
             <input value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
               placeholder="Ej: Completo italiano + bebida a elección" style={INPUT} />
           </div>
 
           {/* Price */}
           <div>
-            <label style={{ fontSize:12, fontWeight:700, color:'var(--text-muted)', letterSpacing:.5, textTransform:'uppercase', display:'block', marginBottom:5 }}>Precio ($)</label>
+            <label style={{ fontSize:12, fontWeight:700, color:'var(--ink-500)', letterSpacing:.5, textTransform:'uppercase', display:'block', marginBottom:5 }}>Precio ($)</label>
             <input type="number" value={form.price} onChange={e => setForm(f => ({ ...f, price: e.target.value }))}
               placeholder="0" style={INPUT} />
           </div>
 
           {/* Badge */}
           <div>
-            <label style={{ fontSize:12, fontWeight:700, color:'var(--text-muted)', letterSpacing:.5, textTransform:'uppercase', display:'block', marginBottom:5 }}>Etiqueta</label>
+            <label style={{ fontSize:12, fontWeight:700, color:'var(--ink-500)', letterSpacing:.5, textTransform:'uppercase', display:'block', marginBottom:5 }}>Etiqueta</label>
             <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
               {BADGES.map(b => (
                 <button key={b} onClick={() => setForm(f => ({ ...f, badge: b }))}
                   style={{ padding:'5px 12px', borderRadius:999, border:'2px solid', fontSize:12, fontWeight:700, cursor:'pointer',
-                    borderColor: form.badge === b ? '#F26419' : 'rgba(242,100,25,0.2)',
-                    background:  form.badge === b ? '#F26419' : 'transparent',
-                    color:       form.badge === b ? '#fff' : '#A0541A' }}>
+                    borderColor: form.badge === b ? 'var(--brand-strong)' : 'var(--line)',
+                    background:  form.badge === b ? 'var(--brand-strong)' : 'transparent',
+                    color:       form.badge === b ? 'var(--on-brand)' : 'var(--ink-500)' }}>
                   {b || 'Sin etiqueta'}
                 </button>
               ))}
@@ -280,10 +281,10 @@ function PromoModal({
           <div style={{ display:'flex', alignItems:'center', gap:10 }}>
             <button onClick={() => setForm(f => ({ ...f, visible: !f.visible }))}
               style={{ width:36, height:20, borderRadius:999, border:'none',
-                background: form.visible ? '#F26419' : '#d1d5db', cursor:'pointer', position:'relative', transition:'background .2s', flexShrink:0 }}>
+                background: form.visible ? 'var(--brand)' : '#d1d5db', cursor:'pointer', position:'relative', transition:'background .2s', flexShrink:0 }}>
               <span style={{ position:'absolute', top:3, left: form.visible ? 17 : 3, width:14, height:14, borderRadius:'50%', background:'#fff', transition:'left .2s' }}/>
             </button>
-            <span style={{ fontSize:13, color:'var(--text)', fontWeight:600 }}>
+            <span style={{ fontSize:13, color:'var(--ink-900)', fontWeight:600 }}>
               {form.visible ? 'Visible en el menú' : 'Oculta'}
             </span>
           </div>
@@ -291,11 +292,11 @@ function PromoModal({
 
         <div style={{ display:'flex', gap:10, marginTop:24 }}>
           <button onClick={onCancel} disabled={saving}
-            style={{ flex:1, padding:'11px', borderRadius:999, border:'1.5px solid var(--border)', background:'transparent', color:'var(--text)', fontSize:14, fontWeight:700, cursor:'pointer' }}>
+            style={{ flex:1, padding:'11px', borderRadius:999, border:'1.5px solid var(--line)', background:'transparent', color:'var(--ink-900)', fontSize:14, fontWeight:700, cursor:'pointer' }}>
             Cancelar
           </button>
           <button onClick={onSave} disabled={saving || !form.name.trim() || !form.price}
-            style={{ flex:2, padding:'11px', borderRadius:999, border:'none', background:'#F26419', color:'#fff',
+            style={{ flex:2, padding:'11px', borderRadius:999, border:'none', background:'var(--brand-strong)', color:'var(--on-brand)',
               fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:16,
               cursor: (saving || !form.name.trim() || !form.price) ? 'not-allowed' : 'pointer',
               opacity: (saving || !form.name.trim() || !form.price) ? 0.6 : 1 }}>
@@ -422,7 +423,7 @@ export default function PromotionsEditor({ initial, menuItems }: { initial: Prom
   }
 
   const BADGE_COLOR: Record<string, string> = {
-    PROMO: '#F26419', OFERTA: '#dc2626', NUEVO: '#16a34a', COMBO: '#7c3aed', ESPECIAL: '#d97706',
+    PROMO: 'var(--brand)', OFERTA: '#dc2626', NUEVO: '#16a34a', COMBO: '#7c3aed', ESPECIAL: '#d97706',
   };
 
   return (
@@ -432,22 +433,22 @@ export default function PromotionsEditor({ initial, menuItems }: { initial: Prom
       {/* List */}
       <div style={{ display:'flex', flexDirection:'column', gap:10, marginBottom:20 }}>
         {promos.length === 0 && (
-          <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:'var(--radius)', padding:'40px 20px', textAlign:'center' }}>
-            <div style={{ fontSize:32, marginBottom:10 }}>🏷️</div>
-            <div style={{ fontSize:14, color:'var(--text-muted)', marginBottom:16 }}>No hay promociones aún. Crea la primera o carga los ejemplos.</div>
+          <div style={{ background:'var(--surface-raised)', border:'1px solid var(--line)', borderRadius:'var(--radius-lg)', padding:'40px 20px', textAlign:'center' }}>
+            <div style={{ marginBottom:10 }}><Tag size={32} style={{color:'var(--ink-500)'}}/></div>
+            <div style={{ fontSize:14, color:'var(--ink-500)', marginBottom:16 }}>No hay promociones aún. Crea la primera o carga los ejemplos.</div>
             <button onClick={handleSeedExamples} disabled={isPending}
-              style={{ padding:'9px 22px', borderRadius:999, border:'1.5px solid rgba(242,100,25,0.4)', background:'rgba(242,100,25,0.06)', color:'#F26419', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:15, cursor: isPending ? 'not-allowed' : 'pointer', opacity: isPending ? 0.6 : 1 }}>
-              📋 Cargar promociones de ejemplo
+              style={{ padding:'9px 22px', borderRadius:999, border:'1.5px solid var(--line)', background:'var(--brand-soft)', color:'var(--brand)', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:15, cursor: isPending ? 'not-allowed' : 'pointer', opacity: isPending ? 0.6 : 1 }}>
+              <ClipboardList size={14} style={{display:'inline', verticalAlign:'middle'}}/> Cargar promociones de ejemplo
             </button>
           </div>
         )}
 
         {promos.map(p => (
-          <div key={p.id} style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:'var(--radius)', padding:'14px 16px', display:'flex', gap:12, alignItems:'flex-start' }}>
+          <div key={p.id} style={{ background:'var(--surface-raised)', border:'1px solid var(--line)', borderRadius:'var(--radius-lg)', padding:'14px 16px', display:'flex', gap:12, alignItems:'flex-start' }}>
             {/* Toggle */}
             <button onClick={() => handleToggleVisible(p)}
               style={{ flexShrink:0, marginTop:2, width:32, height:18, borderRadius:999, border:'none',
-                background: p.visible ? '#F26419' : '#d1d5db', cursor:'pointer', position:'relative', transition:'background .2s' }}>
+                background: p.visible ? 'var(--brand)' : '#d1d5db', cursor:'pointer', position:'relative', transition:'background .2s' }}>
               <span style={{ position:'absolute', top:2, left: p.visible ? 15 : 2, width:14, height:14, borderRadius:'50%', background:'#fff', transition:'left .2s' }}/>
             </button>
 
@@ -455,19 +456,19 @@ export default function PromotionsEditor({ initial, menuItems }: { initial: Prom
               <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap', marginBottom:3 }}>
                 {p.badge && (
                   <span style={{ fontSize:10, fontWeight:900, letterSpacing:1, padding:'2px 7px', borderRadius:4,
-                    background: BADGE_COLOR[p.badge] ?? '#F26419', color:'#fff' }}>
+                    background: BADGE_COLOR[p.badge] ?? 'var(--brand)', color:'#fff' }}>
                     {p.badge}
                   </span>
                 )}
-                <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:800, fontSize:16, color:'var(--text)' }}>{p.name}</span>
-                <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:16, color:'var(--orange)', marginLeft:'auto' }}>{fmt(p.price)}</span>
+                <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:800, fontSize:16, color:'var(--ink-900)' }}>{p.name}</span>
+                <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:16, color:'var(--brand)', marginLeft:'auto' }}>{fmt(p.price)}</span>
               </div>
-              {p.description && <div style={{ fontSize:12, color:'var(--text-muted)', marginBottom:4 }}>{p.description}</div>}
+              {p.description && <div style={{ fontSize:12, color:'var(--ink-500)', marginBottom:4 }}>{p.description}</div>}
               {p.choices.length > 0 && (
                 <div style={{ display:'flex', flexWrap:'wrap', gap:4 }}>
                   {p.choices.map((c, i) => (
                     <span key={i} style={{ fontSize:11, background:'rgba(8,145,178,0.08)', color:'#0891b2', padding:'2px 7px', borderRadius:4, fontWeight:600 }}>
-                      🔀 {c.label}{c.category ? ` (${CATEGORY_LABEL[c.category] ?? c.category})` : ''}
+                      <Shuffle size={11} style={{display:'inline', verticalAlign:'middle'}}/> {c.label}{c.category ? ` (${CATEGORY_LABEL[c.category] ?? c.category})` : ''}
                     </span>
                   ))}
                 </div>
@@ -476,7 +477,7 @@ export default function PromotionsEditor({ initial, menuItems }: { initial: Prom
 
             <div style={{ display:'flex', gap:6, flexShrink:0 }}>
               <button onClick={() => openEdit(p)}
-                style={{ padding:'5px 12px', borderRadius:8, border:'1px solid var(--border)', background:'transparent', color:'var(--text)', fontSize:12, fontWeight:700, cursor:'pointer' }}>
+                style={{ padding:'5px 12px', borderRadius:8, border:'1px solid var(--line)', background:'transparent', color:'var(--ink-900)', fontSize:12, fontWeight:700, cursor:'pointer' }}>
                 Editar
               </button>
               <button onClick={() => handleDelete(p)}
@@ -490,8 +491,8 @@ export default function PromotionsEditor({ initial, menuItems }: { initial: Prom
 
       {/* Create button */}
       <button onClick={openCreate}
-        style={{ width:'100%', padding:'13px', borderRadius:999, border:'2px dashed rgba(242,100,25,0.4)',
-          background:'rgba(242,100,25,0.04)', color:'#F26419',
+        style={{ width:'100%', padding:'13px', borderRadius:999, border:'2px dashed var(--line)',
+          background:'var(--brand-soft)', color:'var(--brand)',
           fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:18,
           cursor:'pointer' }}>
         + Nueva promoción

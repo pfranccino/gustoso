@@ -50,12 +50,12 @@ export default function LoginPage() {
       flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
-      background: 'linear-gradient(160deg, #FFF9F5 0%, #FFE5CC 100%)',
+      background: 'linear-gradient(160deg, var(--surface-subtle) 0%, #FFE5CC 100%)',
       padding: '24px',
       fontFamily: "'Barlow', sans-serif",
     }}>
       {/* Fondo decorativo igual al Hero */}
-      <div style={{ position:'fixed', inset:0, zIndex:0, background:'radial-gradient(ellipse 80% 60% at 50% 0%, rgba(242,100,25,0.10) 0%, transparent 70%)', pointerEvents:'none' }}/>
+      <div style={{ position:'fixed', inset:0, zIndex:0, background:'radial-gradient(ellipse 80% 60% at 50% 0%, var(--brand-soft) 0%, transparent 70%)', pointerEvents:'none' }}/>
 
       <div style={{ position:'relative', zIndex:1, width:'100%', maxWidth:420 }}>
         {/* Logo */}
@@ -65,23 +65,23 @@ export default function LoginPage() {
 
         {/* Card */}
         <div style={{
-          background: '#FFFFFF',
-          border: '1px solid rgba(242,100,25,0.2)',
+          background: 'var(--surface-raised)',
+          border: '1px solid var(--line)',
           borderRadius: 14,
           padding: '36px 28px 40px',
-          boxShadow: '0 8px 40px rgba(242,100,25,0.10)',
+          boxShadow: '0 8px 40px var(--brand-soft)',
         }}>
           <h1 style={{
             fontFamily: "'Barlow Condensed', sans-serif",
             fontWeight: 900,
             fontSize: 32,
-            color: '#1A0800',
+            color: 'var(--ink-900)',
             marginBottom: 4,
             lineHeight: 1,
           }}>
             Panel Admin
           </h1>
-          <p style={{ fontSize: 14, color: '#A0541A', marginBottom: 32, fontWeight: 500 }}>
+          <p style={{ fontSize: 14, color: 'var(--ink-500)', marginBottom: 32, fontWeight: 500 }}>
             Gustoso&apos;s — acceso exclusivo
           </p>
 
@@ -92,7 +92,7 @@ export default function LoginPage() {
                 display: 'block',
                 fontSize: 11,
                 fontWeight: 700,
-                color: '#A0541A',
+                color: 'var(--ink-500)',
                 letterSpacing: 1,
                 textTransform: 'uppercase',
                 marginBottom: 7,
@@ -111,9 +111,9 @@ export default function LoginPage() {
                   width: '100%',
                   padding: '12px 14px',
                   borderRadius: 8,
-                  border: '1.5px solid rgba(242,100,25,0.25)',
-                  background: '#FFF9F5',
-                  color: '#1A0800',
+                  border: '1.5px solid var(--line)',
+                  background: 'var(--surface-subtle)',
+                  color: 'var(--ink-900)',
                   fontSize: 15,
                   fontFamily: "'Barlow', sans-serif",
                   outline: 'none',
@@ -128,7 +128,7 @@ export default function LoginPage() {
                 display: 'block',
                 fontSize: 11,
                 fontWeight: 700,
-                color: '#A0541A',
+                color: 'var(--ink-500)',
                 letterSpacing: 1,
                 textTransform: 'uppercase',
                 marginBottom: 7,
@@ -147,9 +147,9 @@ export default function LoginPage() {
                   width: '100%',
                   padding: '12px 14px',
                   borderRadius: 8,
-                  border: '1.5px solid rgba(242,100,25,0.25)',
-                  background: '#FFF9F5',
-                  color: '#1A0800',
+                  border: '1.5px solid var(--line)',
+                  background: 'var(--surface-subtle)',
+                  color: 'var(--ink-900)',
                   fontSize: 15,
                   fontFamily: "'Barlow', sans-serif",
                   outline: 'none',
@@ -184,15 +184,15 @@ export default function LoginPage() {
                 padding: '14px',
                 borderRadius: 999,
                 border: 'none',
-                background: loading ? '#d1bfb8' : '#F26419',
-                color: '#ffffff',
+                background: loading ? '#d1bfb8' : 'var(--brand-strong)',
+                color: 'var(--on-brand)',
                 fontFamily: "'Barlow Condensed', sans-serif",
                 fontWeight: 900,
                 fontSize: 20,
                 cursor: loading ? 'not-allowed' : 'pointer',
                 letterSpacing: 0.5,
                 transition: 'background .2s',
-                boxShadow: loading ? 'none' : '0 4px 16px rgba(242,100,25,0.35)',
+                boxShadow: loading ? 'none' : 'var(--shadow-brand)',
               }}
             >
               {loading ? 'Ingresando…' : 'Ingresar →'}
@@ -202,7 +202,7 @@ export default function LoginPage() {
 
         {/* Volver al menú */}
         <div style={{ textAlign: 'center', marginTop: 20 }}>
-          <a href="/" style={{ fontSize: 13, color: '#A0541A', textDecoration: 'none', fontWeight: 600 }}>
+          <a href="/" style={{ fontSize: 13, color: 'var(--ink-500)', textDecoration: 'none', fontWeight: 600 }}>
             ← Volver al menú
           </a>
         </div>

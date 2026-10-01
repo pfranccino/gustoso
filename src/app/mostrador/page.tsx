@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { PaymentMethod } from '@/lib/firestore/orders';
+import { Beef, Sandwich, Flame, Wheat, CookingPot, CupSoda, Utensils, Banknote, Landmark, CreditCard, Store, ShoppingCart, Lock, Monitor, Printer } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 
 /* ── tipos ─────────────────────────────────────── */
 type Item = {
@@ -12,15 +14,18 @@ type Item = {
 type Line = { item: Item; size: 'normal' | 'xl' | null; qty: number };
 type LastOrder = { orderId: string; lines: Line[]; total: number; payment: PaymentMethod | null };
 
-const CATS: Record<string, string> = {
-  vienesas:'🌭 Vienesas', as:'🥪 AS', churrasco:'🥩 Churrasco',
-  mechada:'🥖 Mechada', papas:'🍟 Papas & Más', bebidas:'🥤 Bebidas', burrito:'🌯 Burrito',
+const CAT_LABEL: Record<string, string> = {
+  vienesas:'Vienesas', as:'AS', churrasco:'Churrasco',
+  mechada:'Mechada', papas:'Papas & Más', bebidas:'Bebidas', burrito:'Burrito',
+};
+const CAT_ICON: Record<string, LucideIcon> = {
+  vienesas:Beef, as:Sandwich, churrasco:Flame, mechada:Wheat, papas:CookingPot, bebidas:CupSoda, burrito:Utensils,
 };
 
-const PAYMENT: { id: PaymentMethod; label: string; emoji: string }[] = [
-  { id:'efectivo',      label:'Efectivo',      emoji:'💵' },
-  { id:'transferencia', label:'Transf.',        emoji:'🏦' },
-  { id:'debito',        label:'Débito',         emoji:'💳' },
+const PAYMENT: { id: PaymentMethod; label: string; icon: LucideIcon }[] = [
+  { id:'efectivo',      label:'Efectivo',      icon: Banknote },
+  { id:'transferencia', label:'Transf.',        icon: Landmark },
+  { id:'debito',        label:'Débito',         icon: CreditCard },
 ];
 
 function fmt(n: number) {
@@ -66,12 +71,12 @@ function printComanda(orderId: string, lines: Line[], total: number, payment: Pa
     @media print{button{display:none}}
   </style></head>
   <body>
-    <h2>🏪 GUSTOSO&apos;S MOSTRADOR</h2>
+    <h2>GUSTOSO&apos;S MOSTRADOR</h2>
     <div class="sub">${orderId} · ${now.toLocaleDateString('es-CL')} ${now.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'})}</div>
     <hr/>${rows}
     <div class="total">TOTAL: ${fmt(total)}</div>
     <div style="text-align:right;font-size:12px;margin-top:4px">Pago: ${payLabel}</div>
-    <br/><button onclick="window.print()" style="width:100%;padding:10px;background:#000;color:#fff;border:none;font-size:14px;cursor:pointer">🖨️ Imprimir</button>
+    <br/><button onclick="window.print()" style="width:100%;padding:10px;background:#000;color:#fff;border:none;font-size:14px;cursor:pointer">Imprimir</button>
     <script>window.onload=function(){window.print();}<\/script>
   </body></html>`;
   const w = window.open('', '_blank', 'width=380,height=620');
@@ -82,7 +87,7 @@ function printComanda(orderId: string, lines: Line[], total: number, payment: Pa
 function MobileBlock() {
   return (
     <div style={{ minHeight:'100dvh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', background:'#0f172a', color:'#f8fafc', padding:24, textAlign:'center' }}>
-      <div style={{ fontSize:64, marginBottom:16 }}>🖥️</div>
+      <div style={{ marginBottom:16, display:'flex', justifyContent:'center' }}><Monitor size={64} style={{color:'#94a3b8'}}/></div>
       <h1 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:28, marginBottom:8, color:'#f8fafc' }}>Pantalla muy pequeña</h1>
       <p style={{ fontSize:14, color:'#94a3b8', maxWidth:300, lineHeight:1.5 }}>El mostrador está optimizado para tablet o desktop. Por favor usa una pantalla más grande para registrar pedidos.</p>
     </div>
@@ -145,7 +150,7 @@ function PinScreen({ onSuccess }: { onSuccess: () => void }) {
         .pin-shaking { animation: pin-shake 0.5s ease; }
       `}</style>
       <div className={shaking ? 'pin-shaking' : ''} style={{ textAlign:'center', width:320, padding:'0 16px' }}>
-        <div style={{ fontSize:48, marginBottom:8 }}>🏪</div>
+        <div style={{ marginBottom:8, display:'flex', justifyContent:'center' }}><Store size={48} style={{color:'#94a3b8'}}/></div>
         <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:28, color:'#f8fafc', marginBottom:4 }}>Gustoso&apos;s Mostrador</div>
         <div style={{ fontSize:13, color:'#94a3b8', marginBottom:28 }}>Ingresa el PIN de turno</div>
 
@@ -156,7 +161,7 @@ function PinScreen({ onSuccess }: { onSuccess: () => void }) {
               width: i < pin.length ? 16 : 12,
               height: i < pin.length ? 16 : 12,
               borderRadius:'50%',
-              background: i < pin.length ? '#f26419' : '#334155',
+              background: i < pin.length ? 'var(--brand)' : '#334155',
               transition:'all .15s',
               margin:'auto 0',
             }}/>
@@ -170,7 +175,7 @@ function PinScreen({ onSuccess }: { onSuccess: () => void }) {
           {digits.map((d,i) => (
             <button key={i} onClick={() => !loading && press(d)}
               style={{ padding:'20px 0', borderRadius:12, border:'none', fontSize: d === '✓' ? 20 : 22, fontWeight:700, cursor:'pointer', transition:'all .1s',
-                background: d === '✓' ? '#f26419' : d === '←' ? '#334155' : '#1e293b',
+                background: d === '✓' ? 'var(--brand)' : d === '←' ? '#334155' : '#1e293b',
                 color: d === '✓' ? '#fff' : d === '←' ? '#94a3b8' : '#f8fafc',
                 opacity: loading ? 0.5 : 1 }}>
               {loading && d === '✓' ? '…' : d}
@@ -391,7 +396,7 @@ function MostradorScreen() {
       {/* Top bar */}
       <div style={{ height:52, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 20px', borderBottom:'1px solid #1e293b', background:'#0f172a' }}>
         <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:20, color:'#f8fafc', letterSpacing:.5 }}>
-          🏪 <span style={{ color:'#f26419' }}>Gustoso&apos;s</span> — Mostrador
+          <Store size={18} style={{marginRight:6}}/> <span style={{ color:'var(--brand)' }}>Gustoso&apos;s</span> — Mostrador
         </div>
         <div style={{ display:'flex', alignItems:'center', gap:12 }}>
           {/* Connection indicator */}
@@ -410,7 +415,7 @@ function MostradorScreen() {
           <div style={{ fontSize:12, color:'#64748b' }}>{new Date().toLocaleDateString('es-CL',{weekday:'short',day:'numeric',month:'short'})}</div>
           <button onClick={lock} title="Bloquear"
             style={{ padding:'5px 12px', borderRadius:8, border:'1px solid #334155', background:'transparent', color:'#64748b', fontSize:12, fontWeight:600, cursor:'pointer' }}>
-            🔒 Bloquear
+            <Lock size={12}/> Bloquear
           </button>
         </div>
       </div>
@@ -434,9 +439,9 @@ function MostradorScreen() {
               {categories.map((c,i) => (
                 <button key={c} onClick={() => setCat(c)}
                   style={{ padding:'7px 14px', borderRadius:999, border:'none', whiteSpace:'nowrap', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:13, cursor:'pointer', transition:'all .15s',
-                    background: cat === c ? '#f26419' : '#1e293b',
-                    color:      cat === c ? '#fff' : '#94a3b8' }}>
-                  {CATS[c] ?? c}
+                    background: cat === c ? 'var(--brand-strong)' : '#1e293b',
+                    color:      cat === c ? 'var(--on-brand)' : '#94a3b8' }}>
+                  {(() => { const Icon = CAT_ICON[c]; return Icon ? <><Icon size={13}/> {CAT_LABEL[c] ?? c}</> : (CAT_LABEL[c] ?? c); })()}
                   {i < 9 && <span style={{ fontSize:9, opacity:.5, marginLeft:4 }}>{i+1}</span>}
                 </button>
               ))}
@@ -457,11 +462,11 @@ function MostradorScreen() {
                       {isDual ? (
                         <div style={{ display:'flex', gap:6 }}>
                           <button onClick={() => addLine(m,'normal')}
-                            style={{ flex:1, padding:'8px 4px', borderRadius:8, border:'1.5px solid #f26419', background:'transparent', color:'#f26419', fontSize:12, fontWeight:700, cursor:'pointer' }}>
+                            style={{ flex:1, padding:'8px 4px', borderRadius:8, border:'1.5px solid var(--brand)', background:'transparent', color:'var(--brand)', fontSize:12, fontWeight:700, cursor:'pointer' }}>
                             +N<br/><span style={{ fontSize:10 }}>{fmt(m.priceNormal ?? 0)}</span>
                           </button>
                           <button onClick={() => addLine(m,'xl')}
-                            style={{ flex:1, padding:'8px 4px', borderRadius:8, border:'none', background:'#f26419', color:'#fff', fontSize:12, fontWeight:700, cursor:'pointer' }}>
+                            style={{ flex:1, padding:'8px 4px', borderRadius:8, border:'none', background:'var(--brand-strong)', color:'var(--on-brand)', fontSize:12, fontWeight:700, cursor:'pointer' }}>
                             +XL<br/><span style={{ fontSize:10 }}>{fmt(m.priceXL ?? 0)}</span>
                           </button>
                         </div>
@@ -471,7 +476,7 @@ function MostradorScreen() {
                         </div>
                       ) : (
                         <button onClick={() => addLine(m,null)}
-                          style={{ width:'100%', padding:'9px', borderRadius:8, border:'none', background:'#f26419', color:'#fff', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:15, cursor:'pointer' }}>
+                          style={{ width:'100%', padding:'9px', borderRadius:8, border:'none', background:'var(--brand-strong)', color:'var(--on-brand)', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:15, cursor:'pointer' }}>
                           + {fmt(m.price ?? 0)}
                         </button>
                       )}
@@ -505,8 +510,8 @@ function MostradorScreen() {
                 <div key={i} style={{ display:'flex', alignItems:'center', gap:2, flexShrink:0 }}>
                   <button onClick={() => setActiveCart(i)}
                     style={{ padding:'5px 10px', borderRadius:7, border:'none', fontSize:12, fontWeight:700, cursor:'pointer', transition:'all .15s',
-                      background: activeCart === i ? '#f26419' : '#1e293b',
-                      color:      activeCart === i ? '#fff' : '#94a3b8' }}>
+                      background: activeCart === i ? 'var(--brand-strong)' : '#1e293b',
+                      color:      activeCart === i ? 'var(--on-brand)' : '#94a3b8' }}>
                     #{i+1}{qty > 0 && ` · ${qty}`}
                   </button>
                   {carts.length > 1 && (
@@ -529,7 +534,7 @@ function MostradorScreen() {
           {/* Cart header */}
           <div style={{ padding:'10px 16px 8px', flexShrink:0, borderBottom:'1px solid #1e293b', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
             <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:18, color:'#f8fafc' }}>
-              Pedido #{activeCart+1} {cart.length > 0 && <span style={{ fontSize:14, color:'#f26419' }}>({totalQty} items)</span>}
+              Pedido #{activeCart+1} {cart.length > 0 && <span style={{ fontSize:14, color:'var(--brand)' }}>({totalQty} items)</span>}
               {isCompact && <span style={{ fontSize:10, color:'#64748b', marginLeft:6 }}>· compacto</span>}
             </span>
             <div style={{ display:'flex', gap:6, alignItems:'center' }}>
@@ -545,13 +550,13 @@ function MostradorScreen() {
           <div style={{ flex:1, overflowY:'auto', padding:'10px 16px' }}>
             {cart.length === 0 ? (
               <div style={{ textAlign:'center', padding:'30px 0', color:'#475569' }}>
-                <div style={{ fontSize:36, marginBottom:8 }}>🛒</div>
+                <div style={{ marginBottom:8, display:'flex', justifyContent:'center' }}><ShoppingCart size={36} style={{color:'#475569'}}/></div>
                 <div style={{ fontSize:13, marginBottom:16 }}>Selecciona productos del menú</div>
                 {/* Reimprimir última comanda */}
                 {lastOrder && (
                   <button onClick={() => printComanda(lastOrder.orderId, lastOrder.lines, lastOrder.total, lastOrder.payment)}
                     style={{ padding:'8px 16px', borderRadius:8, border:'1px solid #334155', background:'transparent', color:'#64748b', fontSize:12, fontWeight:600, cursor:'pointer' }}>
-                    🖨️ Reimprimir última comanda · {lastOrder.orderId}
+                    <Printer size={12}/> Reimprimir última comanda · {lastOrder.orderId}
                   </button>
                 )}
               </div>
@@ -564,14 +569,14 @@ function MostradorScreen() {
                     <div key={i} style={{ display:'flex', alignItems:'center', gap:8, padding:'6px 4px', borderBottom:'1px solid #1e293b', height:40 }}>
                       <span style={{ flex:1, fontSize:12, color:'#f8fafc', lineHeight:1.2 }}>
                         {l.item.name}
-                        {l.size && <span style={{ fontSize:10, color:'#f26419', marginLeft:4 }}>{l.size.toUpperCase()}</span>}
+                        {l.size && <span style={{ fontSize:10, color:'var(--brand)', marginLeft:4 }}>{l.size.toUpperCase()}</span>}
                       </span>
                       <button onClick={() => setQty(l.item, l.size, -1)}
                         style={{ width:22, height:22, borderRadius:4, border:'1px solid #334155', background:'transparent', color:'#f8fafc', fontSize:14, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>−</button>
                       <span style={{ fontSize:13, fontWeight:700, color:'#f8fafc', minWidth:16, textAlign:'center' }}>{l.qty}</span>
                       <button onClick={() => setQty(l.item, l.size, 1)}
-                        style={{ width:22, height:22, borderRadius:4, border:'none', background:'#f26419', color:'#fff', fontSize:14, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>+</button>
-                      <span style={{ fontSize:12, fontWeight:700, color:'#f26419', minWidth:64, textAlign:'right' }}>{fmt(p * l.qty)}</span>
+                        style={{ width:22, height:22, borderRadius:4, border:'none', background:'var(--brand)', color:'#fff', fontSize:14, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>+</button>
+                      <span style={{ fontSize:12, fontWeight:700, color:'var(--brand)', minWidth:64, textAlign:'right' }}>{fmt(p * l.qty)}</span>
                     </div>
                   );
                 })}
@@ -586,9 +591,9 @@ function MostradorScreen() {
                       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:8 }}>
                         <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:15, color:'#f8fafc', lineHeight:1.2 }}>
                           {l.item.name}
-                          {l.size && <span style={{ fontSize:11, color:'#f26419', marginLeft:5 }}>{l.size.toUpperCase()}</span>}
+                          {l.size && <span style={{ fontSize:11, color:'var(--brand)', marginLeft:5 }}>{l.size.toUpperCase()}</span>}
                         </div>
-                        <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:15, color:'#f26419', flexShrink:0 }}>
+                        <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:15, color:'var(--brand)', flexShrink:0 }}>
                           {fmt(p * l.qty)}
                         </div>
                       </div>
@@ -597,7 +602,7 @@ function MostradorScreen() {
                           style={{ width:28, height:28, borderRadius:6, border:'1px solid #334155', background:'transparent', color:'#f8fafc', fontSize:16, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>−</button>
                         <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:16, color:'#f8fafc', minWidth:24, textAlign:'center' }}>{l.qty}</span>
                         <button onClick={() => setQty(l.item, l.size, 1)}
-                          style={{ width:28, height:28, borderRadius:6, border:'none', background:'#f26419', color:'#fff', fontSize:16, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>+</button>
+                          style={{ width:28, height:28, borderRadius:6, border:'none', background:'var(--brand)', color:'#fff', fontSize:16, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>+</button>
                         <span style={{ fontSize:12, color:'#64748b', marginLeft:'auto' }}>{fmt(p)} c/u</span>
                       </div>
                     </div>
@@ -620,9 +625,9 @@ function MostradorScreen() {
             <div style={{ display:'flex', gap:6, marginBottom:14 }}>
               {PAYMENT.map(p => (
                 <button key={p.id} onClick={() => setPayment(p.id)}
-                  style={{ flex:1, padding:'8px 4px', borderRadius:9, border:`2px solid ${payment === p.id ? '#f26419' : '#334155'}`, background: payment === p.id ? 'rgba(242,100,25,0.15)' : 'transparent', cursor:'pointer', transition:'all .15s', display:'flex', flexDirection:'column', alignItems:'center', gap:2 }}>
-                  <span style={{ fontSize:18 }}>{p.emoji}</span>
-                  <span style={{ fontSize:10, fontWeight:700, color: payment === p.id ? '#f26419' : '#64748b' }}>{p.label}</span>
+                  style={{ flex:1, padding:'8px 4px', borderRadius:9, border:`2px solid ${payment === p.id ? 'var(--brand)' : '#334155'}`, background: payment === p.id ? 'var(--brand-soft)' : 'transparent', cursor:'pointer', transition:'all .15s', display:'flex', flexDirection:'column', alignItems:'center', gap:2 }}>
+                  <p.icon size={18} style={{ color: payment === p.id ? 'var(--brand)' : '#64748b' }}/>
+                  <span style={{ fontSize:10, fontWeight:700, color: payment === p.id ? 'var(--brand)' : '#64748b' }}>{p.label}</span>
                 </button>
               ))}
             </div>
@@ -630,10 +635,10 @@ function MostradorScreen() {
             {/* Confirmar */}
             <button onClick={handleConfirm} disabled={!cart.length || saving}
               style={{ width:'100%', padding:'15px', borderRadius:12, border:'none', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:19, cursor: (!cart.length || saving) ? 'not-allowed' : 'pointer', transition:'all .15s',
-                background: !cart.length ? '#1e293b' : '#f26419',
-                color: !cart.length ? '#475569' : '#fff',
-                boxShadow: cart.length ? '0 4px 20px rgba(242,100,25,0.35)' : 'none' }}>
-              {saving ? 'Guardando…' : '🖨️ Confirmar e imprimir'}
+                background: !cart.length ? '#1e293b' : 'var(--brand-strong)',
+                color: !cart.length ? '#475569' : 'var(--on-brand)',
+                boxShadow: cart.length ? 'var(--shadow-brand)' : 'none' }}>
+              <Printer size={16}/> {saving ? 'Guardando…' : 'Confirmar e imprimir'}
             </button>
           </div>
         </div>

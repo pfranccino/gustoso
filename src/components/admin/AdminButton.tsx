@@ -14,10 +14,10 @@ interface AdminButtonProps {
 }
 
 const VARIANT_STYLES: Record<Variant, React.CSSProperties> = {
-  primary: { background: 'var(--orange)', color: '#fff', border: 'none' },
-  ghost:   { background: 'transparent', color: 'var(--text-muted)', border: '1px solid var(--border)' },
+  primary: { background: 'var(--brand-strong)', color: 'var(--on-brand)', border: 'none' },
+  ghost:   { background: 'transparent', color: 'var(--ink-500)', border: '1px solid var(--line)' },
   danger:  { background: 'transparent', color: '#dc2626', border: '1px solid rgba(220,38,38,0.35)' },
-  dark:    { background: 'var(--text)', color: 'var(--bg)', border: 'none' },
+  dark:    { background: 'var(--ink-900)', color: 'var(--surface-base)', border: 'none' },
 };
 
 const SIZE_STYLES: Record<Size, React.CSSProperties> = {

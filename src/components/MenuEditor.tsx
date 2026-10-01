@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useTransition, useRef, useImperativeHandle, forwardRef } from 'react';
+import { CupSoda, Leaf } from 'lucide-react';
 import { MenuItem, Extra, Ingredient } from '@/lib/firestore/menuItems';
 import type { Category } from '@/lib/firestore/categoriesTypes';
 import { DEFAULT_CATEGORIES } from '@/lib/firestore/categoriesTypes';
@@ -248,13 +249,13 @@ export default function MenuEditor({ initialItems, categories = DEFAULT_CATEGORI
       <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:24, flexWrap:'wrap' }}>
         <button
           onClick={() => { setCreating(emptyCreate(editableCategories[0]?.id ?? 'vienesas')); setSaveError(''); }}
-          style={{ padding:'9px 18px', borderRadius:999, border:'none', background:'#F26419', color:'#fff', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:15, cursor:'pointer' }}
+          style={{ padding:'9px 18px', borderRadius:999, border:'none', background:'var(--brand-strong)', color:'var(--on-brand)', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:15, cursor:'pointer' }}
         >
           + Crear producto
         </button>
         <button
           onClick={handleSeed} disabled={seeding}
-          style={{ padding:'9px 18px', borderRadius:999, border:'1.5px solid #F26419', background:'transparent', color:'#F26419', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:15, cursor: seeding?'not-allowed':'pointer', opacity: seeding?0.6:1 }}
+          style={{ padding:'9px 18px', borderRadius:999, border:'1.5px solid var(--brand)', background:'transparent', color:'var(--brand)', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:15, cursor: seeding?'not-allowed':'pointer', opacity: seeding?0.6:1 }}
         >
           {seeding ? 'Importando…' : 'Importar menú inicial'}
         </button>
@@ -262,9 +263,9 @@ export default function MenuEditor({ initialItems, categories = DEFAULT_CATEGORI
           onClick={handleMigrateIngredients} disabled={migrating}
           style={{ padding:'9px 18px', borderRadius:999, border:'1.5px solid #6b7280', background:'transparent', color:'#6b7280', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:15, cursor: migrating?'not-allowed':'pointer', opacity: migrating?0.6:1 }}
         >
-          {migrating ? 'Migrando…' : '🥬 Migrar ingredientes'}
+          {migrating ? 'Migrando…' : <><Leaf size={14} style={{display:'inline', verticalAlign:'middle'}}/> Migrar ingredientes</>}
         </button>
-        {seedMsg    && <span style={{ fontSize:13, color:'#A0541A', fontWeight:600 }}>{seedMsg}</span>}
+        {seedMsg    && <span style={{ fontSize:13, color:'var(--ink-500)', fontWeight:600 }}>{seedMsg}</span>}
         {migrateMsg && <span style={{ fontSize:13, color:'#16a34a', fontWeight:600 }}>{migrateMsg}</span>}
       </div>
 
@@ -274,29 +275,29 @@ export default function MenuEditor({ initialItems, categories = DEFAULT_CATEGORI
         if (!catItems?.length) return null;
         return (
           <div key={cat} style={{ marginBottom:32 }}>
-            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:20, color:'var(--text)', marginBottom:12, borderBottom:'1.5px solid var(--border)', paddingBottom:8 }}>
+            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:20, color:'var(--ink-900)', marginBottom:12, borderBottom:'1.5px solid var(--line)', paddingBottom:8 }}>
               {emoji} {label}
             </div>
             <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(340px, 1fr))', gap:8 }}>
               {catItems.map(item => (
-                <div key={item.id} style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:'var(--radius)', padding:'12px 14px', display:'flex', alignItems:'center', gap:12, opacity: item.visible ? 1 : 0.5 }}>
+                <div key={item.id} style={{ background:'var(--surface-raised)', border:'1px solid var(--line)', borderRadius:'var(--radius-lg)', padding:'12px 14px', display:'flex', alignItems:'center', gap:12, opacity: item.visible ? 1 : 0.5 }}>
                   <button onClick={() => toggleVisible(item)} title={item.visible?'Ocultar':'Mostrar'}
-                    style={{ flexShrink:0, width:36, height:20, borderRadius:999, border:'none', background: item.visible?'#F26419':'#d1d5db', cursor:'pointer', position:'relative', transition:'background .2s' }}>
+                    style={{ flexShrink:0, width:36, height:20, borderRadius:999, border:'none', background: item.visible?'var(--brand)':'#d1d5db', cursor:'pointer', position:'relative', transition:'background .2s' }}>
                     <span style={{ position:'absolute', top:2, left: item.visible?18:2, width:16, height:16, borderRadius:'50%', background:'#fff', transition:'left .2s' }}/>
                   </button>
                   <div style={{ flex:1, minWidth:0 }}>
                     <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-                      <div style={{ fontWeight:700, fontSize:14, color:'var(--text)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{item.name}</div>
-                      {item.volume && <span style={{ fontSize:10, fontWeight:700, color:'#0891b2', background:'rgba(8,145,178,0.1)', padding:'1px 6px', borderRadius:4, flexShrink:0 }}>🥤 {item.volume}</span>}
+                      <div style={{ fontWeight:700, fontSize:14, color:'var(--ink-900)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{item.name}</div>
+                      {item.volume && <span style={{ fontSize:10, fontWeight:700, color:'#0891b2', background:'rgba(8,145,178,0.1)', padding:'1px 6px', borderRadius:4, flexShrink:0, display:'inline-flex', alignItems:'center', gap:2 }}><CupSoda size={10}/> {item.volume}</span>}
                     </div>
-                    {item.desc && <div style={{ fontSize:12, color:'var(--text-muted)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{item.desc}</div>}
+                    {item.desc && <div style={{ fontSize:12, color:'var(--ink-500)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{item.desc}</div>}
                     <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
-                      {item.ingredients.length > 0 && (() => { const en = item.ingredients.filter(i => i.enabled).length; const tot = item.ingredients.length; return <div style={{ fontSize:11, color: en < tot ? '#d97706' : 'var(--text-muted)', fontWeight:600 }}>🥬 {en < tot ? `${en}/${tot}` : tot} ingrediente{tot > 1 ? 's' : ''}</div>; })()}
-                      {item.extras.length > 0 && <div style={{ fontSize:11, color:'var(--orange)', fontWeight:600 }}>➕ {item.extras.length} extra{item.extras.length > 1 ? 's' : ''}</div>}
+                      {item.ingredients.length > 0 && (() => { const en = item.ingredients.filter(i => i.enabled).length; const tot = item.ingredients.length; return <div style={{ fontSize:11, color: en < tot ? '#d97706' : 'var(--ink-500)', fontWeight:600, display:'inline-flex', alignItems:'center', gap:2 }}><Leaf size={10}/> {en < tot ? `${en}/${tot}` : tot} ingrediente{tot > 1 ? 's' : ''}</div>; })()}
+                      {item.extras.length > 0 && <div style={{ fontSize:11, color:'var(--brand)', fontWeight:600 }}>+ {item.extras.length} extra{item.extras.length > 1 ? 's' : ''}</div>}
                     </div>
                   </div>
                   <div style={{ textAlign:'right', flexShrink:0 }}>
-                    <div style={{ fontSize:13, fontWeight:700, color:'var(--orange)', whiteSpace:'nowrap' }}>
+                    <div style={{ fontSize:13, fontWeight:700, color:'var(--brand)', whiteSpace:'nowrap' }}>
                       {isDual(item) ? `${fmt(item.priceNormal!)} / ${fmt(item.priceXL!)}` : fmt(item.price!)}
                     </div>
                     {item.costEstimado != null && (() => {
@@ -306,7 +307,7 @@ export default function MenuEditor({ initialItems, categories = DEFAULT_CATEGORI
                       return <div style={{ fontSize:11, fontWeight:700, color, whiteSpace:'nowrap' }}>Margen {margin}%</div>;
                     })()}
                   </div>
-                  <button onClick={() => openEdit(item)} style={{ flexShrink:0, padding:'5px 12px', borderRadius:6, border:'1px solid var(--border)', background:'transparent', fontSize:12, fontWeight:700, color:'var(--text-muted)', cursor:'pointer' }}>Editar</button>
+                  <button onClick={() => openEdit(item)} style={{ flexShrink:0, padding:'5px 12px', borderRadius:6, border:'1px solid var(--line)', background:'transparent', fontSize:12, fontWeight:700, color:'var(--ink-500)', cursor:'pointer' }}>Editar</button>
                   <button onClick={() => handleDelete(item)} style={{ flexShrink:0, padding:'5px 10px', borderRadius:6, border:'1px solid rgba(220,38,38,0.3)', background:'transparent', fontSize:12, fontWeight:700, color:'#dc2626', cursor:'pointer' }}>✕</button>
                 </div>
               ))}
@@ -344,9 +345,9 @@ export default function MenuEditor({ initialItems, categories = DEFAULT_CATEGORI
       {creating && (
         <Modal title="Crear producto" onClose={() => { setCreating(null); setSaveError(''); }}>
           <div style={{ marginBottom:14 }}>
-            <label style={{ display:'block', fontSize:11, fontWeight:700, color:'#A0541A', letterSpacing:1, textTransform:'uppercase', marginBottom:6 }}>Categoría</label>
+            <label style={{ display:'block', fontSize:11, fontWeight:700, color:'var(--ink-500)', letterSpacing:1, textTransform:'uppercase', marginBottom:6 }}>Categoría</label>
             <select value={creating.category} onChange={e => setCreating(p => p && ({ ...p, category: e.target.value }))}
-              style={{ display:'block', width:'100%', padding:'10px 12px', borderRadius:8, border:'1.5px solid rgba(242,100,25,0.25)', background:'#FFF9F5', color:'#1A0800', fontSize:14, fontFamily:"'Barlow',sans-serif" }}>
+              style={{ display:'block', width:'100%', padding:'10px 12px', borderRadius:8, border:'1.5px solid var(--line)', background:'var(--surface-subtle)', color:'var(--ink-900)', fontSize:14, fontFamily:"'Barlow',sans-serif" }}>
               {editableCategories.map(c => <option key={c.id} value={c.id}>{c.emoji} {c.label}</option>)}
             </select>
           </div>
@@ -357,7 +358,7 @@ export default function MenuEditor({ initialItems, categories = DEFAULT_CATEGORI
             onVolume={v => setCreating(p => p && ({ ...p, volume: v }))} />
 
           <div style={{ marginBottom:14 }}>
-            <label style={{ display:'flex', alignItems:'center', gap:8, cursor:'pointer', fontSize:13, fontWeight:600, color:'#1A0800' }}>
+            <label style={{ display:'flex', alignItems:'center', gap:8, cursor:'pointer', fontSize:13, fontWeight:600, color:'var(--ink-900)' }}>
               <input type="checkbox" checked={creating.dual} onChange={e => setCreating(p => p && ({ ...p, dual: e.target.checked }))} />
               Tiene precio Normal / XL
             </label>
@@ -378,7 +379,7 @@ export default function MenuEditor({ initialItems, categories = DEFAULT_CATEGORI
           <ExtrasEditor ref={createExtrasRef} extras={creating.extras} onChange={extras => setCreating(p => p && ({ ...p, extras }))} />
 
           <div style={{ marginBottom:14 }}>
-            <label style={{ display:'flex', alignItems:'center', gap:8, cursor:'pointer', fontSize:13, fontWeight:600, color:'#1A0800' }}>
+            <label style={{ display:'flex', alignItems:'center', gap:8, cursor:'pointer', fontSize:13, fontWeight:600, color:'var(--ink-900)' }}>
               <input type="checkbox" checked={creating.visible} onChange={e => setCreating(p => p && ({ ...p, visible: e.target.checked }))} />
               Visible en el menú
             </label>
@@ -402,7 +403,7 @@ function VolumeToggle({ hasVolume, volume, onToggle, onVolume }: {
     <div style={{ marginBottom:14 }}>
       <label style={{ display:'flex', alignItems:'center', gap:8, cursor:'pointer', marginBottom: hasVolume ? 12 : 0 }}>
         <input type="checkbox" checked={hasVolume} onChange={e => onToggle(e.target.checked)} style={{ width:15, height:15, cursor:'pointer' }}/>
-        <span style={{ fontSize:13, fontWeight:600, color:'#1A0800' }}>Tiene volumen / capacidad (ml, L…)</span>
+        <span style={{ fontSize:13, fontWeight:600, color:'var(--ink-900)' }}>Tiene volumen / capacidad (ml, L…)</span>
       </label>
 
       {hasVolume && (
@@ -418,7 +419,7 @@ function VolumeToggle({ hasVolume, volume, onToggle, onVolume }: {
           <input
             value={volume} onChange={e => onVolume(e.target.value)}
             placeholder="O escribe otro valor…"
-            style={{ width:'100%', padding:'8px 12px', borderRadius:8, border:'1.5px solid rgba(242,100,25,0.25)', background:'#FFF9F5', color:'#1A0800', fontSize:13, fontFamily:"'Barlow',sans-serif", outline:'none', boxSizing:'border-box' }}
+            style={{ width:'100%', padding:'8px 12px', borderRadius:8, border:'1.5px solid var(--line)', background:'var(--surface-subtle)', color:'var(--ink-900)', fontSize:13, fontFamily:"'Barlow',sans-serif", outline:'none', boxSizing:'border-box' }}
           />
         </>
       )}
@@ -429,8 +430,8 @@ function VolumeToggle({ hasVolume, volume, onToggle, onVolume }: {
 function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
   return (
     <div onClick={onClose} style={{ position:'fixed', inset:0, zIndex:50, background:'rgba(0,0,0,0.45)', display:'flex', alignItems:'center', justifyContent:'center', padding:16 }}>
-      <div onClick={e => e.stopPropagation()} style={{ background:'#fff', borderRadius:14, padding:'28px 24px', width:'100%', maxWidth:440, boxShadow:'0 8px 40px rgba(0,0,0,0.18)', maxHeight:'90vh', overflowY:'auto' }}>
-        <h2 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:22, color:'#1A0800', marginBottom:20 }}>{title}</h2>
+      <div onClick={e => e.stopPropagation()} style={{ background:'var(--surface-raised)', borderRadius:14, padding:'28px 24px', width:'100%', maxWidth:440, boxShadow:'0 8px 40px rgba(0,0,0,0.18)', maxHeight:'90vh', overflowY:'auto' }}>
+        <h2 style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:22, color:'var(--ink-900)', marginBottom:20 }}>{title}</h2>
         {children}
       </div>
     </div>
@@ -440,10 +441,10 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
 function ModalActions({ onSave, onCancel, isPending, saveLabel = 'Guardar' }: { onSave: () => void; onCancel: () => void; isPending: boolean; saveLabel?: string }) {
   return (
     <div style={{ display:'flex', gap:10, marginTop:20 }}>
-      <button onClick={onSave} disabled={isPending} style={{ flex:1, padding:'12px', borderRadius:999, border:'none', background: isPending?'#d1bfb8':'#F26419', color:'#fff', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:18, cursor: isPending?'not-allowed':'pointer' }}>
+      <button onClick={onSave} disabled={isPending} style={{ flex:1, padding:'12px', borderRadius:999, border:'none', background: isPending?'#d1bfb8':'var(--brand-strong)', color:'var(--on-brand)', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:18, cursor: isPending?'not-allowed':'pointer' }}>
         {isPending ? 'Guardando…' : saveLabel}
       </button>
-      <button onClick={onCancel} style={{ padding:'12px 20px', borderRadius:999, border:'1.5px solid var(--border)', background:'transparent', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:16, cursor:'pointer', color:'var(--text-muted)' }}>
+      <button onClick={onCancel} style={{ padding:'12px 20px', borderRadius:999, border:'1.5px solid var(--line)', background:'transparent', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:16, cursor:'pointer', color:'var(--ink-500)' }}>
         Cancelar
       </button>
     </div>
@@ -471,7 +472,7 @@ function IngredientsEditor({ ingredients, onChange }, ref) {
 
   return (
     <div style={{ marginBottom:14 }}>
-      <div style={{ fontSize:11, fontWeight:700, color:'#A0541A', letterSpacing:1, textTransform:'uppercase', marginBottom:6 }}>
+      <div style={{ fontSize:11, fontWeight:700, color:'var(--ink-500)', letterSpacing:1, textTransform:'uppercase', marginBottom:6 }}>
         Ingredientes
       </div>
       <div style={{ fontSize:11, color:'#999', marginBottom:8 }}>
@@ -484,12 +485,12 @@ function IngredientsEditor({ ingredients, onChange }, ref) {
             <button key={i} onClick={() => toggle(i)}
               title={ing.enabled ? 'Clic para desactivar' : 'Clic para activar'}
               style={{ display:'inline-flex', alignItems:'center', gap:6, borderRadius:999, padding:'5px 12px', fontSize:13, fontWeight:600, cursor:'pointer', border:'1.5px solid', transition:'all .15s',
-                background:     ing.enabled ? '#FFF9F5'               : 'rgba(0,0,0,0.04)',
-                borderColor:    ing.enabled ? 'rgba(242,100,25,0.35)' : 'rgba(0,0,0,0.12)',
-                color:          ing.enabled ? '#1A0800'               : '#aaa',
+                background:     ing.enabled ? 'var(--surface-subtle)'               : 'rgba(0,0,0,0.04)',
+                borderColor:    ing.enabled ? 'var(--line)' : 'rgba(0,0,0,0.12)',
+                color:          ing.enabled ? 'var(--ink-900)'               : '#aaa',
                 textDecoration: ing.enabled ? 'none'                  : 'line-through',
               }}>
-              <span style={{ width:8, height:8, borderRadius:'50%', flexShrink:0, background: ing.enabled ? '#F26419' : '#d1d5db', transition:'background .15s' }}/>
+              <span style={{ width:8, height:8, borderRadius:'50%', flexShrink:0, background: ing.enabled ? 'var(--brand)' : '#d1d5db', transition:'background .15s' }}/>
               {ing.name}
             </button>
           ))}
@@ -499,8 +500,8 @@ function IngredientsEditor({ ingredients, onChange }, ref) {
       <div style={{ display:'flex', gap:8 }}>
         <input value={newName} onChange={e => setNewName(e.target.value)} onKeyDown={e => e.key === 'Enter' && add()}
           placeholder="Ej: ketchup, cebolla, tomate…"
-          style={{ flex:1, padding:'8px 10px', borderRadius:8, border:'1.5px solid rgba(242,100,25,0.25)', background:'#FFF9F5', color:'#1A0800', fontSize:13, fontFamily:"'Barlow',sans-serif" }} />
-        <button onClick={add} style={{ padding:'8px 14px', borderRadius:8, border:'none', background:'#F26419', color:'#fff', fontSize:13, fontWeight:700, cursor:'pointer' }}>+</button>
+          style={{ flex:1, padding:'8px 10px', borderRadius:8, border:'1.5px solid var(--line)', background:'var(--surface-subtle)', color:'var(--ink-900)', fontSize:13, fontFamily:"'Barlow',sans-serif" }} />
+        <button onClick={add} style={{ padding:'8px 14px', borderRadius:8, border:'none', background:'var(--brand)', color:'#fff', fontSize:13, fontWeight:700, cursor:'pointer' }}>+</button>
       </div>
     </div>
   );
@@ -524,15 +525,15 @@ function ExtrasEditor({ extras, onChange }, ref) {
 
   return (
     <div style={{ marginBottom:14 }}>
-      <div style={{ fontSize:11, fontWeight:700, color:'#A0541A', letterSpacing:1, textTransform:'uppercase', marginBottom:8 }}>Extras opcionales</div>
+      <div style={{ fontSize:11, fontWeight:700, color:'var(--ink-500)', letterSpacing:1, textTransform:'uppercase', marginBottom:8 }}>Extras opcionales</div>
 
       {extras.length > 0 && (
         <div style={{ display:'flex', flexDirection:'column', gap:6, marginBottom:10 }}>
           {extras.map((e, i) => (
-            <div key={i} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', background:'#FFF9F5', border:'1px solid rgba(242,100,25,0.2)', borderRadius:8, padding:'7px 12px' }}>
-              <span style={{ fontSize:13, fontWeight:600, color:'#1A0800' }}>{e.name}</span>
+            <div key={i} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', background:'var(--surface-subtle)', border:'1px solid var(--line)', borderRadius:8, padding:'7px 12px' }}>
+              <span style={{ fontSize:13, fontWeight:600, color:'var(--ink-900)' }}>{e.name}</span>
               <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                <span style={{ fontSize:13, fontWeight:700, color: e.price > 0 ? '#F26419' : '#16a34a' }}>{e.price > 0 ? `+$${e.price.toLocaleString('es-CL')}` : 'Gratis'}</span>
+                <span style={{ fontSize:13, fontWeight:700, color: e.price > 0 ? 'var(--brand)' : '#16a34a' }}>{e.price > 0 ? `+$${e.price.toLocaleString('es-CL')}` : 'Gratis'}</span>
                 <button onClick={() => onChange(extras.filter((_, j) => j !== i))} style={{ fontSize:14, color:'#dc2626', background:'transparent', border:'none', cursor:'pointer', fontWeight:700, lineHeight:1 }}>✕</button>
               </div>
             </div>
@@ -541,9 +542,9 @@ function ExtrasEditor({ extras, onChange }, ref) {
       )}
 
       <div style={{ display:'flex', gap:8 }}>
-        <input value={newName} onChange={e => setNewName(e.target.value)} onKeyDown={e => e.key === 'Enter' && add()} placeholder="Nombre del extra" style={{ flex:2, padding:'8px 10px', borderRadius:8, border:'1.5px solid rgba(242,100,25,0.25)', background:'#FFF9F5', color:'#1A0800', fontSize:13, fontFamily:"'Barlow',sans-serif" }} />
-        <input value={newPrice} onChange={e => setNewPrice(e.target.value)} onKeyDown={e => e.key === 'Enter' && add()} placeholder="Precio (0=gratis)" type="number" style={{ flex:1, padding:'8px 10px', borderRadius:8, border:'1.5px solid rgba(242,100,25,0.25)', background:'#FFF9F5', color:'#1A0800', fontSize:13, fontFamily:"'Barlow',sans-serif" }} />
-        <button onClick={add} style={{ padding:'8px 14px', borderRadius:8, border:'none', background:'#F26419', color:'#fff', fontSize:13, fontWeight:700, cursor:'pointer' }}>+</button>
+        <input value={newName} onChange={e => setNewName(e.target.value)} onKeyDown={e => e.key === 'Enter' && add()} placeholder="Nombre del extra" style={{ flex:2, padding:'8px 10px', borderRadius:8, border:'1.5px solid var(--line)', background:'var(--surface-subtle)', color:'var(--ink-900)', fontSize:13, fontFamily:"'Barlow',sans-serif" }} />
+        <input value={newPrice} onChange={e => setNewPrice(e.target.value)} onKeyDown={e => e.key === 'Enter' && add()} placeholder="Precio (0=gratis)" type="number" style={{ flex:1, padding:'8px 10px', borderRadius:8, border:'1.5px solid var(--line)', background:'var(--surface-subtle)', color:'var(--ink-900)', fontSize:13, fontFamily:"'Barlow',sans-serif" }} />
+        <button onClick={add} style={{ padding:'8px 14px', borderRadius:8, border:'none', background:'var(--brand)', color:'#fff', fontSize:13, fontWeight:700, cursor:'pointer' }}>+</button>
       </div>
     </div>
   );
@@ -557,13 +558,13 @@ function CostField({ value, onChange, refPrice }: { value: string; onChange: (v:
 
   return (
     <div style={{ marginBottom:14 }}>
-      <label style={{ display:'block', fontSize:11, fontWeight:700, color:'#A0541A', letterSpacing:1, textTransform:'uppercase', marginBottom:6 }}>
+      <label style={{ display:'block', fontSize:11, fontWeight:700, color:'var(--ink-500)', letterSpacing:1, textTransform:'uppercase', marginBottom:6 }}>
         Costo estimado <span style={{ fontWeight:400, textTransform:'none', letterSpacing:0, fontSize:10, color:'#999' }}>(opcional — para calcular margen)</span>
       </label>
       <div style={{ display:'flex', gap:8, alignItems:'center' }}>
         <input
           value={value} onChange={e => onChange(e.target.value)} type="number" placeholder="$0"
-          style={{ flex:1, padding:'10px 12px', borderRadius:8, border:'1.5px solid rgba(242,100,25,0.25)', background:'#FFF9F5', color:'#1A0800', fontSize:14, fontFamily:"'Barlow',sans-serif", boxSizing:'border-box', outline:'none' }}
+          style={{ flex:1, padding:'10px 12px', borderRadius:8, border:'1.5px solid var(--line)', background:'var(--surface-subtle)', color:'var(--ink-900)', fontSize:14, fontFamily:"'Barlow',sans-serif", boxSizing:'border-box', outline:'none' }}
         />
         {margin !== null && (
           <div style={{ flexShrink:0, fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:16, color: marginColor }}>
@@ -578,8 +579,8 @@ function CostField({ value, onChange, refPrice }: { value: string; onChange: (v:
 function Field({ label, ...inputProps }: { label: string } & React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <div style={{ marginBottom:14 }}>
-      <label style={{ display:'block', fontSize:11, fontWeight:700, color:'#A0541A', letterSpacing:1, textTransform:'uppercase', marginBottom:6 }}>{label}</label>
-      <input {...inputProps} style={{ display:'block', width:'100%', padding:'10px 12px', borderRadius:8, border:'1.5px solid rgba(242,100,25,0.25)', background:'#FFF9F5', color:'#1A0800', fontSize:14, fontFamily:"'Barlow',sans-serif", boxSizing:'border-box', outline:'none' }} />
+      <label style={{ display:'block', fontSize:11, fontWeight:700, color:'var(--ink-500)', letterSpacing:1, textTransform:'uppercase', marginBottom:6 }}>{label}</label>
+      <input {...inputProps} style={{ display:'block', width:'100%', padding:'10px 12px', borderRadius:8, border:'1.5px solid var(--line)', background:'var(--surface-subtle)', color:'var(--ink-900)', fontSize:14, fontFamily:"'Barlow',sans-serif", boxSizing:'border-box', outline:'none' }} />
     </div>
   );
 }

@@ -23,15 +23,15 @@ export default function EditableItemRow({
   extra, disabled,
 }: EditableItemRowProps) {
   const INPUT: React.CSSProperties = {
-    padding: '6px 9px', borderRadius: 6, border: '1.5px solid rgba(242,100,25,0.2)',
-    background: 'var(--bg2)', color: 'var(--text)', fontSize: 12,
+    padding: '6px 9px', borderRadius: 6, border: '1.5px solid var(--line)',
+    background: 'var(--surface-sunken)', color: 'var(--ink-900)', fontSize: 12,
     fontFamily: "'Barlow', sans-serif", outline: 'none',
   };
 
   return (
     <div style={{
       display: 'flex', alignItems: 'center', gap: 8,
-      padding: '7px 0', borderBottom: '1px solid var(--border)',
+      padding: '7px 0', borderBottom: '1px solid var(--line)',
     }}>
       {onAvailableChange && (
         <AdminToggle value={available} onChange={onAvailableChange} aria-label={`Disponibilidad de ${name}`} disabled={disabled}/>
@@ -44,11 +44,11 @@ export default function EditableItemRow({
           style={{ ...INPUT, flex: 1, minWidth: 80 }}
         />
       ) : (
-        <span style={{ flex: 1, fontSize: 13, color: 'var(--text)', fontWeight: 500 }}>{name}</span>
+        <span style={{ flex: 1, fontSize: 13, color: 'var(--ink-900)', fontWeight: 500 }}>{name}</span>
       )}
       {onPriceChange !== undefined && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-          <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>$</span>
+          <span style={{ fontSize: 11, color: 'var(--ink-500)', fontWeight: 600 }}>$</span>
           <input
             type="number"
             value={price ?? ''}

@@ -101,7 +101,7 @@ export function useLiveMetrics() {
             pmMap[pm].count++;
             pmGrand += d.total ?? 0;
           }
-          const PM_LABEL: Record<string, string> = { efectivo:'💵 Efectivo', transferencia:'🏦 Transferencia', debito:'💳 Débito/Crédito', none:'Sin especificar' };
+          const PM_LABEL: Record<string, string> = { efectivo:'Efectivo', transferencia:'Transferencia', debito:'Débito/Crédito', none:'Sin especificar' };
           const breakdown: PaymentBreakdown[] = Object.entries(pmMap)
             .map(([m, v]) => ({ method: m, label: PM_LABEL[m] ?? m, total: v.total, count: v.count, pct: pmGrand > 0 ? Math.round((v.total / pmGrand) * 100) : 0 }))
             .sort((a, b) => b.total - a.total);

@@ -1,13 +1,14 @@
 'use client';
 
 import { useState } from 'react';
+import { FolderOpen, Check } from 'lucide-react';
 import type { Category } from '@/lib/firestore/categoriesTypes';
 
 const EMOJI_SUGGESTIONS = ['🍔','🌭','🥪','🥩','🥖','🌯','🍟','🥤','🍕','🍣','🌮','🌶️','🥗','🧆','🍱','☕','🧃','🍦','🍰','🥞'];
 
 const INPUT: React.CSSProperties = {
-  padding: '8px 10px', borderRadius: 8, border: '1.5px solid var(--border)',
-  background: 'var(--card)', color: 'var(--text)', fontSize: 13,
+  padding: '8px 10px', borderRadius: 8, border: '1.5px solid var(--line)',
+  background: 'var(--surface-raised)', color: 'var(--ink-900)', fontSize: 13,
   fontFamily: "'Barlow',sans-serif", outline: 'none', boxSizing: 'border-box' as const,
 };
 
@@ -79,27 +80,27 @@ export default function CategoryManager({ initial }: { initial: Category[] }) {
     <div style={{ marginBottom: 32 }}>
       {/* Toggle header */}
       <button onClick={() => setOpen(v => !v)}
-        style={{ display:'flex', alignItems:'center', gap:8, width:'100%', background:'var(--card)', border:'1px solid var(--border)', borderRadius:'var(--radius)', padding:'12px 16px', cursor:'pointer', textAlign:'left' }}>
-        <span style={{ fontSize:16 }}>🗂️</span>
-        <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:800, fontSize:16, color:'var(--text)', flex:1 }}>Categorías</span>
-        <span style={{ fontSize:12, color:'var(--text-muted)' }}>{cats.length} categoría{cats.length !== 1 ? 's' : ''}</span>
-        <span style={{ fontSize:12, color:'var(--text-muted)' }}>{open ? '▲' : '▼'}</span>
+        style={{ display:'flex', alignItems:'center', gap:8, width:'100%', background:'var(--surface-raised)', border:'1px solid var(--line)', borderRadius:'var(--radius-lg)', padding:'12px 16px', cursor:'pointer', textAlign:'left' }}>
+        <FolderOpen size={16} style={{color:'var(--ink-500)'}}/>
+        <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:800, fontSize:16, color:'var(--ink-900)', flex:1 }}>Categorías</span>
+        <span style={{ fontSize:12, color:'var(--ink-500)' }}>{cats.length} categoría{cats.length !== 1 ? 's' : ''}</span>
+        <span style={{ fontSize:12, color:'var(--ink-500)' }}>{open ? '▲' : '▼'}</span>
       </button>
 
       {open && (
-        <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderTop:'none', borderRadius:'0 0 var(--radius) var(--radius)', padding:16 }}>
+        <div style={{ background:'var(--surface-raised)', border:'1px solid var(--line)', borderTop:'none', borderRadius:'0 0 var(--radius-lg) var(--radius-lg)', padding:16 }}>
           {/* Lista */}
           <div style={{ display:'flex', flexDirection:'column', gap:6, marginBottom:16 }}>
             {cats.map((cat, i) => (
               <div key={cat.id}
-                style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 10px', background:'var(--bg2)', borderRadius:8, border:'1px solid var(--border)', opacity: cat.visible ? 1 : 0.5 }}>
+                style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 10px', background:'var(--surface-sunken)', borderRadius:8, border:'1px solid var(--line)', opacity: cat.visible ? 1 : 0.5 }}>
 
                 {/* Reorder */}
                 <div style={{ display:'flex', flexDirection:'column', gap:1, flexShrink:0 }}>
                   <button onClick={() => move(i, -1)} disabled={i === 0}
-                    style={{ background:'transparent', border:'none', cursor: i === 0 ? 'not-allowed' : 'pointer', fontSize:10, color:'var(--text-muted)', padding:'1px 4px', lineHeight:1, opacity: i===0?0.3:1 }}>▲</button>
+                    style={{ background:'transparent', border:'none', cursor: i === 0 ? 'not-allowed' : 'pointer', fontSize:10, color:'var(--ink-500)', padding:'1px 4px', lineHeight:1, opacity: i===0?0.3:1 }}>▲</button>
                   <button onClick={() => move(i, 1)} disabled={i === cats.length - 1}
-                    style={{ background:'transparent', border:'none', cursor: i === cats.length-1 ? 'not-allowed' : 'pointer', fontSize:10, color:'var(--text-muted)', padding:'1px 4px', lineHeight:1, opacity: i===cats.length-1?0.3:1 }}>▼</button>
+                    style={{ background:'transparent', border:'none', cursor: i === cats.length-1 ? 'not-allowed' : 'pointer', fontSize:10, color:'var(--ink-500)', padding:'1px 4px', lineHeight:1, opacity: i===cats.length-1?0.3:1 }}>▼</button>
                 </div>
 
                 {/* Emoji */}
@@ -107,14 +108,14 @@ export default function CategoryManager({ initial }: { initial: Category[] }) {
 
                 {/* Nombre + slug */}
                 <div style={{ flex:1, minWidth:0 }}>
-                  <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:14, color:'var(--text)' }}>{cat.label}</div>
-                  <div style={{ fontSize:10, color:'var(--text-muted)', fontFamily:'monospace' }}>/{cat.id}{cat.special ? ' · especial' : ''}</div>
+                  <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:14, color:'var(--ink-900)' }}>{cat.label}</div>
+                  <div style={{ fontSize:10, color:'var(--ink-500)', fontFamily:'monospace' }}>/{cat.id}{cat.special ? ' · especial' : ''}</div>
                 </div>
 
                 {/* Toggle visible */}
                 <button onClick={() => toggleVisible(i)}
                   title={cat.visible ? 'Ocultar' : 'Mostrar'}
-                  style={{ width:32, height:18, borderRadius:999, border:'none', background: cat.visible ? 'var(--orange)' : '#d1d5db', cursor:'pointer', position:'relative', transition:'background .2s', flexShrink:0 }}>
+                  style={{ width:32, height:18, borderRadius:999, border:'none', background: cat.visible ? 'var(--brand)' : '#d1d5db', cursor:'pointer', position:'relative', transition:'background .2s', flexShrink:0 }}>
                   <span style={{ position:'absolute', top:2, left: cat.visible ? 15 : 2, width:14, height:14, borderRadius:'50%', background:'#fff', transition:'left .2s' }}/>
                 </button>
 
@@ -128,14 +129,14 @@ export default function CategoryManager({ initial }: { initial: Category[] }) {
           </div>
 
           {/* Añadir nueva */}
-          <div style={{ borderTop:'1px dashed var(--border)', paddingTop:14 }}>
-            <div style={{ fontSize:11, fontWeight:800, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:1, marginBottom:10 }}>Nueva categoría</div>
+          <div style={{ borderTop:'1px dashed var(--line)', paddingTop:14 }}>
+            <div style={{ fontSize:11, fontWeight:800, color:'var(--ink-500)', textTransform:'uppercase', letterSpacing:1, marginBottom:10 }}>Nueva categoría</div>
 
             {/* Sugerencias emoji */}
             <div style={{ display:'flex', gap:4, flexWrap:'wrap', marginBottom:10 }}>
               {EMOJI_SUGGESTIONS.map(e => (
                 <button key={e} onClick={() => setNewEmoji(e)}
-                  style={{ padding:'4px 7px', borderRadius:6, border:`1.5px solid ${newEmoji===e ? 'var(--orange)' : 'var(--border)'}`, background: newEmoji===e ? 'rgba(242,100,25,0.1)' : 'transparent', fontSize:16, cursor:'pointer', transition:'all .12s' }}>
+                  style={{ padding:'4px 7px', borderRadius:6, border:`1.5px solid ${newEmoji===e ? 'var(--brand)' : 'var(--line)'}`, background: newEmoji===e ? 'var(--brand-soft)' : 'transparent', fontSize:16, cursor:'pointer', transition:'all .12s' }}>
                   {e}
                 </button>
               ))}
@@ -149,20 +150,20 @@ export default function CategoryManager({ initial }: { initial: Category[] }) {
                 placeholder="Nombre de la categoría…"
                 style={{ ...INPUT, flex:1, minWidth:140 }} />
               <button onClick={addCategory} disabled={!newName.trim() || saving}
-                style={{ padding:'8px 18px', borderRadius:8, border:'none', background:'var(--orange)', color:'#fff', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:14, cursor: !newName.trim()||saving ? 'not-allowed' : 'pointer', opacity: !newName.trim()||saving ? 0.5 : 1, flexShrink:0 }}>
+                style={{ padding:'8px 18px', borderRadius:8, border:'none', background:'var(--brand-strong)', color:'var(--on-brand)', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:14, cursor: !newName.trim()||saving ? 'not-allowed' : 'pointer', opacity: !newName.trim()||saving ? 0.5 : 1, flexShrink:0 }}>
                 + Agregar
               </button>
             </div>
 
             {newName.trim() && (
-              <div style={{ fontSize:11, color:'var(--text-muted)', marginTop:6 }}>
-                Slug: <code style={{ fontFamily:'monospace', color:'var(--orange)' }}>{slugify(newName)}</code>
+              <div style={{ fontSize:11, color:'var(--ink-500)', marginTop:6 }}>
+                Slug: <code style={{ fontFamily:'monospace', color:'var(--brand)' }}>{slugify(newName)}</code>
               </div>
             )}
           </div>
 
-          {saving && <div style={{ fontSize:12, color:'var(--text-muted)', marginTop:10 }}>Guardando…</div>}
-          {saved  && <div style={{ fontSize:12, color:'#16a34a', fontWeight:600, marginTop:10 }}>✓ Cambios guardados</div>}
+          {saving && <div style={{ fontSize:12, color:'var(--ink-500)', marginTop:10 }}>Guardando…</div>}
+          {saved  && <div style={{ fontSize:12, color:'#16a34a', fontWeight:600, marginTop:10, display:'flex', alignItems:'center', gap:3 }}><Check size={12}/> Cambios guardados</div>}
         </div>
       )}
     </div>

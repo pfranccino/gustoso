@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { Search, AlertTriangle, CheckCircle, Check, Loader } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { fmt } from '@/lib/menuData';
 
@@ -98,13 +99,13 @@ export default function PedidoPage() {
   const negative    = order ? NEGATIVE_STATUS[order.status] : undefined;
 
   return (
-    <div style={{ minHeight:'100dvh', background:'var(--bg)', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'flex-start', padding:'48px 20px 40px', fontFamily:"'Barlow',sans-serif" }}>
+    <div style={{ minHeight:'100dvh', background:'var(--surface-base)', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'flex-start', padding:'48px 20px 40px', fontFamily:"'Barlow',sans-serif" }}>
       <div style={{ width:'100%', maxWidth:440 }}>
 
         {/* Back to menu */}
         <button
           onClick={() => router.push('/')}
-          style={{ display:'flex', alignItems:'center', gap:6, background:'transparent', border:'none', color:'var(--text-muted)', fontSize:13, fontWeight:600, cursor:'pointer', padding:0, marginBottom:32 }}
+          style={{ display:'flex', alignItems:'center', gap:6, background:'transparent', border:'none', color:'var(--ink-500)', fontSize:13, fontWeight:600, cursor:'pointer', padding:0, marginBottom:32 }}
         >
           ← Volver al menú
         </button>
@@ -112,17 +113,17 @@ export default function PedidoPage() {
         {/* Loading */}
         {loading && (
           <div style={{ textAlign:'center', paddingTop:60 }}>
-            <div style={{ fontSize:36, marginBottom:16 }}>⏳</div>
-            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:20, color:'var(--text)' }}>Buscando tu pedido…</div>
+            <div style={{ marginBottom:16 }}><Loader size={36} style={{color:'var(--ink-500)'}}/></div>
+            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:20, color:'var(--ink-900)' }}>Buscando tu pedido…</div>
           </div>
         )}
 
         {/* Not found */}
         {!loading && notFound && (
           <div style={{ textAlign:'center', paddingTop:60 }}>
-            <div style={{ fontSize:36, marginBottom:16 }}>🔍</div>
-            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:22, color:'var(--text)', marginBottom:8 }}>Pedido no encontrado</div>
-            <div style={{ color:'var(--text-muted)', fontSize:14 }}>El código <strong>{orderId}</strong> no existe. Verifica el link o contácta al local.</div>
+            <div style={{ marginBottom:16 }}><Search size={36} style={{color:'var(--ink-500)'}}/></div>
+            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:22, color:'var(--ink-900)', marginBottom:8 }}>Pedido no encontrado</div>
+            <div style={{ color:'var(--ink-500)', fontSize:14 }}>El código <strong>{orderId}</strong> no existe. Verifica el link o contácta al local.</div>
           </div>
         )}
 
@@ -132,16 +133,16 @@ export default function PedidoPage() {
               {/* Header */}
               <div style={{ textAlign:'center', marginBottom:32 }}>
                 <div style={{ fontSize:48, marginBottom:12 }}>
-                  {isNegative ? '⚠️' : order.status === 'delivered' ? '✅' : '✓'}
+                  {isNegative ? <AlertTriangle size={48} style={{color:'#dc2626'}}/> : order.status === 'delivered' ? <CheckCircle size={48} style={{color:'var(--brand)'}}/> : <Check size={48} style={{color:'var(--brand)'}}/>}
                 </div>
-                <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:32, color: isNegative ? '#dc2626' : 'var(--text)', lineHeight:1.1, marginBottom:6 }}>
+                <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:32, color: isNegative ? '#dc2626' : 'var(--ink-900)', lineHeight:1.1, marginBottom:6 }}>
                   {isNegative ? negative?.title : order.status === 'delivered' ? '¡Entregado!' : '¡Pedido recibido!'}
                 </div>
-                <div style={{ display:'inline-block', background:'var(--bg2)', border:'1px solid var(--border)', borderRadius:999, padding:'4px 14px', fontSize:14, fontWeight:700, color:'var(--orange)', letterSpacing:.5 }}>
+                <div style={{ display:'inline-block', background:'var(--surface-sunken)', border:'1px solid var(--line)', borderRadius:999, padding:'4px 14px', fontSize:14, fontWeight:700, color:'var(--brand)', letterSpacing:.5 }}>
                   #{order.orderId}
                 </div>
                 {order.createdAt && (
-                  <div style={{ fontSize:12, color:'var(--text-muted)', marginTop:6, fontWeight:600 }}>
+                  <div style={{ fontSize:12, color:'var(--ink-500)', marginTop:6, fontWeight:600 }}>
                     Recibido a las {formatTime(order.createdAt)}
                   </div>
                 )}
@@ -149,15 +150,15 @@ export default function PedidoPage() {
 
               {/* Negative state message */}
               {isNegative && (
-                <div style={{ background:'rgba(220,38,38,0.07)', border:'1px solid rgba(220,38,38,0.2)', borderRadius:'var(--radius)', padding:'16px 20px', marginBottom:24, color:'#dc2626', fontSize:14, fontWeight:500, lineHeight:1.6 }}>
+                <div style={{ background:'rgba(220,38,38,0.07)', border:'1px solid rgba(220,38,38,0.2)', borderRadius:'var(--radius-lg)', padding:'16px 20px', marginBottom:24, color:'#dc2626', fontSize:14, fontWeight:500, lineHeight:1.6 }}>
                   {negative?.msg}
                 </div>
               )}
 
               {/* Timeline */}
               {!isNegative && (
-                <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:'var(--radius)', padding:'20px 24px', marginBottom:24 }}>
-                  <div style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', letterSpacing:1, textTransform:'uppercase', marginBottom:16 }}>Estado del pedido</div>
+                <div style={{ background:'var(--surface-raised)', border:'1px solid var(--line)', borderRadius:'var(--radius-lg)', padding:'20px 24px', marginBottom:24 }}>
+                  <div style={{ fontSize:11, fontWeight:700, color:'var(--ink-500)', letterSpacing:1, textTransform:'uppercase', marginBottom:16 }}>Estado del pedido</div>
                   <div style={{ display:'flex', flexDirection:'column', gap:0 }}>
                     {TIMELINE_STEPS.map((step, i) => {
                       const isDone    = i < currentStep;
@@ -167,12 +168,12 @@ export default function PedidoPage() {
                       const dotColor = (isDone || isAllDone)
                         ? '#16a34a'
                         : isActive
-                          ? 'var(--orange)'
-                          : 'var(--border)';
+                          ? 'var(--brand)'
+                          : 'var(--line)';
 
                       const textColor = (isDone || isAllDone || isActive)
-                        ? 'var(--text)'
-                        : 'var(--text-muted)';
+                        ? 'var(--ink-900)'
+                        : 'var(--ink-500)';
 
                       return (
                         <div key={i} style={{ display:'flex', alignItems:'flex-start', gap:14, paddingBottom: i < TIMELINE_STEPS.length - 1 ? 16 : 0, position:'relative' }}>
@@ -180,7 +181,7 @@ export default function PedidoPage() {
                           {i < TIMELINE_STEPS.length - 1 && (
                             <div style={{
                               position:'absolute', left:8, top:18, width:2, height:'calc(100% - 8px)',
-                              background: isDone || isAllDone ? '#16a34a' : 'var(--border)',
+                              background: isDone || isAllDone ? '#16a34a' : 'var(--line)',
                               opacity: isDone || isAllDone ? 0.5 : 0.3,
                             }}/>
                           )}
@@ -190,7 +191,7 @@ export default function PedidoPage() {
                               <div style={{ width:8, height:8, borderRadius:'50%', background:'#fff' }}/>
                             )}
                             {isActive && (
-                              <div style={{ width:8, height:8, borderRadius:'50%', background:'var(--orange)', animation:'pulse 1.5s ease-in-out infinite' }}/>
+                              <div style={{ width:8, height:8, borderRadius:'50%', background:'var(--brand)', animation:'pulse 1.5s ease-in-out infinite' }}/>
                             )}
                           </div>
                           {/* Label */}
@@ -199,10 +200,10 @@ export default function PedidoPage() {
                               {isActive && step.inProgress ? step.inProgress : step.label}
                             </div>
                             {isActive && (
-                              <div style={{ fontSize:12, color:'var(--orange)', fontWeight:600, marginTop:1 }}>en proceso</div>
+                              <div style={{ fontSize:12, color:'var(--brand)', fontWeight:600, marginTop:1 }}>en proceso</div>
                             )}
                             {isDone && i === 0 && order.createdAt && (
-                              <div style={{ fontSize:12, color:'var(--text-muted)', marginTop:1 }}>{formatTime(order.createdAt)}</div>
+                              <div style={{ fontSize:12, color:'var(--ink-500)', marginTop:1 }}>{formatTime(order.createdAt)}</div>
                             )}
                             {(isAllDone && i === TIMELINE_STEPS.length - 1) && (
                               <div style={{ fontSize:12, color:'#16a34a', fontWeight:600, marginTop:1 }}>completado</div>
@@ -216,23 +217,23 @@ export default function PedidoPage() {
               )}
 
               {/* Order summary */}
-              <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:'var(--radius)', padding:'16px 20px', marginBottom:24 }}>
-                <div style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', letterSpacing:1, textTransform:'uppercase', marginBottom:10 }}>Resumen</div>
+              <div style={{ background:'var(--surface-raised)', border:'1px solid var(--line)', borderRadius:'var(--radius-lg)', padding:'16px 20px', marginBottom:24 }}>
+                <div style={{ fontSize:11, fontWeight:700, color:'var(--ink-500)', letterSpacing:1, textTransform:'uppercase', marginBottom:10 }}>Resumen</div>
                 <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom: order.deliveryFee ? 6 : 0 }}>
-                  <span style={{ fontSize:14, color:'var(--text-muted)' }}>
+                  <span style={{ fontSize:14, color:'var(--ink-500)' }}>
                     {order.itemCount} {order.itemCount === 1 ? 'producto' : 'productos'}
                   </span>
-                  <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:16, color:'var(--text)' }}>{fmt(order.total - (order.deliveryFee ?? 0))}</span>
+                  <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:16, color:'var(--ink-900)' }}>{fmt(order.total - (order.deliveryFee ?? 0))}</span>
                 </div>
                 {order.deliveryFee != null && order.deliveryFee > 0 && (
                   <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:6 }}>
-                    <span style={{ fontSize:14, color:'var(--text-muted)' }}>Delivery</span>
-                    <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:16, color:'var(--text)' }}>{fmt(order.deliveryFee)}</span>
+                    <span style={{ fontSize:14, color:'var(--ink-500)' }}>Delivery</span>
+                    <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:16, color:'var(--ink-900)' }}>{fmt(order.deliveryFee)}</span>
                   </div>
                 )}
-                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', paddingTop:8, borderTop:'1px solid var(--border)' }}>
-                  <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:14, color:'var(--text-muted)', letterSpacing:.5 }}>TOTAL</span>
-                  <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:24, color:'var(--text)' }}>{fmt(order.total)}</span>
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', paddingTop:8, borderTop:'1px solid var(--line)' }}>
+                  <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:14, color:'var(--ink-500)', letterSpacing:.5 }}>TOTAL</span>
+                  <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:24, color:'var(--ink-900)' }}>{fmt(order.total)}</span>
                 </div>
               </div>
 
@@ -246,7 +247,7 @@ export default function PedidoPage() {
                 )}
                 <button
                   onClick={() => router.push('/')}
-                  style={{ display:'flex', alignItems:'center', justifyContent:'center', background:'var(--bg2)', border:'1px solid var(--border)', color:'var(--text)', padding:'13px 24px', borderRadius:999, fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:16, cursor:'pointer', letterSpacing:.3 }}
+                  style={{ display:'flex', alignItems:'center', justifyContent:'center', background:'var(--surface-sunken)', border:'1px solid var(--line)', color:'var(--ink-900)', padding:'13px 24px', borderRadius:999, fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:16, cursor:'pointer', letterSpacing:.3 }}
                 >
                   Volver al menú
                 </button>

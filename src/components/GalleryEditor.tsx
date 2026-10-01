@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useTransition } from 'react';
+import { Camera } from 'lucide-react';
 import { GalleryItem } from '@/lib/firestore/gallery';
 
 export default function GalleryEditor({ initial }: { initial: GalleryItem[] }) {
@@ -102,16 +103,16 @@ export default function GalleryEditor({ initial }: { initial: GalleryItem[] }) {
       {items.length > 0 && (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 28 }}>
           {items.map(item => (
-            <div key={item.id} style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', overflow: 'hidden' }}>
+            <div key={item.id} style={{ background: 'var(--surface-raised)', border: '1px solid var(--line)', borderRadius: 'var(--radius-lg)', overflow: 'hidden' }}>
               {/* Imagen */}
-              <div style={{ aspectRatio: '4/3', position: 'relative', overflow: 'hidden', background: 'var(--bg3)' }}>
+              <div style={{ aspectRatio: '4/3', position: 'relative', overflow: 'hidden', background: 'var(--surface-sunken)' }}>
                 <img src={item.imageUrl} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                 {/* Overlay actions */}
                 <div style={{ position: 'absolute', top: 6, right: 6, display: 'flex', gap: 5 }}>
                   <button onClick={() => handleReplace(item)} disabled={uploading}
                     title="Reemplazar foto"
                     style={{ width: 28, height: 28, borderRadius: '50%', border: 'none', background: 'rgba(0,0,0,0.6)', color: '#fff', fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    📷
+                    <Camera size={13}/>
                   </button>
                   <button onClick={() => handleDelete(item)} disabled={isPending}
                     title="Eliminar"
@@ -126,7 +127,7 @@ export default function GalleryEditor({ initial }: { initial: GalleryItem[] }) {
                   defaultValue={item.title}
                   onBlur={e => handleTitleBlur(item, e.target.value.trim())}
                   placeholder="Título (opcional)"
-                  style={{ width: '100%', background: 'transparent', border: 'none', outline: 'none', fontSize: 13, fontWeight: 600, color: 'var(--text)', fontFamily: "'Barlow',sans-serif", boxSizing: 'border-box' as const }}
+                  style={{ width: '100%', background: 'transparent', border: 'none', outline: 'none', fontSize: 13, fontWeight: 600, color: 'var(--ink-900)', fontFamily: "'Barlow',sans-serif", boxSizing: 'border-box' as const }}
                 />
               </div>
             </div>
@@ -135,29 +136,29 @@ export default function GalleryEditor({ initial }: { initial: GalleryItem[] }) {
       )}
 
       {items.length === 0 && (
-        <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-muted)', marginBottom: 24 }}>
-          <div style={{ fontSize: 40, marginBottom: 10 }}>📷</div>
+        <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--ink-500)', marginBottom: 24 }}>
+          <div style={{ marginBottom: 10 }}><Camera size={40} style={{color:'var(--ink-500)'}}/></div>
           <div style={{ fontSize: 14 }}>No hay fotos aún. Agrega la primera.</div>
         </div>
       )}
 
       {/* Agregar nueva foto */}
-      <div style={{ background: 'var(--card)', border: '2px dashed rgba(242,100,25,0.3)', borderRadius: 'var(--radius)', padding: '20px' }}>
-        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: .5, textTransform: 'uppercase', marginBottom: 14 }}>
+      <div style={{ background: 'var(--surface-raised)', border: '2px dashed var(--line)', borderRadius: 'var(--radius-lg)', padding: '20px' }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--ink-500)', letterSpacing: .5, textTransform: 'uppercase', marginBottom: 14 }}>
           Agregar foto
         </div>
 
         {/* File picker */}
         <div style={{ marginBottom: 12 }}>
           <input ref={fileRef} type="file" accept="image/*"
-            style={{ fontSize: 13, color: 'var(--text)', width: '100%' }} />
+            style={{ fontSize: 13, color: 'var(--ink-900)', width: '100%' }} />
         </div>
 
         {/* Título */}
         <div style={{ marginBottom: 14 }}>
           <input value={newTitle} onChange={e => setNewTitle(e.target.value)}
             placeholder="Título — ej: Sándwich Churrasco (opcional)"
-            style={{ width: '100%', padding: '8px 11px', borderRadius: 8, border: '1.5px solid rgba(242,100,25,0.25)', background: 'var(--bg2)', color: 'var(--text)', fontSize: 13, fontFamily: "'Barlow',sans-serif", outline: 'none', boxSizing: 'border-box' as const }} />
+            style={{ width: '100%', padding: '8px 11px', borderRadius: 8, border: '1.5px solid var(--line)', background: 'var(--surface-sunken)', color: 'var(--ink-900)', fontSize: 13, fontFamily: "'Barlow',sans-serif", outline: 'none', boxSizing: 'border-box' as const }} />
         </div>
 
         {uploadErr && (
@@ -165,7 +166,7 @@ export default function GalleryEditor({ initial }: { initial: GalleryItem[] }) {
         )}
 
         <button onClick={handleAdd} disabled={uploading || isPending}
-          style={{ width: '100%', padding: '11px', borderRadius: 999, border: 'none', background: uploading ? '#d1bfb8' : '#F26419', color: '#fff', fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 16, cursor: uploading ? 'not-allowed' : 'pointer' }}>
+          style={{ width: '100%', padding: '11px', borderRadius: 999, border: 'none', background: uploading ? '#d1bfb8' : 'var(--brand-strong)', color: 'var(--on-brand)', fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 16, cursor: uploading ? 'not-allowed' : 'pointer' }}>
           {uploading ? 'Subiendo…' : '+ Subir foto'}
         </button>
       </div>

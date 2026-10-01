@@ -23,7 +23,7 @@ function LastEdited({ iso }: { iso: string | null }) {
     label = d.toLocaleDateString('es-CL', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
   }
   return (
-    <span style={{ fontSize:12, color:'var(--text-muted)', fontWeight:500 }}>
+    <span style={{ fontSize:12, color:'var(--ink-500)', fontWeight:500 }}>
       · Última edición: {label}
     </span>
   );

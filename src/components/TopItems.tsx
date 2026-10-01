@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { Flame } from 'lucide-react';
 import { MenuItem } from '@/lib/firestore/menuItems';
 import { useCart } from '@/contexts/CartContext';
 
@@ -40,14 +41,14 @@ export default function TopItems({ menuItems }: { menuItems: MenuItem[] }) {
       {/* Header */}
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16 }}>
         <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-          <span style={{ fontSize:20 }}>🔥</span>
+          <Flame size={20} style={{color:'var(--brand)'}}/>
           <div>
-            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:22, color:'var(--text)', lineHeight:1 }}>Lo más pedido esta semana</div>
-            <div style={{ fontSize:12, color:'var(--text-muted)', marginTop:2 }}>Los favoritos de nuestros clientes</div>
+            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:22, color:'var(--ink-900)', lineHeight:1 }}>Lo más pedido esta semana</div>
+            <div style={{ fontSize:12, color:'var(--ink-500)', marginTop:2 }}>Los favoritos de nuestros clientes</div>
           </div>
         </div>
         {/* Desktop: total pedidos */}
-        <span className="top-items-count" style={{ display:'none', fontSize:11, fontWeight:700, color:'var(--text-muted)', letterSpacing:1.5, textTransform:'uppercase' }}>
+        <span className="top-items-count" style={{ display:'none', fontSize:11, fontWeight:700, color:'var(--ink-500)', letterSpacing:1.5, textTransform:'uppercase' }}>
           Datos en vivo
         </span>
       </div>
@@ -59,24 +60,24 @@ export default function TopItems({ menuItems }: { menuItems: MenuItem[] }) {
           return (
             <button key={name} onClick={() => handleAdd(item)}
               className="top-items-card"
-              style={{ flexShrink:0, width:160, background:'var(--card)', border:'1.5px solid var(--border)', borderRadius:'var(--radius)', padding:'14px 12px', textAlign:'left', cursor:'pointer', transition:'border-color .15s, box-shadow .15s', display:'flex', flexDirection:'column', gap:6, alignItems:'stretch' }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor='var(--orange)'; e.currentTarget.style.boxShadow='0 4px 16px rgba(242,100,25,0.15)'; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor='var(--border)'; e.currentTarget.style.boxShadow='none'; }}
+              style={{ flexShrink:0, width:160, background:'var(--surface-raised)', border:'1.5px solid var(--line)', borderRadius:'var(--radius-lg)', padding:'14px 12px', textAlign:'left', cursor:'pointer', transition:'border-color .15s, box-shadow .15s', display:'flex', flexDirection:'column', gap:6, alignItems:'stretch' }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor='var(--brand)'; e.currentTarget.style.boxShadow='0 4px 16px var(--brand-soft)'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor='var(--line)'; e.currentTarget.style.boxShadow='none'; }}
             >
               <div className="top-items-card-body" style={{ display:'flex', flexDirection:'column', gap:6, flex:1, minWidth:0 }}>
                 <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:2 }}>
-                  <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:22, color:'var(--orange)', lineHeight:1 }}>#{idx+1}</span>
-                  <span style={{ fontSize:10, fontWeight:700, color:'var(--text-muted)', letterSpacing:.5, textTransform:'uppercase' }}>Top</span>
+                  <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:22, color:'var(--brand)', lineHeight:1 }}>#{idx+1}</span>
+                  <span style={{ fontSize:10, fontWeight:700, color:'var(--ink-500)', letterSpacing:.5, textTransform:'uppercase' }}>Top</span>
                 </div>
-                <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:800, fontSize:15, color:'var(--text)', lineHeight:1.2 }}>{name}</div>
-                <div style={{ fontSize:11, color:'var(--text-muted)', fontWeight:600 }}>{count} pedido{count !== 1 ? 's' : ''}</div>
+                <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:800, fontSize:15, color:'var(--ink-900)', lineHeight:1.2 }}>{name}</div>
+                <div style={{ fontSize:11, color:'var(--ink-500)', fontWeight:600 }}>{count} pedido{count !== 1 ? 's' : ''}</div>
                 {price !== null && (
-                  <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:17, color:'var(--yellow)' }}>
+                  <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:17, color:'var(--gold)' }}>
                     ${price.toLocaleString('es-CL')}
-                    {item.priceNormal !== null && <span style={{ fontSize:11, color:'var(--text-muted)', marginLeft:3 }}>Normal</span>}
+                    {item.priceNormal !== null && <span style={{ fontSize:11, color:'var(--ink-500)', marginLeft:3 }}>Normal</span>}
                   </div>
                 )}
-                <div style={{ fontSize:11, color:'var(--orange)', fontWeight:700, marginTop:2 }}>+ Agregar →</div>
+                <div style={{ fontSize:11, color:'var(--brand)', fontWeight:700, marginTop:2 }}>+ Agregar →</div>
               </div>
               {item.imageUrl && (
                 <div className="top-items-card-thumb" style={{ display:'none', width:64, height:64, borderRadius:8, overflow:'hidden', flexShrink:0 }}>

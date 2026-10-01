@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import { Banknote, ClipboardCopy, Check, Dice5, Tag, Hash, Calendar } from 'lucide-react';
 import { DiscountCode, DiscountType } from '@/lib/firestore/discountCodes';
 
 const INPUT: React.CSSProperties = {
   padding: '8px 11px', borderRadius: 8,
-  border: '1.5px solid rgba(242,100,25,0.25)',
-  background: '#FFF9F5', color: '#1A0800',
+  border: '1.5px solid var(--line)',
+  background: 'var(--surface-subtle)', color: 'var(--ink-900)',
   fontSize: 13, fontFamily: "'Barlow',sans-serif",
   outline: 'none', width: '100%', boxSizing: 'border-box',
 };
@@ -67,14 +68,14 @@ function CodeModal({
   return (
     <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.55)', zIndex:9999, display:'flex', alignItems:'flex-end', justifyContent:'center' }}
       onClick={e => { if (e.target === e.currentTarget) onCancel(); }}>
-      <div style={{ background:'var(--card)', borderRadius:'16px 16px 0 0', padding:'24px 20px 36px', width:'100%', maxWidth:480, maxHeight:'90vh', overflowY:'auto' }}>
-        <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:22, color:'var(--text)', marginBottom:20 }}>{title}</div>
+      <div style={{ background:'var(--surface-raised)', borderRadius:'16px 16px 0 0', padding:'24px 20px 36px', width:'100%', maxWidth:480, maxHeight:'90vh', overflowY:'auto' }}>
+        <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:22, color:'var(--ink-900)', marginBottom:20 }}>{title}</div>
 
         <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
 
           {/* Código */}
           <div>
-            <label style={{ fontSize:12, fontWeight:700, color:'var(--text-muted)', letterSpacing:.5, textTransform:'uppercase', display:'block', marginBottom:5 }}>Código</label>
+            <label style={{ fontSize:12, fontWeight:700, color:'var(--ink-500)', letterSpacing:.5, textTransform:'uppercase', display:'block', marginBottom:5 }}>Código</label>
             <div style={{ display:'flex', gap:6 }}>
               <input value={form.code}
                 onChange={e => setForm(f => ({ ...f, code: e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, '') }))}
@@ -83,8 +84,8 @@ function CodeModal({
                 style={{ ...INPUT, flex:1, opacity: isEdit ? 0.6 : 1 }} />
               {!isEdit && (
                 <button onClick={() => setForm(f => ({ ...f, code: genCode() }))}
-                  style={{ padding:'8px 12px', borderRadius:8, border:'1.5px solid rgba(242,100,25,0.25)', background:'transparent', color:'#A0541A', fontSize:12, fontWeight:700, cursor:'pointer', whiteSpace:'nowrap' }}>
-                  🎲 Auto
+                  style={{ padding:'8px 12px', borderRadius:8, border:'1.5px solid var(--line)', background:'transparent', color:'var(--ink-500)', fontSize:12, fontWeight:700, cursor:'pointer', whiteSpace:'nowrap' }}>
+                  <Dice5 size={12} style={{display:'inline', verticalAlign:'middle'}}/> Auto
                 </button>
               )}
             </div>
@@ -92,14 +93,14 @@ function CodeModal({
 
           {/* Tipo */}
           <div>
-            <label style={{ fontSize:12, fontWeight:700, color:'var(--text-muted)', letterSpacing:.5, textTransform:'uppercase', display:'block', marginBottom:5 }}>Tipo de descuento</label>
+            <label style={{ fontSize:12, fontWeight:700, color:'var(--ink-500)', letterSpacing:.5, textTransform:'uppercase', display:'block', marginBottom:5 }}>Tipo de descuento</label>
             <div style={{ display:'flex', gap:8 }}>
-              {([['fixed','💵 Monto fijo ($)'],['percent','% Porcentaje']] as [DiscountType, string][]).map(([id, label]) => {
+              {([['fixed','Monto fijo ($)'],['percent','% Porcentaje']] as [DiscountType, string][]).map(([id, label]) => {
                 const sel = form.type === id;
                 return (
                   <button key={id} onClick={() => setForm(f => ({ ...f, type: id }))}
-                    style={{ flex:1, padding:'10px 8px', borderRadius:10, border:`2px solid ${sel ? '#F26419' : 'rgba(242,100,25,0.2)'}`, background: sel ? 'rgba(242,100,25,0.08)' : 'transparent', color: sel ? '#F26419' : '#A0541A', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:14, cursor:'pointer', transition:'all .15s' }}>
-                    {label}
+                    style={{ flex:1, padding:'10px 8px', borderRadius:10, border:`2px solid ${sel ? 'var(--brand)' : 'var(--line)'}`, background: sel ? 'var(--brand-soft)' : 'transparent', color: sel ? 'var(--brand)' : 'var(--ink-500)', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:14, cursor:'pointer', transition:'all .15s', display:'flex', alignItems:'center', justifyContent:'center', gap:5 }}>
+                    {id === 'fixed' && <Banknote size={14}/>} {label}
                   </button>
                 );
               })}
@@ -108,7 +109,7 @@ function CodeModal({
 
           {/* Valor */}
           <div>
-            <label style={{ fontSize:12, fontWeight:700, color:'var(--text-muted)', letterSpacing:.5, textTransform:'uppercase', display:'block', marginBottom:5 }}>
+            <label style={{ fontSize:12, fontWeight:700, color:'var(--ink-500)', letterSpacing:.5, textTransform:'uppercase', display:'block', marginBottom:5 }}>
               {form.type === 'percent' ? 'Porcentaje (1–100)' : 'Monto ($)'}
             </label>
             <input type="number" min="1" max={form.type === 'percent' ? 100 : undefined}
@@ -119,7 +120,7 @@ function CodeModal({
 
           {/* Descripción interna */}
           <div>
-            <label style={{ fontSize:12, fontWeight:700, color:'var(--text-muted)', letterSpacing:.5, textTransform:'uppercase', display:'block', marginBottom:5 }}>
+            <label style={{ fontSize:12, fontWeight:700, color:'var(--ink-500)', letterSpacing:.5, textTransform:'uppercase', display:'block', marginBottom:5 }}>
               Descripción interna <span style={{ fontWeight:400, textTransform:'none' }}>(solo tú la ves)</span>
             </label>
             <input value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
@@ -129,7 +130,7 @@ function CodeModal({
 
           {/* Máximo usos */}
           <div>
-            <label style={{ fontSize:12, fontWeight:700, color:'var(--text-muted)', letterSpacing:.5, textTransform:'uppercase', display:'block', marginBottom:5 }}>
+            <label style={{ fontSize:12, fontWeight:700, color:'var(--ink-500)', letterSpacing:.5, textTransform:'uppercase', display:'block', marginBottom:5 }}>
               Usos máximos <span style={{ fontWeight:400, textTransform:'none' }}>(0 = ilimitado)</span>
             </label>
             <input type="number" min="0" value={form.maxUses} onChange={e => setForm(f => ({ ...f, maxUses: e.target.value }))}
@@ -138,7 +139,7 @@ function CodeModal({
 
           {/* Expiración */}
           <div>
-            <label style={{ fontSize:12, fontWeight:700, color:'var(--text-muted)', letterSpacing:.5, textTransform:'uppercase', display:'block', marginBottom:5 }}>
+            <label style={{ fontSize:12, fontWeight:700, color:'var(--ink-500)', letterSpacing:.5, textTransform:'uppercase', display:'block', marginBottom:5 }}>
               Expira el <span style={{ fontWeight:400, textTransform:'none' }}>(opcional)</span>
             </label>
             <input type="date" value={form.expiresAt} onChange={e => setForm(f => ({ ...f, expiresAt: e.target.value }))}
@@ -148,10 +149,10 @@ function CodeModal({
           {/* Activo */}
           <div style={{ display:'flex', alignItems:'center', gap:10 }}>
             <button onClick={() => setForm(f => ({ ...f, active: !f.active }))}
-              style={{ width:36, height:20, borderRadius:999, border:'none', background: form.active ? '#F26419' : '#d1d5db', cursor:'pointer', position:'relative', transition:'background .2s', flexShrink:0 }}>
+              style={{ width:36, height:20, borderRadius:999, border:'none', background: form.active ? 'var(--brand)' : '#d1d5db', cursor:'pointer', position:'relative', transition:'background .2s', flexShrink:0 }}>
               <span style={{ position:'absolute', top:3, left: form.active ? 17 : 3, width:14, height:14, borderRadius:'50%', background:'#fff', transition:'left .2s' }}/>
             </button>
-            <span style={{ fontSize:13, color:'var(--text)', fontWeight:600 }}>
+            <span style={{ fontSize:13, color:'var(--ink-900)', fontWeight:600 }}>
               {form.active ? 'Activo — clientes pueden usar este código' : 'Desactivado'}
             </span>
           </div>
@@ -161,11 +162,11 @@ function CodeModal({
 
         <div style={{ display:'flex', gap:10, marginTop:24 }}>
           <button onClick={onCancel} disabled={saving}
-            style={{ flex:1, padding:'11px', borderRadius:999, border:'1.5px solid var(--border)', background:'transparent', color:'var(--text)', fontSize:14, fontWeight:700, cursor:'pointer' }}>
+            style={{ flex:1, padding:'11px', borderRadius:999, border:'1.5px solid var(--line)', background:'transparent', color:'var(--ink-900)', fontSize:14, fontWeight:700, cursor:'pointer' }}>
             Cancelar
           </button>
           <button onClick={onSave} disabled={saving || !canSave}
-            style={{ flex:2, padding:'11px', borderRadius:999, border:'none', background:'#F26419', color:'#fff', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:16, cursor: (saving || !canSave) ? 'not-allowed' : 'pointer', opacity: (saving || !canSave) ? 0.6 : 1 }}>
+            style={{ flex:2, padding:'11px', borderRadius:999, border:'none', background:'var(--brand-strong)', color:'var(--on-brand)', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:16, cursor: (saving || !canSave) ? 'not-allowed' : 'pointer', opacity: (saving || !canSave) ? 0.6 : 1 }}>
             {saving ? 'Guardando…' : 'Guardar'}
           </button>
         </div>
@@ -285,9 +286,9 @@ export default function DiscountsEditor({ initial }: { initial: DiscountCode[] }
       {/* Lista */}
       <div style={{ display:'flex', flexDirection:'column', gap:10, marginBottom:20 }}>
         {codes.length === 0 && (
-          <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:'var(--radius)', padding:'40px 20px', textAlign:'center' }}>
-            <div style={{ fontSize:32, marginBottom:10 }}>🏷</div>
-            <div style={{ fontSize:14, color:'var(--text-muted)' }}>No hay códigos aún. Crea el primero.</div>
+          <div style={{ background:'var(--surface-raised)', border:'1px solid var(--line)', borderRadius:'var(--radius-lg)', padding:'40px 20px', textAlign:'center' }}>
+            <div style={{ marginBottom:10 }}><Tag size={32} style={{color:'var(--ink-500)'}}/></div>
+            <div style={{ fontSize:14, color:'var(--ink-500)' }}>No hay códigos aún. Crea el primero.</div>
           </div>
         )}
 
@@ -297,29 +298,29 @@ export default function DiscountsEditor({ initial }: { initial: DiscountCode[] }
           const inactive = !c.active || expired || exhausted;
 
           return (
-            <div key={c.id} style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:'var(--radius)', padding:'14px 16px', display:'flex', gap:12, alignItems:'flex-start', opacity: inactive ? 0.6 : 1 }}>
+            <div key={c.id} style={{ background:'var(--surface-raised)', border:'1px solid var(--line)', borderRadius:'var(--radius-lg)', padding:'14px 16px', display:'flex', gap:12, alignItems:'flex-start', opacity: inactive ? 0.6 : 1 }}>
               {/* Toggle activo */}
               <button onClick={() => handleToggle(c)}
-                style={{ flexShrink:0, marginTop:2, width:32, height:18, borderRadius:999, border:'none', background: c.active ? '#F26419' : '#d1d5db', cursor:'pointer', position:'relative', transition:'background .2s' }}>
+                style={{ flexShrink:0, marginTop:2, width:32, height:18, borderRadius:999, border:'none', background: c.active ? 'var(--brand)' : '#d1d5db', cursor:'pointer', position:'relative', transition:'background .2s' }}>
                 <span style={{ position:'absolute', top:2, left: c.active ? 15 : 2, width:14, height:14, borderRadius:'50%', background:'#fff', transition:'left .2s' }}/>
               </button>
 
               <div style={{ flex:1, minWidth:0 }}>
                 <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap', marginBottom:3 }}>
-                  <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:18, color:'var(--orange)', letterSpacing:1 }}>{c.code}</span>
-                  <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:16, color:'var(--text)' }}>{formatDiscount(c)}</span>
+                  <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:18, color:'var(--brand)', letterSpacing:1 }}>{c.code}</span>
+                  <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:16, color:'var(--ink-900)' }}>{formatDiscount(c)}</span>
                   {expired   && <span style={{ fontSize:11, fontWeight:700, background:'rgba(220,38,38,0.1)', color:'#dc2626', padding:'2px 7px', borderRadius:4 }}>Expirado</span>}
                   {exhausted && <span style={{ fontSize:11, fontWeight:700, background:'rgba(220,38,38,0.1)', color:'#dc2626', padding:'2px 7px', borderRadius:4 }}>Sin usos</span>}
-                  {!c.active && !expired && !exhausted && <span style={{ fontSize:11, fontWeight:700, background:'var(--bg2)', color:'var(--text-muted)', padding:'2px 7px', borderRadius:4 }}>Desactivado</span>}
+                  {!c.active && !expired && !exhausted && <span style={{ fontSize:11, fontWeight:700, background:'var(--surface-sunken)', color:'var(--ink-500)', padding:'2px 7px', borderRadius:4 }}>Desactivado</span>}
                 </div>
 
-                {c.description && <div style={{ fontSize:12, color:'var(--text-muted)', marginBottom:3 }}>{c.description}</div>}
+                {c.description && <div style={{ fontSize:12, color:'var(--ink-500)', marginBottom:3 }}>{c.description}</div>}
 
                 <div style={{ display:'flex', gap:12, flexWrap:'wrap' }}>
-                  <span style={{ fontSize:11, color:'var(--text-muted)' }}>🔢 {usesLabel(c)}</span>
+                  <span style={{ fontSize:11, color:'var(--ink-500)', display:'inline-flex', alignItems:'center', gap:2 }}><Hash size={10}/> {usesLabel(c)}</span>
                   {c.expiresAt && (
-                    <span style={{ fontSize:11, color: expired ? '#dc2626' : 'var(--text-muted)' }}>
-                      📅 Vence {new Date(c.expiresAt).toLocaleDateString('es-CL')}
+                    <span style={{ fontSize:11, color: expired ? '#dc2626' : 'var(--ink-500)' }}>
+                      <Calendar size={10} style={{display:'inline', verticalAlign:'middle'}}/> Vence {new Date(c.expiresAt).toLocaleDateString('es-CL')}
                     </span>
                   )}
                 </div>
@@ -327,11 +328,11 @@ export default function DiscountsEditor({ initial }: { initial: DiscountCode[] }
 
               <div style={{ display:'flex', gap:6, flexShrink:0 }}>
                 <button onClick={() => copyCode(c.code)}
-                  style={{ padding:'5px 10px', borderRadius:8, border:'1px solid var(--border)', background: copied === c.code ? 'rgba(22,163,74,0.08)' : 'transparent', color: copied === c.code ? '#16a34a' : 'var(--text-muted)', fontSize:12, fontWeight:700, cursor:'pointer', transition:'all .2s', whiteSpace:'nowrap' }}>
-                  {copied === c.code ? '✓ Copiado' : '📋 Copiar'}
+                  style={{ padding:'5px 10px', borderRadius:8, border:'1px solid var(--line)', background: copied === c.code ? 'rgba(22,163,74,0.08)' : 'transparent', color: copied === c.code ? '#16a34a' : 'var(--ink-500)', fontSize:12, fontWeight:700, cursor:'pointer', transition:'all .2s', whiteSpace:'nowrap' }}>
+                  {copied === c.code ? <><Check size={12}/> Copiado</> : <><ClipboardCopy size={12}/> Copiar</>}
                 </button>
                 <button onClick={() => openEdit(c)}
-                  style={{ padding:'5px 12px', borderRadius:8, border:'1px solid var(--border)', background:'transparent', color:'var(--text)', fontSize:12, fontWeight:700, cursor:'pointer' }}>
+                  style={{ padding:'5px 12px', borderRadius:8, border:'1px solid var(--line)', background:'transparent', color:'var(--ink-900)', fontSize:12, fontWeight:700, cursor:'pointer' }}>
                   Editar
                 </button>
                 <button onClick={() => handleDelete(c)}
@@ -346,7 +347,7 @@ export default function DiscountsEditor({ initial }: { initial: DiscountCode[] }
 
       {/* Botón crear */}
       <button onClick={openCreate}
-        style={{ width:'100%', padding:'13px', borderRadius:999, border:'2px dashed rgba(242,100,25,0.4)', background:'rgba(242,100,25,0.04)', color:'#F26419', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:18, cursor:'pointer' }}>
+        style={{ width:'100%', padding:'13px', borderRadius:999, border:'2px dashed var(--line)', background:'var(--brand-soft)', color:'var(--brand)', fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:18, cursor:'pointer' }}>
         + Nuevo código de descuento
       </button>
 

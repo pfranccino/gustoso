@@ -1,24 +1,25 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import { Check, Drumstick, Leaf, Settings, Info } from 'lucide-react';
 import { BurritoConfig, BurritoItem, BurritoProtein } from '@/lib/firestore/burritoConfig';
 
 const fmt = (n: number) => `$${n.toLocaleString('es-CL')}`;
 
 const INPUT: React.CSSProperties = {
   padding: '7px 10px', borderRadius: 8,
-  border: '1.5px solid rgba(242,100,25,0.25)',
-  background: '#FFF9F5', color: '#1A0800',
+  border: '1.5px solid var(--line)',
+  background: 'var(--surface-subtle)', color: 'var(--ink-900)',
   fontSize: 13, fontFamily: "'Barlow',sans-serif",
   outline: 'none',
 };
 
 const SECTION_LABELS: Partial<Record<keyof BurritoConfig, string>> = {
-  rellenos:    '🫔 Rellenos',
-  proteinas:   '🥩 Proteínas',
-  toppings:    '🥬 Toppings',
-  salsas:      '🥫 Salsas',
-  adicionales: '➕ Adicionales',
+  rellenos:    'Rellenos',
+  proteinas:   'Proteínas',
+  toppings:    'Toppings',
+  salsas:      'Salsas',
+  adicionales: 'Adicionales',
 };
 
 /* ── helpers de sección ──────────────────────────────────────── */
@@ -31,11 +32,11 @@ function ItemRow({
   onDelete: () => void;
 }) {
   return (
-    <div style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 12px', background:'#FFF9F5', border:'1px solid rgba(242,100,25,0.15)', borderRadius:8 }}>
+    <div style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 12px', background:'var(--surface-subtle)', border:'1px solid var(--brand-soft)', borderRadius:8 }}>
       {/* Toggle visible */}
       <button onClick={() => onChange({ ...item, visible: !item.visible })}
         style={{ flexShrink:0, width:32, height:18, borderRadius:999, border:'none',
-          background: item.visible ? '#F26419' : '#d1d5db', cursor:'pointer', position:'relative', transition:'background .2s' }}>
+          background: item.visible ? 'var(--brand)' : '#d1d5db', cursor:'pointer', position:'relative', transition:'background .2s' }}>
         <span style={{ position:'absolute', top:2, left: item.visible ? 15 : 2, width:14, height:14, borderRadius:'50%', background:'#fff', transition:'left .2s' }}/>
       </button>
 
@@ -45,14 +46,14 @@ function ItemRow({
 
       {/* Price */}
       <div style={{ display:'flex', alignItems:'center', gap:4, flexShrink:0 }}>
-        <span style={{ fontSize:12, color:'#A0541A', fontWeight:600 }}>+$</span>
+        <span style={{ fontSize:12, color:'var(--ink-500)', fontWeight:600 }}>+$</span>
         <input type="number" value={item.price || ''} placeholder="0"
           onChange={e => onChange({ ...item, price: parseInt(e.target.value, 10) || 0 })}
           style={{ ...INPUT, width:72, opacity: item.visible ? 1 : 0.45 }} />
       </div>
 
       {/* Price label */}
-      <span style={{ fontSize:11, color: item.price > 0 ? '#F26419' : '#16a34a', fontWeight:700, minWidth:42, textAlign:'right', flexShrink:0 }}>
+      <span style={{ fontSize:11, color: item.price > 0 ? 'var(--brand)' : '#16a34a', fontWeight:700, minWidth:42, textAlign:'right', flexShrink:0 }}>
         {item.price > 0 ? fmt(item.price) : 'incluido'}
       </span>
 
@@ -71,10 +72,10 @@ function ProteinRow({
   onDelete: () => void;
 }) {
   return (
-    <div style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 12px', background:'#FFF9F5', border:'1px solid rgba(242,100,25,0.15)', borderRadius:8, flexWrap:'wrap' }}>
+    <div style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 12px', background:'var(--surface-subtle)', border:'1px solid var(--brand-soft)', borderRadius:8, flexWrap:'wrap' }}>
       <button onClick={() => onChange({ ...item, visible: !item.visible })}
         style={{ flexShrink:0, width:32, height:18, borderRadius:999, border:'none',
-          background: item.visible ? '#F26419' : '#d1d5db', cursor:'pointer', position:'relative', transition:'background .2s' }}>
+          background: item.visible ? 'var(--brand)' : '#d1d5db', cursor:'pointer', position:'relative', transition:'background .2s' }}>
         <span style={{ position:'absolute', top:2, left: item.visible ? 15 : 2, width:14, height:14, borderRadius:'50%', background:'#fff', transition:'left .2s' }}/>
       </button>
 
@@ -82,14 +83,14 @@ function ProteinRow({
         style={{ ...INPUT, flex:1, minWidth:120, opacity: item.visible ? 1 : 0.45 }} />
 
       <div style={{ display:'flex', alignItems:'center', gap:4, flexShrink:0 }}>
-        <span style={{ fontSize:11, color:'#A0541A', fontWeight:700 }}>Normal</span>
+        <span style={{ fontSize:11, color:'var(--ink-500)', fontWeight:700 }}>Normal</span>
         <input type="number" value={item.normal || ''} placeholder="0"
           onChange={e => onChange({ ...item, normal: parseInt(e.target.value, 10) || 0 })}
           style={{ ...INPUT, width:76, opacity: item.visible ? 1 : 0.45 }} />
       </div>
 
       <div style={{ display:'flex', alignItems:'center', gap:4, flexShrink:0 }}>
-        <span style={{ fontSize:11, color:'#F26419', fontWeight:700 }}>XL</span>
+        <span style={{ fontSize:11, color:'var(--brand)', fontWeight:700 }}>XL</span>
         <input type="number" value={item.xl || ''} placeholder="0"
           onChange={e => onChange({ ...item, xl: parseInt(e.target.value, 10) || 0 })}
           style={{ ...INPUT, width:76, opacity: item.visible ? 1 : 0.45 }} />
@@ -178,8 +179,8 @@ export default function BurritoEditor({ initial }: { initial: BurritoConfig }) {
   /* ── render helpers ────────────────────────────────────────── */
 
   const sectionStyle: React.CSSProperties = {
-    background:'var(--card)', border:'1px solid var(--border)',
-    borderRadius:'var(--radius)', padding:'20px', marginBottom:16,
+    background:'var(--surface-raised)', border:'1px solid var(--line)',
+    borderRadius:'var(--radius-lg)', padding:'20px', marginBottom:16,
   };
 
   const addRowStyle: React.CSSProperties = {
@@ -191,10 +192,10 @@ export default function BurritoEditor({ initial }: { initial: BurritoConfig }) {
     const showPrice = section !== 'rellenos';
     return (
       <div style={sectionStyle}>
-        <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:18, color:'var(--text)', marginBottom:4 }}>
+        <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:18, color:'var(--ink-900)', marginBottom:4 }}>
           {SECTION_LABELS[section]}
         </div>
-        <div style={{ fontSize:12, color:'var(--text-muted)', marginBottom:14 }}>
+        <div style={{ fontSize:12, color:'var(--ink-500)', marginBottom:14 }}>
           {section === 'rellenos'    && 'Base del burrito. Precio siempre incluido en la proteína.'}
           {section === 'toppings'    && `Máx ${config.toppingsMax} · ${config.toppingsLibres} incluidos gratis${config.toppingExtraPrecio > 0 ? `, +$${config.toppingExtraPrecio.toLocaleString('es-CL')} c/u extra` : ''}. Configura los límites abajo.`}
           {section === 'salsas'      && `Máx ${config.salsasMax} · ${config.salsasLibres} incluidas gratis${config.salsaExtraPrecio > 0 ? `, +$${config.salsaExtraPrecio.toLocaleString('es-CL')} c/u extra` : ''}. Configura los límites abajo.`}
@@ -217,7 +218,7 @@ export default function BurritoEditor({ initial }: { initial: BurritoConfig }) {
             style={{ ...INPUT, flex:1, minWidth:140 }} />
           {showPrice && (
             <div style={{ display:'flex', alignItems:'center', gap:4 }}>
-              <span style={{ fontSize:12, color:'#A0541A', fontWeight:600 }}>+$</span>
+              <span style={{ fontSize:12, color:'var(--ink-500)', fontWeight:600 }}>+$</span>
               <input type="number" value={newPrice[section] ?? ''} placeholder="0 = incluido"
                 onChange={e => setNewPrice(v => ({ ...v, [section]: e.target.value }))}
                 onKeyDown={e => e.key === 'Enter' && addItem(section)}
@@ -225,7 +226,7 @@ export default function BurritoEditor({ initial }: { initial: BurritoConfig }) {
             </div>
           )}
           <button onClick={() => addItem(section)}
-            style={{ padding:'7px 16px', borderRadius:8, border:'none', background:'#F26419', color:'#fff', fontSize:13, fontWeight:700, cursor:'pointer' }}>
+            style={{ padding:'7px 16px', borderRadius:8, border:'none', background:'var(--brand-strong)', color:'var(--on-brand)', fontSize:13, fontWeight:700, cursor:'pointer' }}>
             + Agregar
           </button>
         </div>
@@ -240,10 +241,10 @@ export default function BurritoEditor({ initial }: { initial: BurritoConfig }) {
 
       {/* Proteínas */}
       <div style={sectionStyle}>
-        <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:18, color:'var(--text)', marginBottom:4 }}>
+        <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:18, color:'var(--ink-900)', marginBottom:4 }}>
           {SECTION_LABELS.proteinas}
         </div>
-        <div style={{ fontSize:12, color:'var(--text-muted)', marginBottom:14 }}>
+        <div style={{ fontSize:12, color:'var(--ink-500)', marginBottom:14 }}>
           Precio Normal y XL por proteína.
         </div>
 
@@ -262,20 +263,20 @@ export default function BurritoEditor({ initial }: { initial: BurritoConfig }) {
             onKeyDown={e => e.key === 'Enter' && addProtein()}
             style={{ ...INPUT, flex:1, minWidth:120 }} />
           <div style={{ display:'flex', alignItems:'center', gap:4 }}>
-            <span style={{ fontSize:11, color:'#A0541A', fontWeight:700 }}>Normal $</span>
+            <span style={{ fontSize:11, color:'var(--ink-500)', fontWeight:700 }}>Normal $</span>
             <input type="number" value={newNormal} placeholder="0"
               onChange={e => setNewNormal(e.target.value)}
               style={{ ...INPUT, width:76 }} />
           </div>
           <div style={{ display:'flex', alignItems:'center', gap:4 }}>
-            <span style={{ fontSize:11, color:'#F26419', fontWeight:700 }}>XL $</span>
+            <span style={{ fontSize:11, color:'var(--brand)', fontWeight:700 }}>XL $</span>
             <input type="number" value={newXL} placeholder="0"
               onChange={e => setNewXL(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && addProtein()}
               style={{ ...INPUT, width:76 }} />
           </div>
           <button onClick={addProtein}
-            style={{ padding:'7px 16px', borderRadius:8, border:'none', background:'#F26419', color:'#fff', fontSize:13, fontWeight:700, cursor:'pointer' }}>
+            style={{ padding:'7px 16px', borderRadius:8, border:'none', background:'var(--brand-strong)', color:'var(--on-brand)', fontSize:13, fontWeight:700, cursor:'pointer' }}>
             + Agregar
           </button>
         </div>
@@ -283,10 +284,10 @@ export default function BurritoEditor({ initial }: { initial: BurritoConfig }) {
 
       {/* Extra proteína */}
       <div style={sectionStyle}>
-        <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:18, color:'var(--text)', marginBottom:4 }}>
-          🍗 Extra Proteína
+        <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:18, color:'var(--ink-900)', marginBottom:4 }}>
+          <Drumstick size={13} style={{display:'inline', verticalAlign:'middle'}}/> Extra Proteína
         </div>
-        <div style={{ fontSize:12, color:'var(--text-muted)', marginBottom:16 }}>
+        <div style={{ fontSize:12, color:'var(--ink-500)', marginBottom:16 }}>
           Permite al cliente pedir doble porción de su proteína elegida pagando un adicional.
         </div>
 
@@ -294,11 +295,11 @@ export default function BurritoEditor({ initial }: { initial: BurritoConfig }) {
         <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:16 }}>
           <button onClick={() => { setConfig(c => ({ ...c, proteinaExtraHabilitada: !c.proteinaExtraHabilitada })); setSaved(false); }}
             style={{ flexShrink:0, width:36, height:20, borderRadius:999, border:'none',
-              background: config.proteinaExtraHabilitada ? '#F26419' : '#d1d5db',
+              background: config.proteinaExtraHabilitada ? 'var(--brand)' : '#d1d5db',
               cursor:'pointer', position:'relative', transition:'background .2s' }}>
             <span style={{ position:'absolute', top:3, left: config.proteinaExtraHabilitada ? 17 : 3, width:14, height:14, borderRadius:'50%', background:'#fff', transition:'left .2s' }}/>
           </button>
-          <span style={{ fontSize:13, fontWeight:700, color:'var(--text)' }}>
+          <span style={{ fontSize:13, fontWeight:700, color:'var(--ink-900)' }}>
             {config.proteinaExtraHabilitada ? 'Habilitada — aparece en el paso Proteína' : 'Deshabilitada'}
           </span>
         </div>
@@ -306,13 +307,13 @@ export default function BurritoEditor({ initial }: { initial: BurritoConfig }) {
         {config.proteinaExtraHabilitada && (
           <div style={{ display:'flex', gap:10, flexWrap:'wrap' }}>
             <div style={{ display:'flex', flexDirection:'column', gap:4, flex:1, minWidth:120 }}>
-              <label style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', letterSpacing:.5, textTransform:'uppercase' }}>Precio extra Normal ($)</label>
+              <label style={{ fontSize:11, fontWeight:700, color:'var(--ink-500)', letterSpacing:.5, textTransform:'uppercase' }}>Precio extra Normal ($)</label>
               <input type="number" min={0} value={config.proteinaExtraPrecioNormal}
                 onChange={e => { setConfig(c => ({ ...c, proteinaExtraPrecioNormal: parseInt(e.target.value, 10) || 0 })); setSaved(false); }}
                 style={{ ...INPUT }} />
             </div>
             <div style={{ display:'flex', flexDirection:'column', gap:4, flex:1, minWidth:120 }}>
-              <label style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', letterSpacing:.5, textTransform:'uppercase' }}>Precio extra XL ($)</label>
+              <label style={{ fontSize:11, fontWeight:700, color:'var(--ink-500)', letterSpacing:.5, textTransform:'uppercase' }}>Precio extra XL ($)</label>
               <input type="number" min={0} value={config.proteinaExtraPrecioXL}
                 onChange={e => { setConfig(c => ({ ...c, proteinaExtraPrecioXL: parseInt(e.target.value, 10) || 0 })); setSaved(false); }}
                 style={{ ...INPUT }} />
@@ -332,69 +333,69 @@ export default function BurritoEditor({ initial }: { initial: BurritoConfig }) {
 
       {/* Límites y precios extra */}
       <div style={sectionStyle}>
-        <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:18, color:'var(--text)', marginBottom:4 }}>
-          ⚙️ Límites y cobro por extras
+        <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:18, color:'var(--ink-900)', marginBottom:4 }}>
+          <Settings size={16} style={{display:'inline', verticalAlign:'middle'}}/> Límites y cobro por extras
         </div>
-        <div style={{ fontSize:12, color:'var(--text-muted)', marginBottom:16 }}>
+        <div style={{ fontSize:12, color:'var(--ink-500)', marginBottom:16 }}>
           Define cuántos toppings y salsas van incluidos gratis y cuánto cobrar por cada uno adicional.
         </div>
 
         {/* Toppings limits */}
         <div style={{ marginBottom:18 }}>
-          <div style={{ fontSize:13, fontWeight:800, color:'var(--text)', marginBottom:10 }}>🥬 Toppings</div>
+          <div style={{ fontSize:13, fontWeight:800, color:'var(--ink-900)', marginBottom:10 }}><Leaf size={13} style={{display:'inline', verticalAlign:'middle'}}/> Toppings</div>
           <div style={{ display:'flex', gap:10, flexWrap:'wrap' }}>
             <div style={{ display:'flex', flexDirection:'column', gap:4, flex:1, minWidth:100 }}>
-              <label style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', letterSpacing:.5, textTransform:'uppercase' }}>Máx seleccionables</label>
+              <label style={{ fontSize:11, fontWeight:700, color:'var(--ink-500)', letterSpacing:.5, textTransform:'uppercase' }}>Máx seleccionables</label>
               <input type="number" min={1} max={20} value={config.toppingsMax}
                 onChange={e => { setConfig(c => ({ ...c, toppingsMax: parseInt(e.target.value, 10) || 1 })); setSaved(false); }}
                 style={{ ...INPUT, width:'100%' }} />
             </div>
             <div style={{ display:'flex', flexDirection:'column', gap:4, flex:1, minWidth:100 }}>
-              <label style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', letterSpacing:.5, textTransform:'uppercase' }}>Incluidos gratis</label>
+              <label style={{ fontSize:11, fontWeight:700, color:'var(--ink-500)', letterSpacing:.5, textTransform:'uppercase' }}>Incluidos gratis</label>
               <input type="number" min={0} max={20} value={config.toppingsLibres}
                 onChange={e => { setConfig(c => ({ ...c, toppingsLibres: parseInt(e.target.value, 10) || 0 })); setSaved(false); }}
                 style={{ ...INPUT, width:'100%' }} />
             </div>
             <div style={{ display:'flex', flexDirection:'column', gap:4, flex:1, minWidth:100 }}>
-              <label style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', letterSpacing:.5, textTransform:'uppercase' }}>Precio c/u extra ($)</label>
+              <label style={{ fontSize:11, fontWeight:700, color:'var(--ink-500)', letterSpacing:.5, textTransform:'uppercase' }}>Precio c/u extra ($)</label>
               <input type="number" min={0} value={config.toppingExtraPrecio}
                 onChange={e => { setConfig(c => ({ ...c, toppingExtraPrecio: parseInt(e.target.value, 10) || 0 })); setSaved(false); }}
                 style={{ ...INPUT, width:'100%' }} />
             </div>
           </div>
           {config.toppingExtraPrecio > 0 && (
-            <div style={{ fontSize:12, color:'#F26419', fontWeight:600, marginTop:8 }}>
-              ℹ️ El cliente verá: &quot;{config.toppingsLibres} incluidos gratis · +${config.toppingExtraPrecio.toLocaleString('es-CL')} por cada topping extra&quot;
+            <div style={{ fontSize:12, color:'var(--brand)', fontWeight:600, marginTop:8 }}>
+              <Info size={13} style={{display:'inline', verticalAlign:'middle'}}/> El cliente verá: &quot;{config.toppingsLibres} incluidos gratis · +${config.toppingExtraPrecio.toLocaleString('es-CL')} por cada topping extra&quot;
             </div>
           )}
         </div>
 
         {/* Salsas limits */}
         <div>
-          <div style={{ fontSize:13, fontWeight:800, color:'var(--text)', marginBottom:10 }}>🥫 Salsas</div>
+          <div style={{ fontSize:13, fontWeight:800, color:'var(--ink-900)', marginBottom:10 }}>Salsas</div>
           <div style={{ display:'flex', gap:10, flexWrap:'wrap' }}>
             <div style={{ display:'flex', flexDirection:'column', gap:4, flex:1, minWidth:100 }}>
-              <label style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', letterSpacing:.5, textTransform:'uppercase' }}>Máx seleccionables</label>
+              <label style={{ fontSize:11, fontWeight:700, color:'var(--ink-500)', letterSpacing:.5, textTransform:'uppercase' }}>Máx seleccionables</label>
               <input type="number" min={1} max={20} value={config.salsasMax}
                 onChange={e => { setConfig(c => ({ ...c, salsasMax: parseInt(e.target.value, 10) || 1 })); setSaved(false); }}
                 style={{ ...INPUT, width:'100%' }} />
             </div>
             <div style={{ display:'flex', flexDirection:'column', gap:4, flex:1, minWidth:100 }}>
-              <label style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', letterSpacing:.5, textTransform:'uppercase' }}>Incluidas gratis</label>
+              <label style={{ fontSize:11, fontWeight:700, color:'var(--ink-500)', letterSpacing:.5, textTransform:'uppercase' }}>Incluidas gratis</label>
               <input type="number" min={0} max={20} value={config.salsasLibres}
                 onChange={e => { setConfig(c => ({ ...c, salsasLibres: parseInt(e.target.value, 10) || 0 })); setSaved(false); }}
                 style={{ ...INPUT, width:'100%' }} />
             </div>
             <div style={{ display:'flex', flexDirection:'column', gap:4, flex:1, minWidth:100 }}>
-              <label style={{ fontSize:11, fontWeight:700, color:'var(--text-muted)', letterSpacing:.5, textTransform:'uppercase' }}>Precio c/u extra ($)</label>
+              <label style={{ fontSize:11, fontWeight:700, color:'var(--ink-500)', letterSpacing:.5, textTransform:'uppercase' }}>Precio c/u extra ($)</label>
               <input type="number" min={0} value={config.salsaExtraPrecio}
                 onChange={e => { setConfig(c => ({ ...c, salsaExtraPrecio: parseInt(e.target.value, 10) || 0 })); setSaved(false); }}
                 style={{ ...INPUT, width:'100%' }} />
             </div>
           </div>
           {config.salsaExtraPrecio > 0 && (
-            <div style={{ fontSize:12, color:'#F26419', fontWeight:600, marginTop:8 }}>
-              ℹ️ El cliente verá: &quot;{config.salsasLibres} incluidas gratis · +${config.salsaExtraPrecio.toLocaleString('es-CL')} por cada salsa extra&quot;
+            <div style={{ fontSize:12, color:'var(--brand)', fontWeight:600, marginTop:8 }}>
+              <Info size={13} style={{display:'inline', verticalAlign:'middle'}}/> El cliente verá: &quot;{config.salsasLibres} incluidas gratis · +${config.salsaExtraPrecio.toLocaleString('es-CL')} por cada salsa extra&quot;
             </div>
           )}
         </div>
@@ -402,13 +403,13 @@ export default function BurritoEditor({ initial }: { initial: BurritoConfig }) {
 
       {/* Save */}
       {error  && <div style={{ fontSize:13, color:'#dc2626', fontWeight:600, marginBottom:12 }}>{error}</div>}
-      {saved  && <div style={{ fontSize:13, color:'#16a34a', fontWeight:600, marginBottom:12 }}>✓ Guardado correctamente</div>}
+      {saved  && <div style={{ fontSize:13, color:'#16a34a', fontWeight:600, marginBottom:12, display:'flex', alignItems:'center', gap:4 }}><Check size={14}/> Guardado correctamente</div>}
       <button onClick={handleSave} disabled={isPending}
         style={{ width:'100%', padding:'13px', borderRadius:999, border:'none',
-          background: isPending ? '#d1bfb8' : '#F26419', color:'#fff',
+          background: isPending ? '#d1bfb8' : 'var(--brand-strong)', color:'var(--on-brand)',
           fontFamily:"'Barlow Condensed',sans-serif", fontWeight:900, fontSize:20,
           cursor: isPending ? 'not-allowed' : 'pointer',
-          boxShadow: isPending ? 'none' : '0 4px 16px rgba(242,100,25,0.30)' }}>
+          boxShadow: isPending ? 'none' : 'var(--shadow-brand)' }}>
         {isPending ? 'Guardando…' : 'Guardar cambios'}
       </button>
     </div>
